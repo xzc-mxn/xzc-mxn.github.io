@@ -1,302 +1,856 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>For You ❤️ — ขอเป็นแฟน</title>
-  <link href="https://fonts.googleapis.com/css2?family=Mali:wght@300;500;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <style>
-    :root{
-      --primary-1: #ff7a9a;
-      --primary-2: #ffb3c6;
-      --bg-1: #fff6f8;
-      --text: #3b0b16;
-      --muted: #7a3a45;
-      --card: #ffffff;
-      --shadow: 0 10px 30px rgba(91,28,40,0.12);
-      --radius: 18px;
-    }
-
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family:'Mali',cursive;
-      background:linear-gradient(180deg,var(--bg-1) 0%, #fff0f3 50%, #fff0f6 100%);
-      color:var(--text);
-      overflow-x:hidden;
-      line-height:1.5;
-    }
-
-    /* Background Decoration */
-    .bg-decor{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
-    .bg-decor .blob{position:absolute;border-radius:50%;filter:blur(40px);opacity:0.25}
-    .bg-decor .blob.a{width:420px;height:420px;left:-80px;top:-40px;background:linear-gradient(135deg,var(--primary-1),var(--primary-2))}
-    .bg-decor .blob.b{width:300px;height:300px;right:-60px;bottom:-40px;background:linear-gradient(135deg,#ffd1dc,#ffe9ee)}
-
-    /* Landing Overlay */
-    #landing{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:linear-gradient(180deg,rgba(255,122,154,0.98),rgba(255,179,198,0.95));z-index:40;transition:opacity .9s ease}
-    .envelope{font-size:96px;animation:float 3s ease-in-out infinite; cursor: pointer;}
-    .landing-title{color:#fff;font-size:1.6rem;margin-top:18px;letter-spacing:0.6px}
-    .landing-sub{color:rgba(255,255,255,0.9);margin-top:8px;font-size:0.95rem}
-
-    @keyframes float{0%{transform:translateY(0)}50%{transform:translateY(-14px)}100%{transform:translateY(0)}}
-
-    /* Page Container */
-    .wrap{position:relative;max-width:820px;margin:90px auto;padding:28px;z-index:10; padding-bottom: 100px;}
-    main{display:grid;grid-template-columns:1fr;gap:22px}
-
-    .card{background:var(--card);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);}
-
-    header h1{font-size:1.8rem;color:var(--primary-1);margin:0}
-    header p{margin:6px 0 0;color:var(--muted)}
-
-    /* Timeline */
-    .timeline{position:relative;padding-left:28px}
-    .timeline::before{content:"";position:absolute;left:10px;top:12px;bottom:12px;width:4px;background:linear-gradient(180deg,var(--primary-1),var(--primary-2));border-radius:4px}
-    .timeline-item{position:relative;padding:14px 18px;margin:14px 0;}
-    .timeline-item .dot{position:absolute;left:-6px;top:22px;width:14px;height:14px;border-radius:50%;background:white;border:4px solid var(--primary-1)}
-    .timeline-item h3{margin:0 0 6px;font-size:1.05rem;color:#b51e45}
-    .timeline-item p{margin:0;color:#5b2b36}
-
-    /* Gallery Fix */
-    .gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:15px; margin-top: 10px;}
-    .polaroid{
-        background:#fff;
-        padding:10px;
-        padding-bottom: 25px; /* พื้นที่ด้านล่างเยอะหน่อยเหมือนโพลารอยด์ */
-        border-radius:4px;
-        box-shadow:0 4px 10px rgba(0,0,0,0.1);
-        transition:transform .25s ease;
-    }
-    .polaroid img{
-        width:100%;
-        aspect-ratio: 3/4; /* บังคับสัดส่วนแนวตั้ง */
-        object-fit:cover;
-        border-radius:2px;
-        display:block;
-        background-color: #eee;
-    }
-
-    /* Question Box */
-    .question{display:flex;flex-direction:column;align-items:center;gap:10px;padding:40px 26px; text-align: center;}
-    .question h2{font-size:1.8rem;margin:0;color:#ff2f5b}
-    .controls{display:flex;gap:18px;align-items:center; margin-top: 20px;}
-
-    button{border:0;padding:12px 30px;border-radius:999px;font-family:'Mali',cursive; font-size:1.1rem;cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,0.08);transition:all .2s ease}
-    .btn-yes{background:linear-gradient(90deg,var(--primary-1),var(--primary-2));color:#fff; font-weight: bold;}
-    .btn-yes:hover{transform:scale(1.05);box-shadow:0 18px 30px rgba(255,105,139,0.25)}
-    .btn-no{background:#eee;color:#666;}
-
-    /* Accepted View & Music Box */
-    .accepted-view{display:none; animation: fadeIn 1s ease;}
-    .congrats-box{
-        text-align: center;
-        padding: 30px;
-        background: rgba(255,255,255,0.9);
-        border-radius: 20px;
-        border: 2px solid #ffdde5;
-    }
-    .congrats-box h2 { color: #d6336c; font-size: 2rem; margin-bottom: 10px; }
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>For Fa ❤️ — Secret!</title>
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@300;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root{
+          --primary-1: #ff7a9a;
+          --primary-2: #ffb3c6;
+          --primary-3: #ff5a7d;
+          --accent: #ffd1dc;
+          --bg-1: #fff6f8;
+          --bg-2: #fff0f3;
+          --text: #3b0b16;
+          --muted: #7a3a45;
+          --card: #ffffff;
+          --shadow-sm: 0 4px 12px rgba(91,28,40,0.06);
+          --shadow: 0 10px 30px rgba(91,28,40,0.12);
+          --shadow-lg: 0 20px 50px rgba(91,28,40,0.15);
+          --radius: 18px;
+        }
     
-    /* Music Box Style */
-    .music-box {
-        margin-top: 20px;
-        background: #fff0f3;
-        padding: 15px;
-        border-radius: 15px;
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        box-shadow: inset 0 0 10px rgba(255, 122, 154, 0.1);
-        border: 1px solid #ffc2d1;
+        *{box-sizing:border-box}
+        html,body{height:100%}
+        body{
+          margin:0;
+          font-family:'Mali',cursive;
+          background:linear-gradient(180deg,var(--bg-1) 0%, #fff0f3 50%, #fff0f6 100%);
+          color:var(--text);
+          overflow-x:hidden;
+          line-height:1.5;
+        }
+    
+        /* Background Decoration */
+        .bg-decor{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+        .bg-decor .blob{position:absolute;border-radius:50%;filter:blur(40px);opacity:0.25}
+        .bg-decor .blob.a{width:420px;height:420px;left:-80px;top:-40px;background:linear-gradient(135deg,var(--primary-1),var(--primary-2))}
+        .bg-decor .blob.b{width:300px;height:300px;right:-60px;bottom:-40px;background:linear-gradient(135deg,#ffd1dc,#ffe9ee)}
+    
+        /* Landing Overlay */
+        #landing{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:linear-gradient(180deg,rgba(255,122,154,0.98),rgba(255,179,198,0.95));z-index:40;transition:opacity .9s ease}
+        .envelope{font-size:96px;animation:float 3s ease-in-out infinite; cursor: pointer; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.12))}
+        .landing-title{color:#fff;font-size:1.9rem;margin-top:18px;letter-spacing:0.8px;font-weight:600;text-shadow:0 3px 8px rgba(0,0,0,0.15)}
+        .landing-sub{color:rgba(255,255,255,0.95);margin-top:8px;font-size:1rem;font-weight:500}
+    
+        @keyframes float{0%{transform:translateY(0)}50%{transform:translateY(-14px)}100%{transform:translateY(0)}}
+    
+        @keyframes photoShine {
+          0% {opacity:0}
+          50% {opacity:0.5}
+          100% {opacity:0}
+        }
+    
+        /* Page Container */
+        .wrap{position:relative;max-width:820px;margin:90px auto;padding:28px;z-index:10; padding-bottom: 100px;}
+        /* make the page container look like a soft card */
+        .wrap{
+          position:relative;
+          max-width:820px;
+          margin:70px auto;
+          padding:36px;
+          z-index:10;
+          padding-bottom:110px;
+          background: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(255,248,250,0.88));
+          border-radius: 28px;
+          box-shadow: var(--shadow-lg);
+          border: 1px solid rgba(255,255,255,0.6);
+        }
+        main{position:relative;display:grid;grid-template-columns:1fr;gap:22px}
+    
+        /* Carousel Mode */
+        .carousel-mode main {
+          display: block;
+        }
+    
+        .section-slide {
+          display: none !important;
+        }
+    
+        /* active uses a shorter entrance animation to reduce flicker */
+        .section-slide.active {
+          display: block !important;
+          animation: slideInFrame 0.38s ease-out;
+        }
+    
+        @keyframes slideInFrame {
+          from {
+            opacity: 0;
+            transform: translateY(12px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+    
+        @keyframes slideShow {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+    
+        /* Navigation Controls */
+        .carousel-nav {position:fixed;bottom:30px;left:50%;transform:translateX(-50%);z-index:30;display:flex;gap:20px;align-items:center;background:linear-gradient(135deg,rgba(255,255,255,0.97),rgba(255,250,252,0.94));padding:18px 36px;border-radius:50px;box-shadow:0 14px 44px rgba(91,28,40,0.14);backdrop-filter:blur(14px);border:1.5px solid rgba(255,255,255,0.8)}
+        .carousel-nav button {padding:12px 28px;border-radius:28px;border:0;font-family:'Mali',cursive;font-size:1.05rem;cursor:pointer;transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1);font-weight:700;box-shadow:var(--shadow-sm)}
+        .carousel-nav .nav-prev,.carousel-nav .nav-next {background:linear-gradient(135deg,var(--primary-1),var(--primary-2));color:#fff;position:relative;overflow:hidden}
+        .carousel-nav .nav-prev:hover,.carousel-nav .nav-next:hover {transform:scale(1.08);box-shadow:0 8px 20px rgba(255,122,154,0.32)}
+        .carousel-nav .nav-prev:active,.carousel-nav .nav-next:active {transform:scale(0.98)}
+        .carousel-nav .nav-prev:disabled,.carousel-nav .nav-next:disabled {opacity:0.45;cursor:not-allowed;transform:scale(1)}
+        .carousel-progress {display:flex;gap:8px;align-items:center}
+        .progress-dot {width:11px;height:11px;border-radius:50%;background:rgba(255,122,154,0.2);cursor:pointer;transition:all 0.28s cubic-bezier(0.34,1.56,0.64,1);border:1.5px solid rgba(255,122,154,0.3);box-shadow:var(--shadow-sm)}
+        .progress-dot:hover {transform:scale(1.5);background:rgba(255,122,154,0.4);box-shadow:0 6px 18px rgba(255,122,154,0.2)}
+        .progress-dot.active {background:linear-gradient(135deg,var(--primary-1),var(--primary-2));transform:scale(1.5);box-shadow:0 8px 24px rgba(255,122,154,0.3);border-color:rgba(255,122,154,0.6)}
+        .progress-text {color:var(--muted);font-size:0.95rem;font-weight:700;margin-left:12px;white-space:nowrap;letter-spacing:-0.2px}
+    
+        .card{background: linear-gradient(135deg,#ffffff 0%,#fff8fb 100%);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow-sm);transition:transform .28s cubic-bezier(0.34,1.56,0.64,1), box-shadow .28s ease;border:1px solid rgba(255,255,255,0.5)}
+        .card:hover{transform:translateY(-8px);box-shadow:var(--shadow-lg)}
+    
+        header h1{font-size:2rem;color:var(--primary-1);margin:0;font-weight:700;letter-spacing:-0.5px}
+        header p{margin:8px 0 0;color:var(--muted);font-size:1.05rem;font-weight:500}
+    
+        /* Timeline */
+        .timeline{position:relative;padding-left:28px}
+        .timeline::before{content:"";position:absolute;left:10px;top:12px;bottom:12px;width:4px;background:linear-gradient(180deg,var(--primary-1),var(--primary-2));border-radius:4px}
+        .timeline-item{position:relative;padding:18px 22px;margin:16px 0;background:linear-gradient(135deg,rgba(255,209,220,0.7),rgba(255,235,242,0.5));border-radius:14px;border-left:4px solid var(--primary-1);box-shadow:var(--shadow-sm);transition:all .35s cubic-bezier(0.34,1.56,0.64,1);opacity:0;animation:slideInFrame 0.38s ease-out forwards}
+        .timeline-item:hover{transform:translateX(6px);box-shadow:var(--shadow)}
+        .timeline-item .dot{position:absolute;left:-8px;top:24px;width:16px;height:16px;border-radius:50%;background:white;border:4px solid var(--primary-1);box-shadow:0 2px 8px rgba(255,122,154,0.3)}
+        .timeline-item h3{margin:0 0 8px;font-size:1.15rem;color:var(--primary-3);font-weight:600;letter-spacing:-0.3px}
+        .timeline-item p{margin:0;color:var(--text);font-weight:500;line-height:1.6}
+    
+        /* Gallery Fix - Polaroid Casual Scattered Arrangement */
+    
+        /* Old */
+    
+        /*.gallery{position:relative;margin-top:24px;perspective:1400px;padding:12px;height:580px;min-height:580px}
+        .polaroid{background:linear-gradient(135deg,#fff 0%,rgba(255,248,250,0.7) 100%);padding:18px;border-radius:14px;box-shadow:0 18px 52px rgba(91,28,40,0.16),inset 0 1px 1px rgba(255,255,255,0.9);transition:all 0.45s cubic-bezier(0.34,1.56,0.64,1);border:1px solid rgba(255,255,255,0.95);opacity:0;animation:slideInFrame 0.38s ease-out forwards;position:absolute;overflow:visible;transform-origin:center;width:220px}
+        .polaroid::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.6) 0%,rgba(255,240,245,0.2) 100%);opacity:0;pointer-events:none;border-radius:14px;transition:opacity 0.4s ease}
+        .polaroid:hover::after{opacity:1}
+        .polaroid img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:10px;display:block;background:linear-gradient(135deg,#f5f0f3,#f0e6eb);box-shadow:0 8px 18px rgba(0,0,0,0.14);transition:all 0.4s ease}
+        .polaroid:hover img{filter:brightness(1.1) contrast(1.09) saturate(1.05);box-shadow:0 10px 24px rgba(0,0,0,0.18)}
+        .photo-number{position:absolute;top:16px;right:16px;font-size:0.95rem;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--primary-1),var(--primary-2));width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(255,122,154,0.28),0 0 0 3px rgba(255,255,255,0.8);opacity:0;transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);transform:scale(0.7) rotate(-15deg);font-style:italic}
+        .polaroid:hover .photo-number{opacity:1;transform:scale(1) rotate(0deg)}
+        .polaroid:hover{transform:translateY(-22px) scale(1.08);box-shadow:0 36px 72px rgba(255,122,154,0.3),inset 0 1px 1px rgba(255,255,255,0.95);z-index:10}
+    
+        .photo-1{animation-delay:0.05s;top:0px;left:20px;z-index:2;transform:rotate(-8deg) translateY(0px) !important}
+        .photo-2{animation-delay:0.12s;top:80px;left:160px;z-index:4;transform:rotate(6deg) translateY(0px) !important}
+        .photo-3{animation-delay:0.19s;top:220px;left:80px;z-index:1;transform:rotate(-5deg) translateY(0px) !important}
+        .photo-4{animation-delay:0.26s;top:160px;left:280px;z-index:3;transform:rotate(8deg) translateY(0px) !important}*/
+    
+        /* New */
+    
+    .gallery{
+      position: relative;
+      margin-top: 24px;
+      padding: 12px;
+      min-height: 580px;
+    
+      /* จัดให้อยู่ตรงกลาง */
+      display: grid;
+      grid-template-columns: repeat(2, 260px); /* 2 รูปต่อแถว */
+      gap: 32px 48px; /* ระยะห่างกำลังดี */
+      justify-content: center;
+      align-items: center;
     }
-    .album-cover {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background-image: url('https://cdn.discordapp.com/attachments/1340708357618794536/1448674040414994432/https3A2F2Fimages.png?ex=693c1e56&is=693accd6&hm=796c955066554c1caa526f7312af2a9de0c10bd4a0472cad35585f34d0435a05'); /* รูปปก Daniel Caesar */
-        background-size: cover;
-        background-position: center;
-        border: 3px solid #fff;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-        animation: spin 4s linear infinite; /* หมุนตลอดเวลา */
+    
+    /* ===== POLAROID ===== */
+    .polaroid{
+      background: linear-gradient(135deg,#fff 0%,rgba(255,248,250,0.7) 100%);
+      padding: 20px;
+      border-radius: 14px;
+      box-shadow: 
+        0 18px 52px rgba(91,28,40,0.16),
+        inset 0 1px 1px rgba(255,255,255,0.9);
+      transition: all 0.45s cubic-bezier(0.34,1.56,0.64,1);
+      border: 1px solid rgba(255,255,255,0.95);
+      opacity: 0;
+      animation: slideInFrame 0.38s ease-out forwards;
+    
+      position: relative;
+      width: 260px;
     }
-    .song-info {
-        text-align: left;
-        flex: 1;
+    
+    .polaroid::after{
+      content:'';
+      position:absolute;
+      inset:0;
+      background:linear-gradient(135deg,rgba(255,255,255,0.6) 0%,rgba(255,240,245,0.2) 100%);
+      opacity:0;
+      pointer-events:none;
+      border-radius:14px;
+      transition:opacity 0.4s ease;
     }
-    .song-title { font-weight: bold; color: #d6336c; font-size: 1rem; }
-    .artist-name { font-size: 0.85rem; color: #888; }
-    .playing-bar {
-        margin-top: 5px;
-        height: 4px;
-        background: #ffdce5;
-        border-radius: 2px;
-        overflow: hidden;
+    
+    .polaroid:hover::after{opacity:1;}
+    
+    .polaroid img{
+      width:100%;
+      aspect-ratio:3/4;
+      object-fit:cover;
+      border-radius:10px;
+      display:block;
+      background:linear-gradient(135deg,#f5f0f3,#f0e6eb);
+      box-shadow:0 8px 18px rgba(0,0,0,0.14);
+      transition:all 0.4s ease;
     }
-    .playing-bar-fill {
-        height: 100%;
-        background: #ff7a9a;
-        width: 0%;
-        animation: progress 20s linear infinite;
+    
+    .polaroid:hover img{
+      filter:brightness(1.1) contrast(1.09) saturate(1.05);
+      box-shadow:0 10px 24px rgba(0,0,0,0.18);
     }
-
-    @keyframes spin { 100% { transform: rotate(360deg); } }
-    @keyframes progress { 0% { width: 0%; } 100% { width: 100%; } }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-    /* Responsive */
-    @media (max-width:600px){
-      .gallery{grid-template-columns:1fr 1fr} /* มือถือ 2 แถวเหมือนเดิมแต่ทรงสวยขึ้น */
-      .envelope{font-size:74px}
-      .music-box { flex-direction: row; }
+    
+    /* ===== PHOTO NUMBER ===== */
+    .photo-number{
+      position:absolute;
+      top:16px;
+      right:16px;
+      font-size:0.95rem;
+      font-weight:800;
+      color:#fff;
+      background:linear-gradient(135deg,var(--primary-1),var(--primary-2));
+      width:36px;
+      height:36px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow:
+        0 6px 16px rgba(255,122,154,0.28),
+        0 0 0 3px rgba(255,255,255,0.8);
+      opacity:0;
+      transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+      transform:scale(0.7) rotate(-15deg);
+      font-style:italic;
     }
-  </style>
+    
+    .polaroid:hover .photo-number{
+      opacity:1;
+      transform:scale(1) rotate(0deg);
+    }
+    
+    /* ===== HOVER ===== */
+    .polaroid:hover{
+      transform:translateY(-18px) scale(1.06);
+      z-index:10;
+    }
+    
+    /* ===== ลบตำแหน่งบังคับเก่าทั้งหมด ===== */
+    .photo-1,
+    .photo-2,
+    .photo-3,
+    .photo-4{
+      top: auto !important;
+      left: auto !important;
+      transform: none !important;
+      position: relative !important;
+    }
+    
+    
+        /* Question Box */
+        .question{display:flex;flex-direction:column;align-items:center;gap:14px;padding:48px 32px;text-align:center;animation:slideInFrame 0.38s ease-out}
+        .question h2{font-size:2rem;margin:0;color:var(--primary-1);font-weight:700;letter-spacing:-0.5px}
+        .controls{display:flex;gap:24px;align-items:center;margin-top:28px;justify-content:center}
+    
+        button{border:0;padding:14px 36px;border-radius:999px;font-family:'Mali',cursive;font-size:1.1rem;cursor:pointer;box-shadow:var(--shadow-sm);transition:all .28s cubic-bezier(0.34,1.56,0.64,1);font-weight:700;letter-spacing:-0.3px}
+        .btn-yes{background:linear-gradient(135deg,var(--primary-1),var(--primary-2));color:#fff;box-shadow:0 12px 32px rgba(255,122,154,0.28);position:relative;overflow:hidden}
+        .btn-yes::before{content:"";position:absolute;inset:0;background:radial-gradient(circle,rgba(255,255,255,0.3),transparent 70%);opacity:0}
+        .btn-yes:hover{transform:scale(1.1);box-shadow:0 16px 42px rgba(255,122,154,0.38)}
+        .btn-yes:active{transform:scale(0.98)}
+        .btn-no{background:linear-gradient(135deg,#f0e6eb,#f8f0f5);color:var(--text);border:1.5px solid #e8d6e2;font-weight:600}
+        .btn-no:hover{background:#e8d6e2;box-shadow:var(--shadow);transform:translateY(-2px)}
+        .btn-no:active{transform:translateY(0)}
+    
+        /* Accepted View & Music Box */
+        .accepted-view{display:none;animation:fadeIn 0.8s ease-out}
+        .accepted-view.active{display:block !important}
+        .congrats-box{text-align:center;padding:40px 32px;background:linear-gradient(135deg,rgba(255,255,255,0.95),rgba(255,250,252,0.95));border-radius:22px;border:2px solid var(--accent);box-shadow:var(--shadow-lg);animation:slideInFrame 0.38s ease-out}
+        .congrats-box h2 {color:var(--primary-1);font-size:2.2rem;margin:0 0 12px;font-weight:700;letter-spacing:-0.5px}
+        .congrats-box p {color:var(--text);font-size:1.1rem;margin:8px 0;line-height:1.6;font-weight:500}
+        
+        /* Music Box Style */
+        .music-box {margin-top:28px;background:linear-gradient(135deg,rgba(255,209,220,0.4),rgba(255,235,242,0.6));padding:20px;border-radius:18px;display:flex;align-items:center;gap:18px;box-shadow:var(--shadow-sm);border:1.5px solid var(--accent);transition:all .35s cubic-bezier(0.34,1.56,0.64,1)}
+        .music-box:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
+        .album-cover {width:68px;height:68px;border-radius:50%;background-image: url('https://cdn.discordapp.com/attachments/1340708357618794536/1448674040414994432/https3A2F2Fimages.png?ex=693c1e56&is=693accd6&hm=796c955066554c1caa526f7312af2a9de0c10bd4a0472cad35585f34d0435a05');background-size:cover;background-position:center;border:3px solid #fff;box-shadow:0 6px 16px rgba(255,122,154,0.25);animation:spin 3s linear infinite;flex-shrink:0}
+        .song-info {text-align:left;flex:1}
+        .song-title {font-weight:700;color:var(--primary-1);font-size:1.05rem;margin:0;letter-spacing:-0.3px}
+        .artist-name {font-size:0.95rem;color:var(--muted);margin:4px 0 0}
+        .playing-bar {margin-top:8px;height:5px;background:rgba(255,122,154,0.2);border-radius:3px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,0.1)}
+        .playing-bar-fill {height:100%;background:linear-gradient(90deg,var(--primary-1),var(--primary-2));width:0%;animation:progress 20s linear infinite;border-radius:3px}
+    
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes progress { 0% { width: 0%; } 100% { width: 100%; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    
+        /* Floating Hearts */
+        .floating-heart {
+          position: fixed;
+          font-size: 24px;
+          pointer-events: none;
+          animation: float-up 3s ease-in forwards;
+          z-index: 5;
+        }
+    
+        @keyframes float-up {
+          0% {
+            opacity: 1;
+            transform: translateY(0) translateX(0) scale(1);
+          }
+          100% {
+            opacity: 0;
+            transform: translateY(-100vh) translateX(50px) scale(0.5);
+          }
+        }
+    
+        /* Heart Cursor Trail */
+        .heart-trail {position:fixed;font-size:20px;pointer-events:none;animation:trail-fade 0.7s ease-out forwards;z-index:5;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.08))}
+        @keyframes trail-fade {0% {opacity:1;transform:translate(0,0) scale(1);filter:drop-shadow(0 2px 8px rgba(255,122,154,0.4))}50% {opacity:0.8}100% {opacity:0;transform:translate(0,24px) scale(0.5);filter:drop-shadow(0 0 0 rgba(255,122,154,0))}}
+    
+        /* Card Entrance Animation (unified with slideInFrame) */
+        .card {animation:slideInFrame 0.38s ease-out backwards}
+        .card:nth-child(1) { animation-delay: 0s; }
+        .card:nth-child(2) { animation-delay: 0.1s; }
+        .card:nth-child(3) { animation-delay: 0.2s; }
+        .card:nth-child(4) { animation-delay: 0.3s; }
+        .card:nth-child(5) { animation-delay: 0.4s; }
+    
+        /* Button Animations */
+        .btn-yes {position:relative;overflow:hidden}
+    
+        /* Message Cards */
+        .message-card {
+          background: linear-gradient(135deg,rgba(255,235,242,0.8),rgba(255,250,252,0.9));
+          border-left:5px solid var(--primary-1);
+          padding:22px;
+          border-radius:14px;
+          margin:15px 0;
+          animation:messageSlide 0.5s ease-out backwards;
+          box-shadow:var(--shadow-sm);
+          border:1px solid rgba(255,209,220,0.4);
+          transition:all .35s cubic-bezier(0.34,1.56,0.64,1);
+          display:flex;
+          gap:12px;
+          align-items:flex-start
+        }
+        .message-card:hover{transform:translateX(4px);box-shadow:var(--shadow)}
+        .message-card .emoji {font-size:1.8rem;flex-shrink:0;display:flex;align-items:center}
+        .message-card strong {color:var(--primary-1);font-weight:600;display:block;margin-bottom:4px}
+        .message-card p{margin:0;color:var(--text);line-height:1.5;font-weight:500}
+    
+        @keyframes messageSlide {
+          from {
+            opacity: 0;
+            transform: translateX(-30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+    
+        .message-card:nth-of-type(1) { animation-delay: 0s; }
+        .message-card:nth-of-type(2) { animation-delay: 0.1s; }
+        .message-card:nth-of-type(3) { animation-delay: 0.2s; }
+    
+        /* Love List */
+        .love-items {display:grid;grid-template-columns:1fr;gap:14px;margin-top:15px}
+        .love-item {display:flex;align-items:center;gap:16px;padding:18px;background:linear-gradient(135deg,rgba(255,235,242,0.6),rgba(255,245,248,0.8));border-radius:13px;border:1px solid rgba(255,209,220,0.5);animation:itemBounce 0.5s ease-out backwards;box-shadow:var(--shadow-sm);transition:all .35s cubic-bezier(0.34,1.56,0.64,1)}
+        .love-item:hover{transform:translateX(6px);box-shadow:var(--shadow)}
+        .love-item .emoji {font-size:1.8rem;flex-shrink:0}
+        .love-item span {color:var(--text);font-weight:600;font-size:1.05rem;flex:1}
+    
+        @keyframes itemBounce {
+          from {
+            opacity: 0;
+            transform: scale(0.8) translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateX(0);
+          }
+        }
+    
+        .love-item:nth-child(1) { animation-delay: 0s; }
+        .love-item:nth-child(2) { animation-delay: 0.1s; }
+        .love-item:nth-child(3) { animation-delay: 0.2s; }
+        .love-item:nth-child(4) { animation-delay: 0.3s; }
+        .love-item:nth-child(5) { animation-delay: 0.4s; }
+        .love-item:nth-child(6) { animation-delay: 0.5s; }
+    
+        /* Congrats Image */
+        .congrats-img {width:100%;max-width:400px;border-radius:15px;margin-top:15px}
+        .image-credit {text-align:center;font-size:0.85rem;color:var(--muted);margin-top:16px;font-style:italic;font-weight:500;letter-spacing:-0.2px}
+        .shy-text {
+          font-size: 0.8rem;
+          color: #aaa;
+          margin-top: 10px;
+        }
+    
+        /* Accessibility */
+        button:focus-visible {
+          outline: 2px solid var(--primary-1);
+          outline-offset: 2px;
+        }
+    
+        /* Responsive */
+        /* Tablet and Mobile Responsive */
+        @media (max-width:768px){
+          .wrap{margin:60px auto;padding:24px;max-width:100%;border-radius:24px}
+          header h1{font-size:1.8rem}
+          .question h2{font-size:1.8rem}
+          .congrats-box h2{font-size:2rem}
+          .gallery{grid-template-columns:1fr 1fr}
+          .controls{gap:16px;padding:0 16px}
+          button{padding:12px 28px;font-size:1rem}
+        }
+    
+        @media (max-width:600px){
+          .wrap{margin:50px auto 60px;padding:20px;padding-bottom:100px}
+          .bg-decor .blob.a{width:280px;height:280px;left:-100px;top:-60px}
+          .bg-decor .blob.b{width:220px;height:220px;right:-80px;bottom:-60px}
+          header h1{font-size:1.6rem;letter-spacing:0}
+          header p{font-size:0.95rem}
+          .envelope{font-size:64px}
+          .landing-title{font-size:1.6rem;letter-spacing:0}
+          .gallery{grid-template-columns:1fr;gap:32px 24px;padding:8px}
+          .polaroid{padding:16px}
+          .photo-number{font-size:0.9rem;width:32px;height:32px;top:14px;right:14px}
+          .polaroid:hover{transform:translateY(-16px) scale(1.06)}
+          .timeline{padding-left:20px}
+          .timeline::before{left:4px}
+          .timeline-item{padding:16px 18px;margin:14px 0}
+          .timeline-item .dot{left:-4px;top:20px;width:12px;height:12px}
+          .question{padding:32px 20px;gap:12px}
+          .question h2{font-size:1.5rem}
+          .controls{flex-direction:column;gap:12px;margin-top:20px}
+          button{width:100%;padding:12px 24px;font-size:1rem}
+          .message-card{padding:16px;gap:10px}
+          .message-card .emoji{font-size:1.6rem}
+          .love-items{gap:10px}
+          .love-item{padding:14px;gap:12px}
+          .love-item .emoji{font-size:1.6rem}
+          .music-box{flex-direction:column;gap:12px;padding:16px}
+          .album-cover{width:60px;height:60px;border:2px solid #fff}
+          .song-info{text-align:center}
+        }
+    </style>
 </head>
+
 <body>
 
-  <div class="bg-decor">
-    <div class="blob a"></div>
-    <div class="blob b"></div>
-  </div>
+    <div class="bg-decor">
+        <div class="blob a"></div>
+        <div class="blob b"></div>
+    </div>
 
-  <div id="landing" onclick="openLetter()">
-    <div class="envelope">💌</div>
-    <div class="landing-title">มีเรื่องอยากจะบอก...</div>
-    <div class="landing-sub">แตะเพื่อเปิดจดหมาย</div>
-  </div>
+    <div id="landing" onclick="openLetter()">
+        <div class="envelope">💌</div>
+        <div class="landing-title">มีเรื่องอยากจะบอก...</div>
+        <div class="landing-sub">แตะเพื่อเปิดจดหมาย</div>
+    </div>
 
-  <div class="wrap" id="page" style="display:none; opacity:0; transition:opacity 1s ease;">
-    <main>
-      
-      <section class="card">
-        <header>
-          <h1>ถึง... ฟาาาาาาาา</h1>
-          <p>เลามีเรื่องสำคัญอยากจะบอก ลองเลื่อนลงไปดูนะ 👇</p>
-        </header>
-      </section>
+    <div class="wrap" id="page" style="display:none; opacity:0; transition:opacity 1s ease;" role="main">
+        <main>
 
-      <section class="card timeline">
-        <h2>📖 เรื่องราวของเรา</h2>
-        <div class="timeline-item">
-          <div class="dot"></div>
-          <h3>Day 1 — วันแรกที่เจอ</h3>
-          <p>วันแรกที่เจอกันไม่คิดว่าจะรักได้นานถึงขนาดนี้นะเนี่ยย นึกว่ามาเล่นๆ แต่ถึงขนาดนี้ก็โอ้ววว เกินคาดเยอะแร้วว</p>
-        </div>
-        <div class="timeline-item">
-          <div class="dot"></div>
-          <h3>ความประทับใจ</h3>
-          <p>ภูมิจัยยยย คนอะไรน่ารักได้ทุกวัน ทุกเวลา แก้มก็น่าบีบอีกอ่ยยยย</p>
-        </div>
-        <div class="timeline-item">
-          <div class="dot"></div>
-          <h3>วันนี้...</h3>
-          <p>เลาอยากมีตะเองอยู่ไปนานๆ เรยยย คบกันไปยาวๆ มีอะไรไม่เข้าใจกันก็ปรับความเข้าใจกัน อยู่กันไปเรื่อยๆ เรยนะะะ</p>
-        </div>
-      </section>
+            <section class="card section-slide active" data-slide="0">
+                <header>
+                    <h1>ถึง... ฟาาาาาาาา</h1>
+                    <p>เลามีเรื่องสำคัญอยากจะบอก ลองกดถัดไปดูน้าาา 👇</p>
+                </header>
+            </section>
 
-      <section class="card">
-        <h2>📸 ความทรงจำ</h2>
-        <div class="gallery">
-          <div class="polaroid" style="transform:rotate(-2deg)">
-            <img src="https://cdn.discordapp.com/attachments/1340708357618794536/1448669485081821204/3831F601-8862-4F85-8D32-DCCDA0AB042A.jpeg?ex=693c1a18&is=693ac898&hm=7a1d01d7ee6b96aeacbed4cc1f7a911fef86a5bef698ad79f45db27f56f00d44&">
-          </div>
-          <div class="polaroid" style="transform:rotate(2deg)">
-            <img src="https://cdn.discordapp.com/attachments/1340708357618794536/1448669483844505693/3DEB7109-3EB4-4381-80BB-0D0B1EC8949C.jpeg?ex=693c1a17&is=693ac897&hm=993c0c0fcd96898f8b4802ca3672e09a105b58fdbb1796194f384557ece86b2f&">
-          </div>
-          <div class="polaroid" style="transform:rotate(-1deg)">
-            <img src="https://cdn.discordapp.com/attachments/1340708357618794536/1448669484238766293/2250099F-C982-40D3-8011-897AAA08B42C.jpeg?ex=693c1a18&is=693ac898&hm=cb3436a8d9acb2d20b2f143586f812033555bd9bb209042edd2d4983a93916c7&">
-          </div>
-          <div class="polaroid" style="transform:rotate(3deg)">
-            <img src="https://cdn.discordapp.com/attachments/1340708357618794536/1448669484666589235/D39A08C5-649E-4F56-88D9-B928DA10A1AA.jpeg?ex=693c1a18&is=693ac898&hm=916778851518323b7fa19f99aff571408a5a0d9618a597e0d508ff7969363083&">
-          </div>
-        </div>
-        <p style="text-align:center; font-size:0.9rem; color:#9a5a62; margin-top:15px;">(รูปแสนอุบาทท 56466518)</p>
-      </section>
-
-      <section class="card question" id="questionCard">
-        <h2>เป็นแฟนกันนะ? ❤️</h2>
-        <p>ให้เลาได้ดูแลเปงห่วงตะเองง เป็นคนข้างๆ เธอ จะได้ม้ายยย?</p>
-
-        <div class="controls">
-          <button class="btn-yes" onclick="sayYes()">ตกลงสิ!</button>
-          <button class="btn-no" id="btnNo" onmouseover="moveBtn()" ontouchstart="moveBtn()">อาจจะยังน้าา</button>
-        </div>
-        <p style="font-size:0.8rem; color:#aaa; margin-top:10px;">(ถ้าตอบตกลง เดี๋ยวพี่จะทำให้มันพิเศษมั้ยไม่รู้ววว)</p>
-      </section>
-
-      <div class="accepted-view" id="acceptedView">
-        <div class="congrats-box">
-            
-            <div class="music-box">
-                <div class="album-cover"></div>
-                <div class="song-info">
-                    <div class="song-title">Hold Me Down</div>
-                    <div class="artist-name">Daniel Caesar</div>
-                    <div class="playing-bar"><div class="playing-bar-fill"></div></div>
+            <section class="card timeline section-slide" data-slide="1">
+                <h2>📖 เรื่องราวของเรา</h2>
+                <div class="timeline-item">
+                    <div class="dot"></div>
+                    <h3>Day 1 — วันแรกที่เจอ</h3>
+                    <p>วันแรกที่เจอกันไม่คิดว่าจะรักได้นานถึงขนาดนี้นะเนี่ยย นึกว่ามาเล่นๆ แต่ถึงขนาดนี้ก็โอ้ววว เกินคาดเยอะแร้วว</p>
                 </div>
-                <div style="font-size:1.5rem;">🎵</div>
+                <div class="timeline-item">
+                    <div class="dot"></div>
+                    <h3>ความประทับใจ</h3>
+                    <p>ภูมิจัยยยย คนอะไรน่ารักได้ทุกวัน ทุกเวลา แก้มก็น่าบีบอีกอ่ยยยย</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="dot"></div>
+                    <h3>วันนี้...</h3>
+                    <p>เลาอยากมีตะเองอยู่ไปนานๆ เรยยย คบกันไปยาวๆ มีอะไรไม่เข้าใจกันก็ปรับความเข้าใจกัน อยู่กันไปเรื่อยๆ เรยนะะะ</p>
+                </div>
+            </section>
+
+            <section class="card section-slide" data-slide="2">
+                <h2>💬 คำพูดจากใจ</h2>
+                <div class="message-card">
+                    <span class="emoji">💕</span>
+                    <div><strong>จริงแล้วว</strong> เลารักตะเองมากๆเรยย อาจจะมีบางครั้งไม่เข้าใจกัน เหวี่ยงใส่กันบ้าง แต่เราก็เข้าใจกันเหมือนเดิมม</div>
+                </div>
+                <div class="message-card">
+                    <span class="emoji">🥰</span>
+                    <div><strong>ทุกครั้ง</strong> ที่เห็นหน้า คนอะไรสวยขนาดเน้ จะชม!! ไม่ต้องสวนว่าตรงไหน ทุกตรง!!</div>
+                </div>
+                <div class="message-card">
+                    <span class="emoji">✨</span>
+                    <div><strong>ขอบคุณ</strong> ที่มีน้องงง ไม่ว่าจะเป็นวันดีหรือวันไม่ดี น้องก็อยู่กับพี่เสมอเรยย</div>
+                </div>
+            </section>
+
+            <section class="card section-slide" data-slide="3">
+                <h2 style="font-size:1.8rem;margin-bottom:24px;text-align:center;letter-spacing:-0.3px">📸 ความทรงจำของเรา</h2>
+                <p style="text-align:center;color:var(--muted);margin-bottom:32px;font-size:0.95rem;font-weight:500">ช่วงเวลาที่มีเธอข้างๆ เลา ทำให้ชีวิตสวยขึ้น</p>
+                <div class="gallery" role="region" aria-label="Photo memories gallery">
+                    <div class="polaroid photo-1" style="transform:rotate(-5deg)">
+                        <img src="https://cdn.discordapp.com/attachments/1340708357618794536/1448669485081821204/3831F601-8862-4F85-8D32-DCCDA0AB042A.jpeg?ex=693c1a18&is=693ac898&hm=7a1d01d7ee6b96aeacbed4cc1f7a911fef86a5bef698ad79f45db27f56f00d44&" alt="Memory photo 1" loading="lazy">
+                        <div class="photo-number">01</div>
+                    </div>
+                    <div class="polaroid photo-2" style="transform:rotate(4deg) translateY(-8px)">
+                        <img src="https://cdn.discordapp.com/attachments/1340708357618794536/1448669483844505693/3DEB7109-3EB4-4381-80BB-0D0B1EC8949C.jpeg?ex=693c1a17&is=693ac897&hm=993c0c0fcd96898f8b4802ca3672e09a105b58fdbb1796194f384557ece86b2f&" alt="Memory photo 2" loading="lazy">
+                        <div class="photo-number">02</div>
+                    </div>
+                    <div class="polaroid photo-3" style="transform:rotate(-3deg) translateY(4px)">
+                        <img src="https://cdn.discordapp.com/attachments/1340708357618794536/1448669484238766293/2250099F-C982-40D3-8011-897AAA08B42C.jpeg?ex=693c1a18&is=693ac898&hm=cb3436a8d9acb2d20b2f143586f812033555bd9bb209042edd2d4983a93916c7&" alt="Memory photo 3" loading="lazy">
+                        <div class="photo-number">03</div>
+                    </div>
+                    <div class="polaroid photo-4" style="transform:rotate(6deg) translateY(-12px)">
+                        <img src="https://cdn.discordapp.com/attachments/1340708357618794536/1448669484666589235/D39A08C5-649E-4F56-88D9-B928DA10A1AA.jpeg?ex=693c1a18&is=693ac898&hm=916778851518323b7fa19f99aff571408a5a0d9618a597e0d508ff7969363083&" alt="Memory photo 4" loading="lazy">
+                        <div class="photo-number">04</div>
+                    </div>
+                </div>
+                <p class="image-credit" style="margin-top:28px">(รูปแสนอุบาทท 56466518)</p>
+            </section>
+
+            <section class="card section-slide" data-slide="4">
+                <h2>❤️ สิ่งที่เลารักเกี่ยวกับเธอ</h2>
+                <div class="love-items">
+                    <div class="love-item">
+                        <div class="icon">😊</div>
+                        <div class="text"><strong>รอยยิ้ม</strong> คนอะไรรสวยม้ากกก ทุกครั้งที่เห็นอยากจะให้ยิ้มอยู่ตลอด ไม่อยากให้หน้าบูด</div>
+                    </div>
+                    <div class="love-item">
+                        <div class="icon">🎵</div>
+                        <div class="text"><strong>เสียงน้อง</strong> เสียง เอ่ออ น่ารักก เลาช่บโดนบ่นน มันฟิรร แต่ไม่ขอแบบโดนบ่นวีนจริงๆจังๆนะะ</div>
+                    </div>
+                    <div class="love-item">
+                        <div class="icon">🧠</div>
+                        <div class="text"><strong>ความคิด</strong> บางทีใจเราตรงกันบ่อยเรยนน้าาาา ดีแระะะ</div>
+                    </div>
+                    <div class="love-item">
+                        <div class="icon">🌟</div>
+                        <div class="text"><strong>เป็นห่วง</strong> ห่วงตัวเองบ้างนะะ อะไรที่สั่งให้งดก็งดบ้างง เป็นห่วงทั้งนั้นแหละะ</div>
+                    </div>
+                    <div class="love-item">
+                        <div class="icon">💪</div>
+                        <div class="text"><strong>ความเข้มแข็ง</strong> น้องโคตรเก่งอ่ะะ แต่ละเดือนที่ผ่านมาก็เจอแต่หนักๆ แต่ก็ผ่านมาได้หมดเรยย</div>
+                    </div>
+                    <div class="love-item">
+                        <div class="icon">🫶</div>
+                        <div class="text"><strong>ส่วนตัวว</strong> น้องเคยบอกว่า ถ้าคบกับพี่กลัวจะงี่เง่าแล้วพี่ไม่โอเคไรงี้ช่ะะ พี่งี่เง่าตั้งแต่เริ่มคุยกับน้องแล้วเว้ยย</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card question section-slide" id="questionCard" data-slide="5">
+                <h2>เป็นแฟนกันม้ายย? ❤️</h2>
+                <p>ให้เลาได้ดูแลเปงห่วงตะเองง เป็นคนข้างๆ ตะเองง จะได้ม้ายยย?</p>
+
+                <div class="controls">
+                    <button class="btn-yes" onclick="sayYes()" aria-label="Accept confession">ตกลง!!</button>
+                    <button class="btn-no" id="btnNo" aria-label="Maybe later">อาจจะยังน้าา</button>
+                </div>
+                <p class="shy-text">(ถ้าตอบตกลง เดี๋ยวพี่จะทำให้มันพิเศษแหละมั้ยไม่รู้ววว)</p>
+            </section>
+
+            <div class="accepted-view" id="acceptedView" style="display:none;">
+                <div class="congrats-box">
+                    <div class="music-box">
+                        <div class="album-cover"></div>
+                        <div class="song-info">
+                            <div class="song-title">Hold Me Down</div>
+                            <div class="artist-name">Daniel Caesar</div>
+                            <div class="playing-bar">
+                                <div class="playing-bar-fill"></div>
+                            </div>
+                        </div>
+                        <div style="font-size:1.5rem;">🎵</div>
+                    </div>
+
+                    <h2 style="margin-top:20px;">เย้! เลาได้เปงแฟนกันแล้ว 🥳</h2>
+                    <p>ขอบคุณนะะะ จะดูแลให้ดีที่สุดไปเรยยยยยย</p>
+
+                    <img src="https://i.pinimg.com/originals/6a/d0/7b/6ad07bc7872b7f4cafc7f14ad7638306.gif" style="width:100%; max-width:400px; border-radius:15px; margin-top:15px;">
+                </div>
             </div>
 
-            <h2 style="margin-top:20px;">เย้! เลาได้เปงแฟนกันแล้ว 🥳</h2>
-            <p>ขอบคุณนะะะ จะดูแลให้ดีที่สุดไปเรยยยยยย</p>
-            
-            <img src="https://i.pinimg.com/originals/6a/d0/7b/6ad07bc7872b7f4cafc7f14ad7638306.gif" style="width:100%; max-width:400px; border-radius:15px; margin-top:15px;">
+        </main>
+    </div>
+
+    <!-- Navigation Carousel -->
+    <div class="carousel-nav" id="carouselNav" style="display:none;">
+        <button class="nav-prev" onclick="prevSlide()">← ย้อนกลับ</button>
+        <div class="carousel-progress">
+            <span class="progress-text" id="progressText">1 / 6</span>
+            <div id="progressDots"></div>
         </div>
-      </div>
+        <button class="nav-next" onclick="nextSlide()">ถัดไป →</button>
+    </div>
 
-    </main>
-  </div>
+    <audio id="bg-music">
+        <source src="https://cdn.discordapp.com/attachments/1340708357618794536/1448670608643850333/Hold_Me_Down.mp3?ex=693d6ca4&is=693c1b24&hm=4eabdf54bf3bc19b8d30b6c4e509a686327277a01ff59eef960ae5949e55eb80&" type="audio/mpeg">
+    </audio>
 
-  <audio id="bg-music">
-    <source src="https://cdn.discordapp.com/attachments/1340708357618794536/1448670608643850333/Hold_Me_Down.mp3?ex=693c1b24&is=693ac9a4&hm=3d236ce4c0053e39ca0382085e28ffc277a5f427291a329732508bb7dc74a9c1&" type="audio/mpeg">
-  </audio>
-
-  <script>
-    // เปิดหน้าเว็บ
-    function openLetter() {
-        const landing = document.getElementById('landing');
-        const page = document.getElementById('page');
-        landing.style.opacity = '0';
-        setTimeout(() => {
-            landing.style.display = 'none';
-            page.style.display = 'block';
-            setTimeout(() => page.style.opacity = '1', 50);
-        }, 800);
-    }
-
-    // ปุ่มหนี
-    function moveBtn() {
-        const btn = document.getElementById('btnNo');
-        const x = Math.random() * (window.innerWidth - btn.offsetWidth - 20);
-        const y = Math.random() * (window.innerHeight - btn.offsetHeight - 20);
-        btn.style.position = 'fixed';
-        btn.style.left = `${Math.max(10, x)}px`;
-        btn.style.top = `${Math.max(10, y)}px`;
-    }
-
-    // กดตกลง
-    function sayYes() {
-        // 1. ซ่อนคำถาม
-        document.getElementById('questionCard').style.display = 'none';
-        
-        // 2. แสดงหน้าขอบคุณ + Music Box
-        const view = document.getElementById('acceptedView');
-        view.style.display = 'block';
-        view.scrollIntoView({behavior: 'smooth'});
-
-        // 3. เล่นเพลงทันที
-        const audio = document.getElementById('bg-music');
-        audio.volume = 0.5;
-        audio.play().catch(e => console.log("Audio play failed:", e));
-
-        // 4. เอฟเฟกต์พลุ
-        confetti({particleCount: 100, spread: 70, origin: { y: 0.6 }});
-        setTimeout(() => confetti({particleCount: 100, spread: 100, origin: { y: 0.6 }}), 500);
-    }
-  </script>
+    <script>
+        // 🎠 Carousel/Slide Management
+        let currentSlide = 0;
+        const totalSlides = 6;
+        let isTransitioning = false; // prevent double navigation during animation
+    
+        function updateCarousel() {
+          const slides = document.querySelectorAll('.section-slide');
+          slides.forEach((slide, index) => {
+            if (index === currentSlide) {
+              slide.classList.add('active');
+            } else {
+              slide.classList.remove('active');
+            }
+          });
+    
+          // Update controls (dots/buttons/text) separately to avoid re-triggering slide animations
+          updateControls();
+    
+          // Scroll to top (instant to avoid visual jump/flicker)
+          window.scrollTo({ top: 0, behavior: 'auto' });
+        }
+    
+        function nextSlide() {
+          if (isTransitioning) return;
+          if (currentSlide < totalSlides - 1) {
+            isTransitioning = true;
+            currentSlide++;
+            updateCarousel();
+            setTimeout(() => { isTransitioning = false; updateControls(); }, 650);
+          }
+        }
+    
+        function prevSlide() {
+          if (isTransitioning) return;
+          if (currentSlide > 0) {
+            isTransitioning = true;
+            currentSlide--;
+            updateCarousel();
+            setTimeout(() => { isTransitioning = false; updateControls(); }, 650);
+          }
+        }
+    
+        function goToSlide(index) {
+          if (isTransitioning || index === currentSlide) return;
+          isTransitioning = true;
+          currentSlide = index;
+          updateCarousel();
+          setTimeout(() => { isTransitioning = false; updateControls(); }, 650);
+        }
+    
+        // Update only controls: progress dots, progress text, and button disabled state
+        function updateControls() {
+          const progressDots = document.getElementById('progressDots');
+          if (progressDots) {
+            progressDots.innerHTML = '';
+            for (let i = 0; i < totalSlides; i++) {
+              const dot = document.createElement('div');
+              dot.className = 'progress-dot' + (i === currentSlide ? ' active' : '');
+              dot.onclick = () => goToSlide(i);
+              progressDots.appendChild(dot);
+            }
+          }
+    
+          const progressText = document.getElementById('progressText');
+          if (progressText) progressText.textContent = `${currentSlide + 1} / ${totalSlides}`;
+    
+          const prevBtn = document.querySelector('.nav-prev');
+          const nextBtn = document.querySelector('.nav-next');
+          if (prevBtn) prevBtn.disabled = currentSlide === 0 || isTransitioning;
+          if (nextBtn) nextBtn.disabled = currentSlide === totalSlides - 1 || isTransitioning;
+        }
+    
+        // ✨ Floating Hearts Background
+        function createFloatingHeart() {
+          const heart = document.createElement('div');
+          heart.className = 'floating-heart';
+          heart.innerHTML = '❤️';
+          heart.style.left = Math.random() * window.innerWidth + 'px';
+          heart.style.top = window.innerHeight + 'px';
+          document.body.appendChild(heart);
+          
+          setTimeout(() => heart.remove(), 3000);
+        }
+    
+        // Create hearts every 1.5s
+        setInterval(createFloatingHeart, 1500);
+    
+        // 🖱️ Heart Cursor Trail
+        document.addEventListener('mousemove', (e) => {
+          if (Math.random() > 0.7) {
+            const trail = document.createElement('div');
+            trail.className = 'heart-trail';
+            trail.innerHTML = '💕';
+            trail.style.left = e.clientX + 'px';
+            trail.style.top = e.clientY + 'px';
+            document.body.appendChild(trail);
+            
+            setTimeout(() => trail.remove(), 800);
+          }
+        });
+    
+        // 💌 Open Letter
+        function openLetter() {
+            const landing = document.getElementById('landing');
+            const page = document.getElementById('page');
+            const carouselNav = document.getElementById('carouselNav');
+            landing.style.opacity = '0';
+            setTimeout(() => {
+                landing.style.display = 'none';
+                page.style.display = 'block';
+                carouselNav.style.display = 'flex';
+                setTimeout(() => page.style.opacity = '1', 50);
+                updateCarousel();
+            }, 800);
+        }
+    
+        // 🎯 Move button on hover
+        function moveBtn() {
+            const btn = document.getElementById('btnNo');
+            if (!btn) return;
+            // ensure button has size before computing bounds
+            const bw = btn.offsetWidth || 80;
+            const bh = btn.offsetHeight || 40;
+            // leave padding from edges and reserve bottom space for nav
+            const padding = 12;
+            const reserveBottom = 120; // don't place behind nav
+            const maxX = Math.max(padding, window.innerWidth - bw - padding);
+            const maxY = Math.max(padding, window.innerHeight - bh - reserveBottom);
+            const x = Math.random() * (maxX - padding) + padding;
+            const y = Math.random() * (maxY - padding) + padding;
+            btn.style.position = 'fixed';
+            btn.style.zIndex = 1200;
+            btn.style.transition = 'left .28s ease, top .28s ease';
+            btn.style.left = `${Math.round(x)}px`;
+            btn.style.top = `${Math.round(y)}px`;
+        }
+    
+        // 🎊 Enhanced Confetti
+        function celebrateWithConfetti() {
+          // First burst
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 }
+          });
+          
+          // Second burst
+          setTimeout(() => {
+            confetti({
+              particleCount: 80,
+              spread: 120,
+              origin: { y: 0.5 }
+            });
+          }, 300);
+    
+          // Third burst
+          setTimeout(() => {
+            confetti({
+              particleCount: 60,
+              spread: 100,
+              origin: { y: 0.7 },
+              startVelocity: 30
+            });
+          }, 600);
+    
+          // Heart confetti
+          setTimeout(() => {
+            const heartConfetti = () => {
+              for (let i = 0; i < 5; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'floating-heart';
+                heart.innerHTML = '💕';
+                heart.style.left = Math.random() * window.innerWidth + 'px';
+                heart.style.top = '0px';
+                document.body.appendChild(heart);
+                setTimeout(() => heart.remove(), 3000);
+              }
+            };
+            heartConfetti();
+          }, 1000);
+        }
+    
+        // ✅ Accept Confession
+        function sayYes() {
+            // 1. Toggle views via .active (accepted view is part of slide 5, not a separate carousel slide)
+            const q = document.getElementById('questionCard');
+            const a = document.getElementById('acceptedView');
+            if (q) q.classList.remove('active');
+            if (a) a.classList.add('active');
+    
+            // Stay on slide 5 state and disable Next button
+            const nextBtn = document.querySelector('.nav-next');
+            if (nextBtn) nextBtn.disabled = true;
+    
+            // 2. Hide navigation after transition
+            setTimeout(() => {
+                const nav = document.getElementById('carouselNav');
+                if (nav) nav.style.display = 'none';
+            }, 700);
+    
+            // 3. Play music (user gesture from button click should allow play)
+            const audio = document.getElementById('bg-music');
+            if (audio) {
+              audio.volume = 0.5;
+              audio.play().catch(e => console.log('Audio play failed:', e));
+            }
+    
+            // 4. Start celebration
+            celebrateWithConfetti();
+    
+            // 5. Create floating emojis
+            const emojis = ['💕', '✨', '💖', '🎊', '🥰'];
+            for (let i = 0; i < 10; i++) {
+              setTimeout(() => {
+                const emoji = document.createElement('div');
+                emoji.className = 'floating-heart';
+                emoji.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
+                emoji.style.left = Math.random() * window.innerWidth + 'px';
+                emoji.style.top = window.innerHeight + 'px';
+                emoji.style.fontSize = Math.random() * 30 + 20 + 'px';
+                document.body.appendChild(emoji);
+                setTimeout(() => emoji.remove(), 3000);
+              }, i * 150);
+            }
+        }
+    
+        // 🎈 Setup after page loads
+        document.addEventListener('DOMContentLoaded', () => {
+          // Make "No" button interactive
+          const btnNo = document.getElementById('btnNo');
+          btnNo.addEventListener('mouseenter', moveBtn);
+          
+          // Initialize carousel dots
+          updateCarousel();
+        });
+    </script>
 
 </body>
+
 </html>
