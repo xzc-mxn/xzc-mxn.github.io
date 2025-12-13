@@ -64,7 +64,7 @@
           margin:70px auto;
           padding:36px;
           z-index:10;
-          padding-bottom:110px;
+          padding-bottom:36px;
           background: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(255,248,250,0.88));
           border-radius: 28px;
           box-shadow: var(--shadow-lg);
@@ -108,7 +108,7 @@
         }
     
         /* Navigation Controls */
-        .carousel-nav {position:fixed;bottom:30px;left:50%;transform:translateX(-50%);z-index:30;display:flex;gap:20px;align-items:center;background:linear-gradient(135deg,rgba(255,255,255,0.97),rgba(255,250,252,0.94));padding:18px 36px;border-radius:50px;box-shadow:0 14px 44px rgba(91,28,40,0.14);backdrop-filter:blur(14px);border:1.5px solid rgba(255,255,255,0.8)}
+        .carousel-nav {position:relative;margin-top:40px;display:flex;gap:20px;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(255,255,255,0.97),rgba(255,250,252,0.94));padding:18px 36px;border-radius:50px;box-shadow:0 14px 44px rgba(91,28,40,0.14);backdrop-filter:blur(14px);border:1.5px solid rgba(255,255,255,0.8)}
         .carousel-nav button {padding:12px 28px;border-radius:28px;border:0;font-family:'Mali',cursive;font-size:1.05rem;cursor:pointer;transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1);font-weight:700;box-shadow:var(--shadow-sm)}
         .carousel-nav .nav-prev,.carousel-nav .nav-next {background:linear-gradient(135deg,var(--primary-1),var(--primary-2));color:#fff;position:relative;overflow:hidden}
         .carousel-nav .nav-prev:hover,.carousel-nav .nav-next:hover {transform:scale(1.08);box-shadow:0 8px 20px rgba(255,122,154,0.32)}
@@ -280,14 +280,14 @@
         /* Accepted View & Music Box */
         .accepted-view{display:none;animation:fadeIn 0.8s ease-out}
         .accepted-view.active{display:block !important}
-        .congrats-box{text-align:center;padding:40px 32px;background:linear-gradient(135deg,rgba(255,255,255,0.95),rgba(255,250,252,0.95));border-radius:22px;border:2px solid var(--accent);box-shadow:var(--shadow-lg);animation:slideInFrame 0.38s ease-out}
-        .congrats-box h2 {color:var(--primary-1);font-size:2.2rem;margin:0 0 12px;font-weight:700;letter-spacing:-0.5px}
-        .congrats-box p {color:var(--text);font-size:1.1rem;margin:8px 0;line-height:1.6;font-weight:500}
+        .congrats-box{text-align:center;padding:40px 32px;background:linear-gradient(135deg,rgba(255,255,255,0.98),rgba(255,250,252,0.98));border-radius:22px;border:2px solid var(--accent);box-shadow:0 20px 60px rgba(255,122,154,0.25),inset 0 1px 1px rgba(255,255,255,0.8);animation:celebrateScale 0.6s cubic-bezier(0.34,1.56,0.64,1);position:relative;overflow:hidden}
+        .congrats-box h2 {color:var(--primary-1);font-size:2.2rem;margin:0 0 12px;font-weight:700;letter-spacing:-0.5px;animation:textReveal 0.8s ease-out 0.3s both}
+        .congrats-box p {color:var(--text);font-size:1.1rem;margin:8px 0;line-height:1.6;font-weight:500;animation:textReveal 0.8s ease-out 0.5s both}
         
         /* Music Box Style */
-        .music-box {margin-top:28px;background:linear-gradient(135deg,rgba(255,209,220,0.4),rgba(255,235,242,0.6));padding:20px;border-radius:18px;display:flex;align-items:center;gap:18px;box-shadow:var(--shadow-sm);border:1.5px solid var(--accent);transition:all .35s cubic-bezier(0.34,1.56,0.64,1)}
+        .music-box {margin-top:28px;background:linear-gradient(135deg,rgba(255,209,220,0.5),rgba(255,235,242,0.7));padding:20px;border-radius:18px;display:flex;align-items:center;gap:18px;box-shadow:0 10px 30px rgba(255,122,154,0.15);border:1.5px solid var(--accent);transition:all .35s cubic-bezier(0.34,1.56,0.64,1);animation:textReveal 0.8s ease-out 0.2s both;position:relative;z-index:1}
         .music-box:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
-        .album-cover {width:68px;height:68px;border-radius:50%;background-image: url('https://cdn.discordapp.com/attachments/1340708357618794536/1448674040414994432/https3A2F2Fimages.png?ex=693c1e56&is=693accd6&hm=796c955066554c1caa526f7312af2a9de0c10bd4a0472cad35585f34d0435a05');background-size:cover;background-position:center;border:3px solid #fff;box-shadow:0 6px 16px rgba(255,122,154,0.25);animation:spin 3s linear infinite;flex-shrink:0}
+        .album-cover {width:68px;height:68px;border-radius:50%;background-image: url('https://cdn.discordapp.com/attachments/1340708357618794536/1448674040414994432/https3A2F2Fimages.png?ex=693c1e56&is=693accd6&hm=796c955066554c1caa526f7312af2a9de0c10bd4a0472cad35585f34d0435a05');background-size:cover;background-position:center;border:3px solid #fff;box-shadow:0 6px 16px rgba(255,122,154,0.25);animation:spin 15s linear infinite;flex-shrink:0}
         .song-info {text-align:left;flex:1}
         .song-title {font-weight:700;color:var(--primary-1);font-size:1.05rem;margin:0;letter-spacing:-0.3px}
         .artist-name {font-size:0.95rem;color:var(--muted);margin:4px 0 0}
@@ -297,6 +297,27 @@
         @keyframes spin { 100% { transform: rotate(360deg); } }
         @keyframes progress { 0% { width: 0%; } 100% { width: 100%; } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes celebrateScale { from { opacity: 0; transform: scale(0.8) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes textReveal { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes glow { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.6; } }
+
+        /* Spinning Wheel Styles */
+        .wheel-card {animation:slideInFrame 0.6s ease-out}
+        .wheel-container {display:flex;justify-content:center;align-items:center;margin:32px 0;position:relative}
+        .wheel {width:340px;height:340px;border-radius:50%;background:conic-gradient(from 0deg,#ff7a9a 0deg 72deg,#ffb3c6 72deg 144deg,#ffd1dc 144deg 216deg,#ff9ab8 216deg 288deg,#ffe0e8 288deg 360deg);box-shadow:0 12px 40px rgba(255,122,154,0.3),inset 0 -4px 12px rgba(0,0,0,0.1);position:relative;display:flex;align-items:center;justify-content:center;border:8px solid #fff}
+        .wheel::after {content:'';position:absolute;inset:30px;background:radial-gradient(circle,rgba(255,255,255,0.4),transparent 70%);border-radius:50%;pointer-events:none}
+        .wheel-segment {position:absolute;width:100%;height:100%;display:flex;align-items:center;justify-content:center;transform:rotate(var(--rotation));border-radius:50%}
+        .wheel-segment span {position:absolute;left:50%;top:50%;width:120px;text-align:center;font-weight:600;color:#fff;font-size:0.75rem;text-shadow:0 2px 4px rgba(0,0,0,0.2);line-height:1.5;letter-spacing:-0.3px;white-space:normal;word-wrap:break-word;transform:rotate(var(--invert)) translateY(-140px);transform-origin:center center}
+        /* New absolute labels positioned at segment center angles */
+        .wheel-label {position:absolute;left:calc(50% - 60);top:50%;width:130px;text-align:center;font-weight:700;color:#fff;font-size:0.78rem;text-shadow:0 2px 4px rgba(0,0,0,0.2);line-height:1.2;transform-origin:center center;}
+        .wheel-label {transform: rotate(calc(var(--angle) * 1deg)) translateY(-100px) rotate(calc(var(--angle) * -1deg));}
+        .wheel-pointer {position:absolute;width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-top:24px solid var(--primary-1);top:-8px;z-index:10;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2))}
+        .btn-spin {background:linear-gradient(135deg,var(--primary-1),var(--primary-2));color:#fff;padding:14px 48px;border-radius:999px;border:0;font-family:'Mali',cursive;font-size:1.15rem;cursor:pointer;font-weight:700;box-shadow:0 12px 32px rgba(255,122,154,0.28);transition:all 0.28s cubic-bezier(0.34,1.56,0.64,1);letter-spacing:-0.3px}
+        .btn-spin:hover {transform:scale(1.08);box-shadow:0 16px 42px rgba(255,122,154,0.38)}
+        .btn-spin:active {transform:scale(0.98)}
+        .btn-spin:disabled {opacity:0.6;cursor:not-allowed;transform:scale(1)}
+        @keyframes spin {from {transform:rotate(0deg)}to {transform:rotate(3600deg)}}
+        .wheel.spinning {animation:spin 3s cubic-bezier(0.25,0.46,0.45,0.94)}
     
         /* Floating Hearts */
         .floating-heart {
@@ -596,17 +617,46 @@
                 </div>
             </div>
 
-        </main>
-    </div>
+            <!-- Spinning Wheel Game Section -->
+            <div id="wheelSection" style="display:none; animation:slideInFrame 0.6s ease-out;">
+                <div class="card wheel-card">
+                    <h2 style="text-align:center;margin-bottom:24px;">🎡 จะทำอะไรกันดี? 🎡</h2>
+                    <p style="text-align:center;color:var(--muted);margin-bottom:28px;font-weight:500">หมุนล้อเพื่อตัดสินใจว่าจะทำอะไรให้ดีย์</p>
+                    
+                    <div class="wheel-container">
+                      <div class="wheel" id="spinnerWheel">
+                        <!-- Labels placed absolutely at segment centers -->
+                            <div class="wheel-label" style="--angle:36">เลี้ยงขนม 🍪</div>
+                            <div class="wheel-label" style="--angle:108">เลี้ยงน้ำหวาน 🍮</div>
+                            <div class="wheel-label" style="--angle:180">เลี้ยงไอติม 🍦</div>
+                            <div class="wheel-label" style="--angle:252">อดกิน 😤</div>
+                            <div class="wheel-label" style="--angle:324">ดูหนังกัน 🎬</div>
+                      </div>
+                        <div class="wheel-pointer"></div>
+                    </div>
 
-    <!-- Navigation Carousel -->
-    <div class="carousel-nav" id="carouselNav" style="display:none;">
-        <button class="nav-prev" onclick="prevSlide()">← ย้อนกลับ</button>
-        <div class="carousel-progress">
-            <span class="progress-text" id="progressText">1 / 6</span>
-            <div id="progressDots"></div>
+                    <div style="text-align:center;margin-top:32px;">
+                        <button class="btn-spin" onclick="spinWheel()" id="spinBtn">🎲 หมุนล้อ</button>
+                    </div>
+
+                    <div id="wheelResult" style="margin-top:24px;padding:20px;background:linear-gradient(135deg,rgba(255,235,242,0.8),rgba(255,250,252,0.9));border-radius:14px;text-align:center;display:none;animation:slideInFrame 0.4s ease-out;">
+                        <p style="color:var(--muted);font-size:0.95rem;margin:0 0 8px;">ผลที่ได้คือ... ✨</p>
+                        <h3 id="resultText" style="color:var(--primary-1);font-size:1.6rem;margin:0;font-weight:700;"></h3>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Navigation Carousel -->
+        <div class="carousel-nav" id="carouselNav" style="display:none;">
+            <button class="nav-prev" onclick="prevSlide()">← ย้อนกลับ</button>
+            <div class="carousel-progress">
+                <span class="progress-text" id="progressText">1 / 6</span>
+                <div id="progressDots"></div>
+            </div>
+            <button class="nav-next" onclick="nextSlide()">ถัดไป →</button>
         </div>
-        <button class="nav-next" onclick="nextSlide()">ถัดไป →</button>
     </div>
 
     <audio id="bg-music">
@@ -730,25 +780,45 @@
             }, 800);
         }
     
-        // 🎯 Move button on hover
+        // 🎯 Move button on hover - stays within viewport, avoids navigation bar
+        let lastMoveTime = 0;
         function moveBtn() {
             const btn = document.getElementById('btnNo');
             if (!btn) return;
-            // ensure button has size before computing bounds
-            const bw = btn.offsetWidth || 80;
-            const bh = btn.offsetHeight || 40;
-            // leave padding from edges and reserve bottom space for nav
-            const padding = 12;
-            const reserveBottom = 120; // don't place behind nav
-            const maxX = Math.max(padding, window.innerWidth - bw - padding);
-            const maxY = Math.max(padding, window.innerHeight - bh - reserveBottom);
-            const x = Math.random() * (maxX - padding) + padding;
-            const y = Math.random() * (maxY - padding) + padding;
+            
+            // Rate limit for smooth movement
+            const now = Date.now();
+            if (now - lastMoveTime < 100) return;
+            lastMoveTime = now;
+            
+            const bw = btn.offsetWidth || 100;
+            const bh = btn.offsetHeight || 45;
+            const padding = 20;
+            const topMargin = 20;
+            const bottomReserve = 140; // Reserve space for carousel nav
+            
+            // Get exact viewport dimensions
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            
+            // Calculate maximum safe coordinates
+            const maxX = vw - bw - padding;
+            const maxY = vh - bh - bottomReserve;
+            const minX = padding;
+            const minY = topMargin;
+            
+            // Validate bounds
+            if (maxX <= minX || maxY <= minY) return;
+            
+            // Generate random position within safe bounds
+            const x = Math.floor(Math.random() * (maxX - minX) + minX);
+            const y = Math.floor(Math.random() * (maxY - minY) + minY);
+            
             btn.style.position = 'fixed';
-            btn.style.zIndex = 1200;
-            btn.style.transition = 'left .28s ease, top .28s ease';
-            btn.style.left = `${Math.round(x)}px`;
-            btn.style.top = `${Math.round(y)}px`;
+            btn.style.zIndex = '1200';
+            btn.style.transition = 'left 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.18s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            btn.style.left = x + 'px';
+            btn.style.top = y + 'px';
         }
     
         // 🎊 Enhanced Confetti
@@ -801,8 +871,17 @@
             // 1. Toggle views via .active (accepted view is part of slide 5, not a separate carousel slide)
             const q = document.getElementById('questionCard');
             const a = document.getElementById('acceptedView');
+            const wheelSec = document.getElementById('wheelSection');
             if (q) q.classList.remove('active');
             if (a) a.classList.add('active');
+    
+            // Show wheel section after music box appears
+            setTimeout(() => {
+                if (wheelSec) {
+                    wheelSec.style.display = 'block';
+                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                }
+            }, 1500);
     
             // Stay on slide 5 state and disable Next button
             const nextBtn = document.querySelector('.nav-next');
@@ -824,20 +903,117 @@
             // 4. Start celebration
             celebrateWithConfetti();
     
-            // 5. Create floating emojis
-            const emojis = ['💕', '✨', '💖', '🎊', '🥰'];
-            for (let i = 0; i < 10; i++) {
+            // 5. Create floating emojis - more particles for fuller effect
+            const emojis = ['💕', '✨', '💖', '🎊', '🥰', '💗', '🎉', '💝'];
+            for (let i = 0; i < 15; i++) {
               setTimeout(() => {
                 const emoji = document.createElement('div');
                 emoji.className = 'floating-heart';
                 emoji.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
                 emoji.style.left = Math.random() * window.innerWidth + 'px';
                 emoji.style.top = window.innerHeight + 'px';
-                emoji.style.fontSize = Math.random() * 30 + 20 + 'px';
+                emoji.style.fontSize = Math.random() * 32 + 18 + 'px';
+                emoji.style.filter = 'drop-shadow(0 4px 12px rgba(255,122,154,0.3))';
                 document.body.appendChild(emoji);
-                setTimeout(() => emoji.remove(), 3000);
-              }, i * 150);
+                setTimeout(() => emoji.remove(), 3500);
+              }, i * 120);
             }
+            
+            // 6. Create heart rain effect (continuous for 3 seconds)
+            const heartRainInterval = setInterval(() => {
+              for (let i = 0; i < 3; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'floating-heart';
+                heart.innerHTML = '❤️';
+                heart.style.left = Math.random() * window.innerWidth + 'px';
+                heart.style.top = '-30px';
+                heart.style.fontSize = '20px';
+                heart.style.opacity = '0.8';
+                document.body.appendChild(heart);
+                setTimeout(() => heart.remove(), 3000);
+              }
+            }, 300);
+            
+            // Stop heart rain after 3 seconds
+            setTimeout(() => clearInterval(heartRainInterval), 3000);
+            
+            // 7. Extra confetti bursts at intervals
+            setTimeout(() => {
+              confetti({
+                particleCount: 50,
+                spread: 60,
+                origin: { y: 0.5, x: 0.2 }
+              });
+            }, 1200);
+            
+            setTimeout(() => {
+              confetti({
+                particleCount: 50,
+                spread: 60,
+                origin: { y: 0.5, x: 0.8 }
+              });
+            }, 1400);
+        }
+
+        // 🎡 Spinning Wheel Game
+        let isSpinning = false;
+        const wheelOptions = [
+            '🍪 เลี้ยงขนม',
+            '🍮 เลี้ยงน้ำหวาน',
+            '🍦 เลี้ยงไอติม',
+            '😤 อดกิน',
+            '🎬 ดูหนังกัน'
+        ];
+
+        function spinWheel() {
+          if (isSpinning) return;
+
+          const wheel = document.getElementById('spinnerWheel');
+          const resultDiv = document.getElementById('wheelResult');
+          const resultText = document.getElementById('resultText');
+          const spinBtn = document.getElementById('spinBtn');
+
+          isSpinning = true;
+          spinBtn.disabled = true;
+
+          const baseRotations = 1800; // 5 full rotations
+          const segmentAngle = 360 / wheelOptions.length; // 72 for 5 segments
+          const randomIndex = Math.floor(Math.random() * wheelOptions.length);
+
+          // center angle of chosen segment
+          const centerAngle = (randomIndex * segmentAngle) + (segmentAngle / 2);
+
+          // allow small jitter around center but avoid edges (margin degrees)
+          const margin = 8; // degrees away from edges
+          const half = segmentAngle / 2;
+          const jitterRange = Math.max(0, half - margin);
+          const jitter = (Math.random() * (jitterRange * 2)) - jitterRange; // -j..+j
+
+          // pointer is at top (0deg). To align centerAngle under pointer we rotate
+          // by (360 - (centerAngle + jitter)) plus base rotations.
+          const target = 360 - (centerAngle + jitter);
+          const totalRotation = baseRotations + target;
+
+          // use transform+transition (avoid conflicting keyframe animation)
+          const duration = 3000; // ms
+          wheel.style.transition = 'none';
+          wheel.style.transform = 'rotate(0deg)';
+
+          // trigger transition next frame
+          requestAnimationFrame(() => {
+            wheel.style.transition = `transform ${duration}ms cubic-bezier(0.25,0.46,0.45,0.94)`;
+            wheel.style.transform = `rotate(${totalRotation}deg)`;
+          });
+
+          // Show result after transition ends (duration + small buffer)
+          setTimeout(() => {
+            resultText.textContent = wheelOptions[randomIndex];
+            resultDiv.style.display = 'block';
+            isSpinning = false;
+            spinBtn.disabled = false;
+
+            confetti({ particleCount: 40, spread: 50, origin: { y: 0.6 } });
+          }, duration + 150);
         }
     
         // 🎈 Setup after page loads
