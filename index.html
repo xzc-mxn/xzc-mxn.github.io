@@ -1,1011 +1,1258 @@
-<!DOCTYPE html>
-<html lang="th">
+ewport" content="width=device-width, initial-scale=1.0" />
+  <title>LUXURY HUB EVO — Premium Roblox Scripts</title>
+  <meta name="description" content="แหล่งรวม Script, GUI, Account และบริการ Roblox คุณภาพสูง" />
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <!-- QRCode.js for PromptPay QR generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    /* ── AUTH MODAL STYLES ──────────────────────── */
+    .auth-tabs { display:flex; gap:0; margin-bottom:24px; border-bottom:1px solid rgba(201,160,85,0.15); }
+    .auth-tab {
+      flex:1; padding:12px; background:transparent; border:none;
+      font-family:var(--font-display); font-weight:600; font-size:0.82rem;
+      letter-spacing:2px; text-transform:uppercase; color:var(--muted);
+      cursor:pointer; transition:all 0.25s; border-bottom:2px solid transparent;
+      margin-bottom:-1px;
+    }
+    .auth-tab.active { color:var(--gold-base); border-bottom-color:var(--gold-base); }
+    .auth-tab:hover:not(.active) { color:var(--text-primary); }
 
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>For Fa ❤️ — Secret!</title>
-    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@300;500;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <style>
-        :root{
-          --primary-1: #ff7a9a;
-          --primary-2: #ffb3c6;
-          --primary-3: #ff5a7d;
-          --accent: #ffd1dc;
-          --bg-1: #fff6f8;
-          --bg-2: #fff0f3;
-          --text: #3b0b16;
-          --muted: #7a3a45;
-          --card: #ffffff;
-          --shadow-sm: 0 4px 12px rgba(91,28,40,0.06);
-          --shadow: 0 10px 30px rgba(91,28,40,0.12);
-          --shadow-lg: 0 20px 50px rgba(91,28,40,0.15);
-          --radius: 18px;
-        }
-    
-        *{box-sizing:border-box}
-        html,body{height:100%}
-        body{
-          margin:0;
-          font-family:'Mali',cursive;
-          background:linear-gradient(180deg,var(--bg-1) 0%, #fff0f3 50%, #fff0f6 100%);
-          color:var(--text);
-          overflow-x:hidden;
-          line-height:1.5;
-        }
-    
-        /* Background Decoration */
-        .bg-decor{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
-        .bg-decor .blob{position:absolute;border-radius:50%;filter:blur(40px);opacity:0.25}
-        .bg-decor .blob.a{width:420px;height:420px;left:-80px;top:-40px;background:linear-gradient(135deg,var(--primary-1),var(--primary-2))}
-        .bg-decor .blob.b{width:300px;height:300px;right:-60px;bottom:-40px;background:linear-gradient(135deg,#ffd1dc,#ffe9ee)}
-    
-        /* Landing Overlay */
-        #landing{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:linear-gradient(180deg,rgba(255,122,154,0.98),rgba(255,179,198,0.95));z-index:40;transition:opacity .9s ease}
-        .envelope{font-size:96px;animation:float 3s ease-in-out infinite; cursor: pointer; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.12))}
-        .landing-title{color:#fff;font-size:1.9rem;margin-top:18px;letter-spacing:0.8px;font-weight:600;text-shadow:0 3px 8px rgba(0,0,0,0.15)}
-        .landing-sub{color:rgba(255,255,255,0.95);margin-top:8px;font-size:1rem;font-weight:500}
-    
-        @keyframes float{0%{transform:translateY(0)}50%{transform:translateY(-14px)}100%{transform:translateY(0)}}
-    
-        @keyframes photoShine {
-          0% {opacity:0}
-          50% {opacity:0.5}
-          100% {opacity:0}
-        }
-    
-        /* Page Container */
-        .wrap{position:relative;max-width:820px;margin:90px auto;padding:28px;z-index:10; padding-bottom: 100px;}
-        /* make the page container look like a soft card */
-        .wrap{
-          position:relative;
-          max-width:820px;
-          margin:70px auto;
-          padding:36px;
-          z-index:10;
-          padding-bottom:36px;
-          background: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(255,248,250,0.88));
-          border-radius: 28px;
-          box-shadow: var(--shadow-lg);
-          border: 1px solid rgba(255,255,255,0.6);
-        }
-        main{position:relative;display:grid;grid-template-columns:1fr;gap:22px}
-    
-        /* Carousel Mode */
-        .carousel-mode main {
-          display: block;
-        }
-    
-        .section-slide {
-          display: none !important;
-        }
-    
-        /* active uses a shorter entrance animation to reduce flicker */
-        .section-slide.active {
-          display: block !important;
-          animation: slideInFrame 0.38s ease-out;
-        }
-    
-        @keyframes slideInFrame {
-          from {
-            opacity: 0;
-            transform: translateY(12px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-    
-        @keyframes slideShow {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-    
-        /* Navigation Controls */
-        .carousel-nav {position:relative;margin-top:40px;display:flex;gap:20px;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(255,255,255,0.97),rgba(255,250,252,0.94));padding:18px 36px;border-radius:50px;box-shadow:0 14px 44px rgba(91,28,40,0.14);backdrop-filter:blur(14px);border:1.5px solid rgba(255,255,255,0.8)}
-        .carousel-nav button {padding:12px 28px;border-radius:28px;border:0;font-family:'Mali',cursive;font-size:1.05rem;cursor:pointer;transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1);font-weight:700;box-shadow:var(--shadow-sm)}
-        .carousel-nav .nav-prev,.carousel-nav .nav-next {background:linear-gradient(135deg,var(--primary-1),var(--primary-2));color:#fff;position:relative;overflow:hidden}
-        .carousel-nav .nav-prev:hover,.carousel-nav .nav-next:hover {transform:scale(1.08);box-shadow:0 8px 20px rgba(255,122,154,0.32)}
-        .carousel-nav .nav-prev:active,.carousel-nav .nav-next:active {transform:scale(0.98)}
-        .carousel-nav .nav-prev:disabled,.carousel-nav .nav-next:disabled {opacity:0.45;cursor:not-allowed;transform:scale(1)}
-        .carousel-progress {display:flex;gap:8px;align-items:center}
-        .progress-dot {width:11px;height:11px;border-radius:50%;background:rgba(255,122,154,0.2);cursor:pointer;transition:all 0.28s cubic-bezier(0.34,1.56,0.64,1);border:1.5px solid rgba(255,122,154,0.3);box-shadow:var(--shadow-sm)}
-        .progress-dot:hover {transform:scale(1.5);background:rgba(255,122,154,0.4);box-shadow:0 6px 18px rgba(255,122,154,0.2)}
-        .progress-dot.active {background:linear-gradient(135deg,var(--primary-1),var(--primary-2));transform:scale(1.5);box-shadow:0 8px 24px rgba(255,122,154,0.3);border-color:rgba(255,122,154,0.6)}
-        .progress-text {color:var(--muted);font-size:0.95rem;font-weight:700;margin-left:12px;white-space:nowrap;letter-spacing:-0.2px}
-    
-        .card{background: linear-gradient(135deg,#ffffff 0%,#fff8fb 100%);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow-sm);transition:transform .28s cubic-bezier(0.34,1.56,0.64,1), box-shadow .28s ease;border:1px solid rgba(255,255,255,0.5)}
-        .card:hover{transform:translateY(-8px);box-shadow:var(--shadow-lg)}
-    
-        header h1{font-size:2rem;color:var(--primary-1);margin:0;font-weight:700;letter-spacing:-0.5px}
-        header p{margin:8px 0 0;color:var(--muted);font-size:1.05rem;font-weight:500}
-    
-        /* Timeline */
-        .timeline{position:relative;padding-left:28px}
-        .timeline::before{content:"";position:absolute;left:10px;top:12px;bottom:12px;width:4px;background:linear-gradient(180deg,var(--primary-1),var(--primary-2));border-radius:4px}
-        .timeline-item{position:relative;padding:18px 22px;margin:16px 0;background:linear-gradient(135deg,rgba(255,209,220,0.7),rgba(255,235,242,0.5));border-radius:14px;border-left:4px solid var(--primary-1);box-shadow:var(--shadow-sm);transition:all .35s cubic-bezier(0.34,1.56,0.64,1);opacity:0;animation:slideInFrame 0.38s ease-out forwards}
-        .timeline-item:hover{transform:translateX(6px);box-shadow:var(--shadow)}
-        .timeline-item .dot{position:absolute;left:-8px;top:24px;width:16px;height:16px;border-radius:50%;background:white;border:4px solid var(--primary-1);box-shadow:0 2px 8px rgba(255,122,154,0.3)}
-        .timeline-item h3{margin:0 0 8px;font-size:1.15rem;color:var(--primary-3);font-weight:600;letter-spacing:-0.3px}
-        .timeline-item p{margin:0;color:var(--text);font-weight:500;line-height:1.6}
-    
-        /* Gallery Fix - Polaroid Casual Scattered Arrangement */
-    
-        /* Old */
-    
-        /*.gallery{position:relative;margin-top:24px;perspective:1400px;padding:12px;height:580px;min-height:580px}
-        .polaroid{background:linear-gradient(135deg,#fff 0%,rgba(255,248,250,0.7) 100%);padding:18px;border-radius:14px;box-shadow:0 18px 52px rgba(91,28,40,0.16),inset 0 1px 1px rgba(255,255,255,0.9);transition:all 0.45s cubic-bezier(0.34,1.56,0.64,1);border:1px solid rgba(255,255,255,0.95);opacity:0;animation:slideInFrame 0.38s ease-out forwards;position:absolute;overflow:visible;transform-origin:center;width:220px}
-        .polaroid::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.6) 0%,rgba(255,240,245,0.2) 100%);opacity:0;pointer-events:none;border-radius:14px;transition:opacity 0.4s ease}
-        .polaroid:hover::after{opacity:1}
-        .polaroid img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:10px;display:block;background:linear-gradient(135deg,#f5f0f3,#f0e6eb);box-shadow:0 8px 18px rgba(0,0,0,0.14);transition:all 0.4s ease}
-        .polaroid:hover img{filter:brightness(1.1) contrast(1.09) saturate(1.05);box-shadow:0 10px 24px rgba(0,0,0,0.18)}
-        .photo-number{position:absolute;top:16px;right:16px;font-size:0.95rem;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--primary-1),var(--primary-2));width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(255,122,154,0.28),0 0 0 3px rgba(255,255,255,0.8);opacity:0;transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);transform:scale(0.7) rotate(-15deg);font-style:italic}
-        .polaroid:hover .photo-number{opacity:1;transform:scale(1) rotate(0deg)}
-        .polaroid:hover{transform:translateY(-22px) scale(1.08);box-shadow:0 36px 72px rgba(255,122,154,0.3),inset 0 1px 1px rgba(255,255,255,0.95);z-index:10}
-    
-        .photo-1{animation-delay:0.05s;top:0px;left:20px;z-index:2;transform:rotate(-8deg) translateY(0px) !important}
-        .photo-2{animation-delay:0.12s;top:80px;left:160px;z-index:4;transform:rotate(6deg) translateY(0px) !important}
-        .photo-3{animation-delay:0.19s;top:220px;left:80px;z-index:1;transform:rotate(-5deg) translateY(0px) !important}
-        .photo-4{animation-delay:0.26s;top:160px;left:280px;z-index:3;transform:rotate(8deg) translateY(0px) !important}*/
-    
-        /* New */
-    
-    .gallery{
-      position: relative;
-      margin-top: 24px;
-      padding: 12px;
-      min-height: 580px;
-    
-      /* จัดให้อยู่ตรงกลาง */
-      display: grid;
-      grid-template-columns: repeat(2, 260px); /* 2 รูปต่อแถว */
-      gap: 32px 48px; /* ระยะห่างกำลังดี */
-      justify-content: center;
-      align-items: center;
+    /* ── ADMIN PANEL STYLES ─────────────────────── */
+    #adminModal .modal-panel {
+      max-width: 900px;
+      width: 96vw;
+      max-height: 88vh;
+      overflow-y: auto;
     }
-    
-    /* ===== POLAROID ===== */
-    .polaroid{
-      background: linear-gradient(135deg,#fff 0%,rgba(255,248,250,0.7) 100%);
-      padding: 20px;
-      border-radius: 14px;
-      box-shadow: 
-        0 18px 52px rgba(91,28,40,0.16),
-        inset 0 1px 1px rgba(255,255,255,0.9);
-      transition: all 0.45s cubic-bezier(0.34,1.56,0.64,1);
-      border: 1px solid rgba(255,255,255,0.95);
-      opacity: 0;
-      animation: slideInFrame 0.38s ease-out forwards;
-    
-      position: relative;
-      width: 260px;
+    .adm-tabs {
+      display: flex; gap: 6px; flex-wrap: wrap;
+      margin-bottom: 20px; padding-bottom: 16px;
+      border-bottom: 1px solid rgba(201,160,85,0.15);
     }
-    
-    .polaroid::after{
-      content:'';
-      position:absolute;
-      inset:0;
-      background:linear-gradient(135deg,rgba(255,255,255,0.6) 0%,rgba(255,240,245,0.2) 100%);
-      opacity:0;
-      pointer-events:none;
-      border-radius:14px;
-      transition:opacity 0.4s ease;
+    .adm-tab {
+      padding: 8px 16px; background: var(--bg-overlay);
+      border: 1px solid rgba(201,160,85,0.12);
+      color: var(--muted); font-family: var(--font-display);
+      font-size: 0.75rem; font-weight: 600; letter-spacing: 1px;
+      text-transform: uppercase; cursor: pointer;
+      clip-path: var(--clip-tl); transition: all 0.2s;
     }
-    
-    .polaroid:hover::after{opacity:1;}
-    
-    .polaroid img{
-      width:100%;
-      aspect-ratio:3/4;
-      object-fit:cover;
+    .adm-tab.active { background: rgba(201,160,85,0.12); color: var(--gold-base); border-color: rgba(201,160,85,0.35); }
+    .adm-tab:hover:not(.active) { color: var(--text-primary); }
+
+    .adm-section-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px; padding-bottom: 10px;
+      border-bottom: 1px solid rgba(201,160,85,0.1);
+      font-family: var(--font-display); font-size: 0.82rem;
+      font-weight: 600; letter-spacing: 1px; color: var(--text-secondary);
+      text-transform: uppercase;
+    }
+    .adm-table-wrap { overflow-x: auto; }
+    .adm-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .adm-table th {
+      text-align: left; padding: 8px 12px;
+      background: var(--bg-overlay); color: var(--muted);
+      font-family: var(--font-display); font-weight: 600;
+      letter-spacing: 1px; text-transform: uppercase; font-size: 0.7rem;
+    }
+    .adm-table td { padding: 10px 12px; border-bottom: 1px solid rgba(201,160,85,0.06); vertical-align: middle; }
+    .adm-table tr:hover td { background: rgba(201,160,85,0.03); }
+    .adm-badge {
+      display: inline-block; padding: 2px 8px;
+      background: rgba(201,160,85,0.1); border: 1px solid rgba(201,160,85,0.2);
+      color: var(--gold-base); font-family: var(--font-mono);
+      font-size: 0.68rem; border-radius: 2px;
+    }
+    .adm-badge.admin { background: rgba(224,64,80,0.1); border-color: rgba(224,64,80,0.25); color: var(--danger); }
+    .adm-badge-type.promptpay { color: #00aeef; }
+    .adm-badge-type.truemoney { color: #f97316; }
+    .adm-stock-ok { color: var(--success); font-family: var(--font-mono); font-size: 0.82rem; }
+    .adm-stock-empty { color: var(--danger); font-family: var(--font-mono); font-size: 0.82rem; }
+    .adm-empty { text-align:center; padding: 32px; color: var(--muted); font-size: 0.82rem; }
+    .adm-form-box {
+      background: var(--bg-overlay); border: 1px solid rgba(201,160,85,0.1);
+      padding: 20px; margin-bottom: 20px; clip-path: var(--clip-tl);
+    }
+    .adm-form-title { font-family:var(--font-display); font-weight:600; font-size:0.82rem; letter-spacing:1px; color:var(--gold-base); margin-bottom:16px; text-transform:uppercase; }
+    .adm-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .adm-stat-box {
+      flex:1; min-width:80px; padding: 14px 18px;
+      background: var(--bg-overlay); border: 1px solid rgba(201,160,85,0.1);
+      clip-path: var(--clip-tl); text-align: center;
+    }
+    .adm-stat-n { font-family:var(--font-display); font-size:1.4rem; font-weight:700; color:var(--gold-base); }
+    .adm-stat-l { font-size:0.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-top:2px; }
+    .adm-pay-card {
+      padding:16px; margin-bottom:12px;
+      background: var(--bg-overlay); border: 1px solid rgba(201,160,85,0.12);
+      clip-path: var(--clip-tl);
+    }
+    .adm-pay-card.pending { border-color: rgba(201,160,85,0.3); }
+    .adm-pay-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+    .adm-pay-info { display:flex; gap:16px; flex-wrap:wrap; font-size:0.8rem; margin-bottom:8px; }
+    .adm-content-pre {
+      background: var(--bg-deep); padding: 8px 10px; margin: 0;
+      font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-secondary);
+      white-space: pre-wrap; word-break: break-all; max-width: 300px;
+    }
+    .adm-toggle { position:relative; display:inline-block; width:36px; height:20px; }
+    .adm-toggle input { opacity:0; width:0; height:0; }
+    .adm-toggle-slider {
+      position:absolute; inset:0; background:var(--bg-void);
+      border:1px solid var(--faint); cursor:pointer; transition:.3s;
       border-radius:10px;
-      display:block;
-      background:linear-gradient(135deg,#f5f0f3,#f0e6eb);
-      box-shadow:0 8px 18px rgba(0,0,0,0.14);
-      transition:all 0.4s ease;
     }
-    
-    .polaroid:hover img{
-      filter:brightness(1.1) contrast(1.09) saturate(1.05);
-      box-shadow:0 10px 24px rgba(0,0,0,0.18);
+    .adm-toggle input:checked + .adm-toggle-slider { background:rgba(201,160,85,0.2); border-color:var(--gold-base); }
+    .adm-toggle-slider::before {
+      content:''; position:absolute; height:12px; width:12px; left:3px; bottom:3px;
+      background:var(--muted); transition:.3s; border-radius:50%;
     }
-    
-    /* ===== PHOTO NUMBER ===== */
-    .photo-number{
-      position:absolute;
-      top:16px;
-      right:16px;
-      font-size:0.95rem;
-      font-weight:800;
-      color:#fff;
-      background:linear-gradient(135deg,var(--primary-1),var(--primary-2));
-      width:36px;
-      height:36px;
-      border-radius:50%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      box-shadow:
-        0 6px 16px rgba(255,122,154,0.28),
-        0 0 0 3px rgba(255,255,255,0.8);
-      opacity:0;
-      transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);
-      transform:scale(0.7) rotate(-15deg);
-      font-style:italic;
-    }
-    
-    .polaroid:hover .photo-number{
-      opacity:1;
-      transform:scale(1) rotate(0deg);
-    }
-    
-    /* ===== HOVER ===== */
-    .polaroid:hover{
-      transform:translateY(-18px) scale(1.06);
-      z-index:10;
-    }
-    
-    /* ===== ลบตำแหน่งบังคับเก่าทั้งหมด ===== */
-    .photo-1,
-    .photo-2,
-    .photo-3,
-    .photo-4{
-      top: auto !important;
-      left: auto !important;
-      transform: none !important;
-      position: relative !important;
-    }
-    
-    
-        /* Question Box */
-        .question{display:flex;flex-direction:column;align-items:center;gap:14px;padding:48px 32px;text-align:center;animation:slideInFrame 0.38s ease-out}
-        .question h2{font-size:2rem;margin:0;color:var(--primary-1);font-weight:700;letter-spacing:-0.5px}
-        .controls{display:flex;gap:24px;align-items:center;margin-top:28px;justify-content:center}
-    
-        button{border:0;padding:14px 36px;border-radius:999px;font-family:'Mali',cursive;font-size:1.1rem;cursor:pointer;box-shadow:var(--shadow-sm);transition:all .28s cubic-bezier(0.34,1.56,0.64,1);font-weight:700;letter-spacing:-0.3px}
-        .btn-yes{background:linear-gradient(135deg,var(--primary-1),var(--primary-2));color:#fff;box-shadow:0 12px 32px rgba(255,122,154,0.28);position:relative;overflow:hidden}
-        .btn-yes::before{content:"";position:absolute;inset:0;background:radial-gradient(circle,rgba(255,255,255,0.3),transparent 70%);opacity:0}
-        .btn-yes:hover{transform:scale(1.1);box-shadow:0 16px 42px rgba(255,122,154,0.38)}
-        .btn-yes:active{transform:scale(0.98)}
-        .btn-no{background:linear-gradient(135deg,#f0e6eb,#f8f0f5);color:var(--text);border:1.5px solid #e8d6e2;font-weight:600}
-        .btn-no:hover{background:#e8d6e2;box-shadow:var(--shadow);transform:translateY(-2px)}
-        .btn-no:active{transform:translateY(0)}
-    
-        /* Accepted View & Music Box */
-        .accepted-view{display:none;animation:fadeIn 0.8s ease-out}
-        .accepted-view.active{display:block !important}
-        .congrats-box{text-align:center;padding:40px 32px;background:linear-gradient(135deg,rgba(255,255,255,0.98),rgba(255,250,252,0.98));border-radius:22px;border:2px solid var(--accent);box-shadow:0 20px 60px rgba(255,122,154,0.25),inset 0 1px 1px rgba(255,255,255,0.8);animation:celebrateScale 0.6s cubic-bezier(0.34,1.56,0.64,1);position:relative;overflow:hidden}
-        .congrats-box h2 {color:var(--primary-1);font-size:2.2rem;margin:0 0 12px;font-weight:700;letter-spacing:-0.5px;animation:textReveal 0.8s ease-out 0.3s both}
-        .congrats-box p {color:var(--text);font-size:1.1rem;margin:8px 0;line-height:1.6;font-weight:500;animation:textReveal 0.8s ease-out 0.5s both}
-        
-        /* Music Box Style */
-        .music-box {margin-top:28px;background:linear-gradient(135deg,rgba(255,209,220,0.5),rgba(255,235,242,0.7));padding:20px;border-radius:18px;display:flex;align-items:center;gap:18px;box-shadow:0 10px 30px rgba(255,122,154,0.15);border:1.5px solid var(--accent);transition:all .35s cubic-bezier(0.34,1.56,0.64,1);animation:textReveal 0.8s ease-out 0.2s both;position:relative;z-index:1}
-        .music-box:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
-        .album-cover {width:68px;height:68px;border-radius:50%;background-image: url('https://cdn.discordapp.com/attachments/1340708357618794536/1448674040414994432/https3A2F2Fimages.png?ex=69587696&is=69572516&hm=fc23693f3b26db8e0e8b61b79a039b79ac34a7e9323f8ebafe5070369eead9e2&');background-size:cover;background-position:center;border:3px solid #fff;box-shadow:0 6px 16px rgba(255,122,154,0.25);animation:spin 15s linear infinite;flex-shrink:0}
-        .song-info {text-align:left;flex:1}
-        .song-title {font-weight:700;color:var(--primary-1);font-size:1.05rem;margin:0;letter-spacing:-0.3px}
-        .artist-name {font-size:0.95rem;color:var(--muted);margin:4px 0 0}
-        .playing-bar {margin-top:8px;height:5px;background:rgba(255,122,154,0.2);border-radius:3px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,0.1)}
-        .playing-bar-fill {height:100%;background:linear-gradient(90deg,var(--primary-1),var(--primary-2));width:0%;animation:progress 20s linear infinite;border-radius:3px}
-    
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        @keyframes progress { 0% { width: 0%; } 100% { width: 100%; } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes celebrateScale { from { opacity: 0; transform: scale(0.8) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-        @keyframes textReveal { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes glow { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.6; } }
+    .adm-toggle input:checked + .adm-toggle-slider::before { transform:translateX(16px); background:var(--gold-base); }
 
-        /* Spinning Wheel Styles */
-        .wheel-card {animation:slideInFrame 0.6s ease-out}
-        .wheel-container {display:flex;justify-content:center;align-items:center;margin:32px 0;position:relative}
-        .wheel {width:340px;height:340px;border-radius:50%;background:conic-gradient(from 0deg,#ff7a9a 0deg 72deg,#ffb3c6 72deg 144deg,#ffd1dc 144deg 216deg,#ff9ab8 216deg 288deg,#ffe0e8 288deg 360deg);box-shadow:0 12px 40px rgba(255,122,154,0.3),inset 0 -4px 12px rgba(0,0,0,0.1);position:relative;display:flex;align-items:center;justify-content:center;border:8px solid #fff}
-        .wheel::after {content:'';position:absolute;inset:30px;background:radial-gradient(circle,rgba(255,255,255,0.4),transparent 70%);border-radius:50%;pointer-events:none}
-        .wheel-segment {position:absolute;width:100%;height:100%;display:flex;align-items:center;justify-content:center;transform:rotate(var(--rotation));border-radius:50%}
-        .wheel-segment span {position:absolute;left:50%;top:50%;width:120px;text-align:center;font-weight:600;color:#fff;font-size:0.75rem;text-shadow:0 2px 4px rgba(0,0,0,0.2);line-height:1.5;letter-spacing:-0.3px;white-space:normal;word-wrap:break-word;transform:rotate(var(--invert)) translateY(-140px);transform-origin:center center}
-        /* New absolute labels positioned at segment center angles */
-        .wheel-label {position:absolute;left:calc(50% - 60);top:50%;width:130px;text-align:center;font-weight:700;color:#fff;font-size:0.78rem;text-shadow:0 2px 4px rgba(0,0,0,0.2);line-height:1.2;transform-origin:center center;}
-        .wheel-label {transform: rotate(calc(var(--angle) * 1deg)) translateY(-100px) rotate(calc(var(--angle) * -1deg));}
-        .wheel-pointer {position:absolute;width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-top:24px solid var(--primary-1);top:-8px;z-index:10;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2))}
-        .btn-spin {background:linear-gradient(135deg,var(--primary-1),var(--primary-2));color:#fff;padding:14px 48px;border-radius:999px;border:0;font-family:'Mali',cursive;font-size:1.15rem;cursor:pointer;font-weight:700;box-shadow:0 12px 32px rgba(255,122,154,0.28);transition:all 0.28s cubic-bezier(0.34,1.56,0.64,1);letter-spacing:-0.3px}
-        .btn-spin:hover {transform:scale(1.08);box-shadow:0 16px 42px rgba(255,122,154,0.38)}
-        .btn-spin:active {transform:scale(0.98)}
-        .btn-spin:disabled {opacity:0.6;cursor:not-allowed;transform:scale(1)}
-        @keyframes spin {from {transform:rotate(0deg)}to {transform:rotate(3600deg)}}
-        .wheel.spinning {animation:spin 3s cubic-bezier(0.25,0.46,0.45,0.94)}
-    
-        /* Floating Hearts */
-        .floating-heart {
-          position: fixed;
-          font-size: 24px;
-          pointer-events: none;
-          animation: float-up 3s ease-in forwards;
-          z-index: 5;
-        }
-    
-        @keyframes float-up {
-          0% {
-            opacity: 1;
-            transform: translateY(0) translateX(0) scale(1);
-          }
-          100% {
-            opacity: 0;
-            transform: translateY(-100vh) translateX(50px) scale(0.5);
-          }
-        }
-    
-        /* Heart Cursor Trail */
-        .heart-trail {position:fixed;font-size:20px;pointer-events:none;animation:trail-fade 0.7s ease-out forwards;z-index:5;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.08))}
-        @keyframes trail-fade {0% {opacity:1;transform:translate(0,0) scale(1);filter:drop-shadow(0 2px 8px rgba(255,122,154,0.4))}50% {opacity:0.8}100% {opacity:0;transform:translate(0,24px) scale(0.5);filter:drop-shadow(0 0 0 rgba(255,122,154,0))}}
-    
-        /* Card Entrance Animation (unified with slideInFrame) */
-        .card {animation:slideInFrame 0.38s ease-out backwards}
-        .card:nth-child(1) { animation-delay: 0s; }
-        .card:nth-child(2) { animation-delay: 0.1s; }
-        .card:nth-child(3) { animation-delay: 0.2s; }
-        .card:nth-child(4) { animation-delay: 0.3s; }
-        .card:nth-child(5) { animation-delay: 0.4s; }
-    
-        /* Button Animations */
-        .btn-yes {position:relative;overflow:hidden}
-    
-        /* Message Cards */
-        .message-card {
-          background: linear-gradient(135deg,rgba(255,235,242,0.8),rgba(255,250,252,0.9));
-          border-left:5px solid var(--primary-1);
-          padding:22px;
-          border-radius:14px;
-          margin:15px 0;
-          animation:messageSlide 0.5s ease-out backwards;
-          box-shadow:var(--shadow-sm);
-          border:1px solid rgba(255,209,220,0.4);
-          transition:all .35s cubic-bezier(0.34,1.56,0.64,1);
-          display:flex;
-          gap:12px;
-          align-items:flex-start
-        }
-        .message-card:hover{transform:translateX(4px);box-shadow:var(--shadow)}
-        .message-card .emoji {font-size:1.8rem;flex-shrink:0;display:flex;align-items:center}
-        .message-card strong {color:var(--primary-1);font-weight:600;display:block;margin-bottom:4px}
-        .message-card p{margin:0;color:var(--text);line-height:1.5;font-weight:500}
-    
-        @keyframes messageSlide {
-          from {
-            opacity: 0;
-            transform: translateX(-30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-    
-        .message-card:nth-of-type(1) { animation-delay: 0s; }
-        .message-card:nth-of-type(2) { animation-delay: 0.1s; }
-        .message-card:nth-of-type(3) { animation-delay: 0.2s; }
-    
-        /* Love List */
-        .love-items {display:grid;grid-template-columns:1fr;gap:14px;margin-top:15px}
-        .love-item {display:flex;align-items:center;gap:16px;padding:18px;background:linear-gradient(135deg,rgba(255,235,242,0.6),rgba(255,245,248,0.8));border-radius:13px;border:1px solid rgba(255,209,220,0.5);animation:itemBounce 0.5s ease-out backwards;box-shadow:var(--shadow-sm);transition:all .35s cubic-bezier(0.34,1.56,0.64,1)}
-        .love-item:hover{transform:translateX(6px);box-shadow:var(--shadow)}
-        .love-item .emoji {font-size:1.8rem;flex-shrink:0}
-        .love-item span {color:var(--text);font-weight:600;font-size:1.05rem;flex:1}
-    
-        @keyframes itemBounce {
-          from {
-            opacity: 0;
-            transform: scale(0.8) translateX(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1) translateX(0);
-          }
-        }
-    
-        .love-item:nth-child(1) { animation-delay: 0s; }
-        .love-item:nth-child(2) { animation-delay: 0.1s; }
-        .love-item:nth-child(3) { animation-delay: 0.2s; }
-        .love-item:nth-child(4) { animation-delay: 0.3s; }
-        .love-item:nth-child(5) { animation-delay: 0.4s; }
-        .love-item:nth-child(6) { animation-delay: 0.5s; }
-    
-        /* Congrats Image */
-        .congrats-img {width:100%;max-width:400px;border-radius:15px;margin-top:15px}
-        .image-credit {text-align:center;font-size:0.85rem;color:var(--muted);margin-top:16px;font-style:italic;font-weight:500;letter-spacing:-0.2px}
-        .shy-text {
-          font-size: 0.8rem;
-          color: #aaa;
-          margin-top: 10px;
-        }
-    
-        /* Accessibility */
-        button:focus-visible {
-          outline: 2px solid var(--primary-1);
-          outline-offset: 2px;
-        }
-    
-        /* Responsive */
-        /* Tablet and Mobile Responsive */
-        @media (max-width:768px){
-          .wrap{margin:60px auto;padding:24px;max-width:100%;border-radius:24px}
-          header h1{font-size:1.8rem}
-          .question h2{font-size:1.8rem}
-          .congrats-box h2{font-size:2rem}
-          .gallery{grid-template-columns:1fr 1fr}
-          .controls{gap:16px;padding:0 16px}
-          button{padding:12px 28px;font-size:1rem}
-        }
-    
-        @media (max-width:600px){
-          .wrap{margin:50px auto 60px;padding:20px;padding-bottom:100px}
-          .bg-decor .blob.a{width:280px;height:280px;left:-100px;top:-60px}
-          .bg-decor .blob.b{width:220px;height:220px;right:-80px;bottom:-60px}
-          header h1{font-size:1.6rem;letter-spacing:0}
-          header p{font-size:0.95rem}
-          .envelope{font-size:64px}
-          .landing-title{font-size:1.6rem;letter-spacing:0}
-          .gallery{grid-template-columns:1fr;gap:32px 24px;padding:8px}
-          .polaroid{padding:16px}
-          .photo-number{font-size:0.9rem;width:32px;height:32px;top:14px;right:14px}
-          .polaroid:hover{transform:translateY(-16px) scale(1.06)}
-          .timeline{padding-left:20px}
-          .timeline::before{left:4px}
-          .timeline-item{padding:16px 18px;margin:14px 0}
-          .timeline-item .dot{left:-4px;top:20px;width:12px;height:12px}
-          .question{padding:32px 20px;gap:12px}
-          .question h2{font-size:1.5rem}
-          .controls{flex-direction:column;gap:12px;margin-top:20px}
-          button{width:100%;padding:12px 24px;font-size:1rem}
-          .message-card{padding:16px;gap:10px}
-          .message-card .emoji{font-size:1.6rem}
-          .love-items{gap:10px}
-          .love-item{padding:14px;gap:12px}
-          .love-item .emoji{font-size:1.6rem}
-          .music-box{flex-direction:column;gap:12px;padding:16px}
-          .album-cover{width:60px;height:60px;border:2px solid #fff}
-          .song-info{text-align:center}
-        }
-    </style>
+    /* ── NAV ADDITIONS ──────────────────────────── */
+    #navAuthBtn {
+      display:flex; align-items:center; gap:8px;
+      background:rgba(201,160,85,0.08); border:1px solid rgba(201,160,85,0.25);
+      color:var(--gold-base); padding:8px 18px;
+      font-family:var(--font-display); font-size:0.78rem;
+      font-weight:600; letter-spacing:2px; text-transform:uppercase;
+      cursor:pointer; clip-path:var(--clip-tl); transition:all 0.25s;
+    }
+    #navAuthBtn:hover { background:rgba(201,160,85,0.15); color:var(--gold-bright); }
+    #navUserMenu {
+      display:none; align-items:center; gap:10px;
+    }
+    .nav-user-credit {
+      font-family:var(--font-mono); font-size:0.78rem;
+      color:var(--gold-bright); background:rgba(201,160,85,0.08);
+      border:1px solid rgba(201,160,85,0.2); padding:6px 12px;
+      clip-path:var(--clip-hex);
+    }
+    .nav-username {
+      font-family:var(--font-display); font-size:0.78rem;
+      font-weight:600; color:var(--text-secondary); letter-spacing:1px;
+    }
+    #navAdminBtn {
+      display:none; align-items:center; gap:6px;
+      background:rgba(224,64,80,0.1); border:1px solid rgba(224,64,80,0.25);
+      color:var(--danger); padding:7px 14px;
+      font-family:var(--font-display); font-size:0.75rem;
+      font-weight:600; letter-spacing:1.5px; text-transform:uppercase;
+      cursor:pointer; clip-path:var(--clip-tl); transition:all 0.25s;
+    }
+    #navAdminBtn:hover { background:rgba(224,64,80,0.18); }
+    #navLogoutBtn {
+      background:transparent; border:1px solid rgba(201,160,85,0.15);
+      color:var(--muted); padding:7px 12px;
+      font-family:var(--font-display); font-size:0.72rem;
+      font-weight:600; letter-spacing:1px; text-transform:uppercase;
+      cursor:pointer; clip-path:var(--clip-br); transition:all 0.2s;
+    }
+    #navLogoutBtn:hover { color:var(--danger); border-color:rgba(224,64,80,0.3); }
+
+    /* ── PROMPTPAY / TRUEMONEY MODALS ───────────── */
+    .pp-qr-wrap {
+      display:flex; flex-direction:column; align-items:center;
+      padding: 20px; background:var(--bg-overlay);
+      border:1px solid rgba(201,160,85,0.15); margin-bottom:16px;
+      clip-path: var(--clip-tl);
+    }
+    .pp-amount-display {
+      font-family:var(--font-display); font-size:1.6rem; font-weight:700;
+      color:var(--gold-bright); letter-spacing:3px; margin-bottom:12px;
+    }
+    .pp-phone {
+      font-family:var(--font-mono); font-size:0.75rem;
+      color:var(--muted); margin-top:10px; letter-spacing:2px;
+    }
+    .pp-steps { margin-bottom:18px; }
+    .pp-step {
+      display:flex; gap:12px; align-items:flex-start;
+      padding: 8px 0; border-bottom:1px solid rgba(201,160,85,0.06);
+      font-size:0.8rem; color:var(--text-secondary);
+    }
+    .pp-step-num {
+      min-width:22px; height:22px;
+      background:rgba(201,160,85,0.15); border:1px solid rgba(201,160,85,0.3);
+      color:var(--gold-base); font-family:var(--font-mono); font-size:0.7rem;
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+
+    /* ── USER PROFILE MODAL ─────────────────────── */
+    .profile-header {
+      display:flex; align-items:center; gap:16px;
+      padding:20px; background:var(--bg-overlay);
+      border:1px solid rgba(201,160,85,0.12); margin-bottom:20px;
+      clip-path:var(--clip-tl);
+    }
+    .profile-avatar {
+      width:56px; height:56px;
+      background:rgba(201,160,85,0.1); border:1px solid rgba(201,160,85,0.3);
+      clip-path:var(--clip-hex); display:flex; align-items:center;
+      justify-content:center; font-size:1.5rem; flex-shrink:0;
+    }
+    .profile-info { flex:1; }
+    .profile-name { font-family:var(--font-display); font-size:1rem; font-weight:700; color:var(--text-primary); letter-spacing:2px; }
+    .profile-role { font-family:var(--font-mono); font-size:0.7rem; color:var(--muted); margin-top:2px; }
+    .profile-credit-box {
+      padding:16px 20px; background:var(--bg-overlay);
+      border:1px solid rgba(201,160,85,0.2); margin-bottom:16px;
+      clip-path:var(--clip-br); display:flex; align-items:center; justify-content:space-between;
+    }
+    .profile-credit-label { font-family:var(--font-display); font-size:0.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+    .profile-credit-val { font-family:var(--font-display); font-size:1.5rem; font-weight:700; color:var(--gold-bright); }
+    .order-history-item {
+      padding:12px 14px; background:var(--bg-overlay);
+      border:1px solid rgba(201,160,85,0.08); margin-bottom:8px;
+      clip-path:var(--clip-tl);
+    }
+    .order-item-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+    .order-item-id { font-family:var(--font-mono); font-size:0.68rem; color:var(--muted); }
+    .order-item-price { font-family:var(--font-mono); font-size:0.82rem; color:var(--gold-base); }
+    .order-item-name { font-size:0.82rem; color:var(--text-primary); }
+    .order-item-date { font-family:var(--font-mono); font-size:0.65rem; color:var(--muted); }
+    .order-delivery-box {
+      margin-top:8px; padding:8px 10px;
+      background:var(--bg-deep); border:1px solid rgba(201,160,85,0.1);
+      font-family:var(--font-mono); font-size:0.72rem; color:var(--text-secondary);
+      white-space:pre-wrap; word-break:break-all; cursor:pointer;
+      position:relative;
+    }
+    .order-delivery-box::after {
+      content:'คลิกเพื่อคัดลอก'; position:absolute; right:8px; top:8px;
+      font-size:0.6rem; color:var(--muted); opacity:0.7;
+    }
+    .order-delivery-box:hover { border-color:rgba(201,160,85,0.3); color:var(--gold-bright); }
+
+    /* ── TOPUP CONNECT ──────────────────────────── */
+    .pay-tile-btn {
+      cursor:pointer; transition:all 0.25s;
+    }
+    .pay-tile-btn:hover { transform:translateY(-2px); }
+
+    /* ── SUCCESS SCREEN ─────────────────────────── */
+    .success-screen { text-align:center; padding:40px 20px; }
+    .success-icon {
+      font-size:3rem; color:var(--gold-bright);
+      margin-bottom:16px; display:block;
+      animation: pulse-gold 2s ease-in-out infinite;
+    }
+    @keyframes pulse-gold {
+      0%,100%{ text-shadow:0 0 20px rgba(201,160,85,0.4); }
+      50%{ text-shadow:0 0 40px rgba(201,160,85,0.8); }
+    }
+    .success-title { font-family:var(--font-display); font-size:1.4rem; font-weight:700; color:var(--gold-bright); letter-spacing:3px; margin-bottom:10px; }
+    .success-desc { color:var(--text-secondary); font-size:0.85rem; line-height:1.7; margin-bottom:20px; }
+    .order-id-box {
+      display:inline-block; padding:10px 20px;
+      background:rgba(201,160,85,0.08); border:1px solid rgba(201,160,85,0.25);
+      font-family:var(--font-mono); font-size:0.82rem; color:var(--gold-base);
+      clip-path:var(--clip-hex); letter-spacing:2px;
+    }
+
+    /* ── FIELD ADDITIONS ────────────────────────── */
+    .field-select {
+      width:100%; padding:10px 14px;
+      background:var(--bg-void); border:1px solid rgba(201,160,85,0.2);
+      color:var(--text-primary); font-family:var(--font-body); font-size:0.82rem;
+      outline:none; cursor:pointer; appearance:none;
+    }
+    .field-select:focus { border-color:var(--gold-base); }
+    .field-select option { background:var(--bg-deep); }
+
+    /* ── DELIVERY MODAL ─────────────────────────── */
+    .delivery-content-box {
+      background:var(--bg-deep); border:1px solid rgba(201,160,85,0.2);
+      padding:20px; font-family:var(--font-mono); font-size:0.85rem;
+      color:var(--gold-bright); white-space:pre-wrap; word-break:break-all;
+      line-height:1.7; margin-bottom:16px; clip-path:var(--clip-tl);
+    }
+
+    /* ── TOPUP PAY TILES CLICKABLE ───────────────── */
+    #topup .pay-tile { cursor:pointer; }
+  </style>
 </head>
-
 <body>
 
-    <div class="bg-decor">
-        <div class="blob a"></div>
-        <div class="blob b"></div>
+  <!-- NAV -->
+  <nav class="lxh-nav">
+    <a href="#hero" class="nav-logo" style="text-decoration:none;">
+      <div class="nav-logo-mark">
+        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="20,2 38,11 38,29 20,38 2,29 2,11" stroke="rgba(201,160,85,0.6)" stroke-width="1" fill="rgba(201,160,85,0.06)"/>
+          <polygon points="20,8 32,14 32,26 20,32 8,26 8,14" stroke="rgba(201,160,85,0.35)" stroke-width="0.8" fill="none"/>
+          <text x="20" y="24" text-anchor="middle" font-family="'Rajdhani',sans-serif" font-size="11" font-weight="700" fill="#c9a055" letter-spacing="1">LH</text>
+        </svg>
+      </div>
+      <div class="nav-logo-text">
+        <span class="brand">Luxury Hub</span>
+        <span class="sub">EVO Edition</span>
+      </div>
+    </a>
+
+    <div class="nav-links">
+      <a href="#hero"     data-section="hero">หน้าแรก</a>
+      <a href="#features" data-section="features">บริการ</a>
+      <a href="#products" data-section="products">สินค้า</a>
+      <a href="#topup"    data-section="topup">เติมเงิน</a>
+      <a href="#contact"  data-section="contact">ติดต่อ</a>
     </div>
 
-    <div id="landing" onclick="openLetter()">
-        <div class="envelope">💌</div>
-        <div class="landing-title">มีเรื่องอยากจะบอก...</div>
-        <div class="landing-sub">แตะเพื่อเปิดจดหมาย</div>
+    <div class="nav-actions">
+      <button class="btn-discord" onclick="window.open('https://discord.gg/','_blank')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>
+        </svg>
+        Discord
+      </button>
+
+      <!-- Auth Button (เมื่อยังไม่ได้ login) -->
+      <button id="navAuthBtn" onclick="openAuthModal('login')">
+        ◆ เข้าสู่ระบบ
+      </button>
+
+      <!-- User Menu (เมื่อ login แล้ว) -->
+      <div id="navUserMenu">
+        <button id="navAdminBtn" onclick="AdminPanel.open()">👑 ADMIN</button>
+        <span class="nav-credit-wrap" style="display:flex;align-items:center;gap:6px;cursor:pointer;" onclick="openProfileModal()">
+          <span class="nav-username" id="navUsername">USER</span>
+          <span class="nav-user-credit" id="navUserCredit">฿0</span>
+        </span>
+        <button id="navLogoutBtn" onclick="Auth.logout()">ออก</button>
+      </div>
+
+      <button class="cart-trigger" onclick="openCartModal()">
+        <span>🛒</span>
+        <span>ตะกร้า</span>
+        <span class="cart-badge" id="cartBadge">0</span>
+      </button>
     </div>
+  </nav>
 
-    <div class="wrap" id="page" style="display:none; opacity:0; transition:opacity 1s ease;" role="main">
-        <main>
-
-            <section class="card section-slide active" data-slide="0">
-                <header>
-                    <h1>ถึง... ฟาาาาาาาา</h1>
-                    <p>เลามีเรื่องสำคัญอยากจะบอก ลองกดถัดไปดูน้าาา 👇</p>
-                </header>
-            </section>
-
-            <section class="card timeline section-slide" data-slide="1">
-                <h2>📖 เรื่องราวของเรา</h2>
-                <div class="timeline-item">
-                    <div class="dot"></div>
-                    <h3>Day 1 — วันแรกที่เจอ</h3>
-                    <p>วันแรกที่เจอกันไม่คิดว่าจะรักได้นานถึงขนาดนี้นะเนี่ยย นึกว่ามาเล่นๆ แต่ถึงขนาดนี้ก็โอ้ววว เกินคาดเยอะแร้วว</p>
-                </div>
-                <div class="timeline-item">
-                    <div class="dot"></div>
-                    <h3>ความประทับใจ</h3>
-                    <p>ภูมิจัยยยย คนอะไรน่ารักได้ทุกวัน ทุกเวลา แก้มก็น่าบีบอีกอ่ยยยย</p>
-                </div>
-                <div class="timeline-item">
-                    <div class="dot"></div>
-                    <h3>วันนี้...</h3>
-                    <p>เลาอยากมีตะเองอยู่ไปนานๆ เรยยย คบกันไปยาวๆ มีอะไรไม่เข้าใจกันก็ปรับความเข้าใจกัน อยู่กันไปเรื่อยๆ เรยนะะะ</p>
-                </div>
-            </section>
-
-            <section class="card section-slide" data-slide="2">
-                <h2>💬 คำพูดจากใจ</h2>
-                <div class="message-card">
-                    <span class="emoji">💕</span>
-                    <div><strong>จริงแล้วว</strong> เลารักตะเองมากๆเรยย อาจจะมีบางครั้งไม่เข้าใจกัน เหวี่ยงใส่กันบ้าง แต่เราก็เข้าใจกันเหมือนเดิมม</div>
-                </div>
-                <div class="message-card">
-                    <span class="emoji">🥰</span>
-                    <div><strong>ทุกครั้ง</strong> ที่เห็นหน้า คนอะไรสวยขนาดเน้ จะชม!! ไม่ต้องสวนว่าตรงไหน ทุกตรง!!</div>
-                </div>
-                <div class="message-card">
-                    <span class="emoji">✨</span>
-                    <div><strong>ขอบคุณ</strong> ที่มีน้องงง ไม่ว่าจะเป็นวันดีหรือวันไม่ดี น้องก็อยู่กับพี่เสมอเรยย</div>
-                </div>
-            </section>
-
-            <section class="card section-slide" data-slide="3">
-                <h2 style="font-size:1.8rem;margin-bottom:24px;text-align:center;letter-spacing:-0.3px">📸 ความทรงจำของเรา</h2>
-                <p style="text-align:center;color:var(--muted);margin-bottom:32px;font-size:0.95rem;font-weight:500">ช่วงเวลาที่มีเธอข้างๆ เลา ทำให้ชีวิตสวยขึ้น</p>
-                <div class="gallery" role="region" aria-label="Photo memories gallery">
-                    <div class="polaroid photo-1" style="transform:rotate(-5deg)">
-                        <img src="https://cdn.discordapp.com/attachments/1340708357618794536/1448669485081821204/3831F601-8862-4F85-8D32-DCCDA0AB042A.jpeg?ex=69587258&is=695720d8&hm=ff0bb755fec61d7d9d955b982799c815ed457702480a21534316fafa79a031fd&" alt="Memory photo 1" loading="lazy">
-                        <div class="photo-number">01</div>
-                    </div>
-                    <div class="polaroid photo-2" style="transform:rotate(4deg) translateY(-8px)">
-                        <img src="https://cdn.discordapp.com/attachments/1340708357618794536/1448669483844505693/3DEB7109-3EB4-4381-80BB-0D0B1EC8949C.jpeg?ex=69587257&is=695720d7&hm=77c95d783fe9a27cae9b358ebec523694cd3af05853dd1dc9ea40fa761791718&" alt="Memory photo 2" loading="lazy">
-                        <div class="photo-number">02</div>
-                    </div>
-                    <div class="polaroid photo-3" style="transform:rotate(-3deg) translateY(4px)">
-                        <img src="https://cdn.discordapp.com/attachments/1340708357618794536/1448669484238766293/2250099F-C982-40D3-8011-897AAA08B42C.jpeg?ex=69587258&is=695720d8&hm=9b19035c9a759de355d28adfeef0d94f8d439a1fec1a280413128c4c140546d0&" alt="Memory photo 3" loading="lazy">
-                        <div class="photo-number">03</div>
-                    </div>
-                    <div class="polaroid photo-4" style="transform:rotate(6deg) translateY(-12px)">
-                        <img src="https://cdn.discordapp.com/attachments/1340708357618794536/1448669484666589235/D39A08C5-649E-4F56-88D9-B928DA10A1AA.jpeg?ex=69587258&is=695720d8&hm=92e35976bba1b29f6a08e746ab52011adb8d174598b426f02670e528281c87d9&" alt="Memory photo 4" loading="lazy">
-                        <div class="photo-number">04</div>
-                    </div>
-                </div>
-                <p class="image-credit" style="margin-top:28px">(รูปแสนอุบาทท 56466518)</p>
-            </section>
-
-            <section class="card section-slide" data-slide="4">
-                <h2>❤️ สิ่งที่เลารักเกี่ยวกับเธอ</h2>
-                <div class="love-items">
-                    <div class="love-item">
-                        <div class="icon">😊</div>
-                        <div class="text"><strong>รอยยิ้ม</strong> คนอะไรรสวยม้ากกก ทุกครั้งที่เห็นอยากจะให้ยิ้มอยู่ตลอด ไม่อยากให้หน้าบูด</div>
-                    </div>
-                    <div class="love-item">
-                        <div class="icon">🎵</div>
-                        <div class="text"><strong>เสียงน้อง</strong> เสียง เอ่ออ น่ารักก เลาช่บโดนบ่นน มันฟิรร แต่ไม่ขอแบบโดนบ่นวีนจริงๆจังๆนะะ</div>
-                    </div>
-                    <div class="love-item">
-                        <div class="icon">🧠</div>
-                        <div class="text"><strong>ความคิด</strong> บางทีใจเราตรงกันบ่อยเรยนน้าาาา ดีแระะะ</div>
-                    </div>
-                    <div class="love-item">
-                        <div class="icon">🌟</div>
-                        <div class="text"><strong>เป็นห่วง</strong> ห่วงตัวเองบ้างนะะ อะไรที่สั่งให้งดก็งดบ้างง เป็นห่วงทั้งนั้นแหละะ</div>
-                    </div>
-                    <div class="love-item">
-                        <div class="icon">💪</div>
-                        <div class="text"><strong>ความเข้มแข็ง</strong> น้องโคตรเก่งอ่ะะ แต่ละเดือนที่ผ่านมาก็เจอแต่หนักๆ แต่ก็ผ่านมาได้หมดเรยย</div>
-                    </div>
-                    <div class="love-item">
-                        <div class="icon">🫶</div>
-                        <div class="text"><strong>ส่วนตัวว</strong> น้องเคยบอกว่า ถ้าคบกับพี่กลัวจะงี่เง่าแล้วพี่ไม่โอเคไรงี้ช่ะะ พี่งี่เง่าตั้งแต่เริ่มคุยกับน้องแล้วเว้ยย</div>
-                    </div>
-                </div>
-            </section>
-
-            <section class="card question section-slide" id="questionCard" data-slide="5">
-                <h2>เป็นแฟนกันม้ายย? ❤️</h2>
-                <p>ให้เลาได้ดูแลเปงห่วงตะเองง เป็นคนข้างๆ ตะเองง จะได้ม้ายยย?</p>
-
-                <div class="controls">
-                    <button class="btn-yes" onclick="sayYes()" aria-label="Accept confession">ตกลง!!</button>
-                    <button class="btn-no" id="btnNo" onclick="sayNo()" aria-label="Maybe later">อาจจะยังน้าา</button>
-                </div>
-                <p class="shy-text">(ถ้าตอบตกลง เดี๋ยวพี่จะทำให้มันพิเศษแหละมั้ยไม่รู้ววว)</p>
-            </section>
-
-            <div class="accepted-view" id="acceptedView" style="display:none;">
-                <div class="congrats-box">
-                    <div class="music-box">
-                        <div class="album-cover"></div>
-                        <div class="song-info">
-                            <div class="song-title">Hold Me Down</div>
-                            <div class="artist-name">Daniel Caesar</div>
-                            <div class="playing-bar">
-                                <div class="playing-bar-fill"></div>
-                            </div>
-                        </div>
-                        <div style="font-size:1.5rem;">🎵</div>
-                    </div>
-
-                    <h2 style="margin-top:20px;">เย้! เลาได้เปงแฟนกันแล้ว 🥳</h2>
-                    <p>ขอบคุณนะะะ จะดูแลให้ดีที่สุดไปเรยยยยยย</p>
-
-                    <img src="https://i.pinimg.com/originals/6a/d0/7b/6ad07bc7872b7f4cafc7f14ad7638306.gif" style="width:100%; max-width:400px; border-radius:15px; margin-top:15px;">
-                </div>
-            </div>
-
-            <div id="wheelSection" style="display:none; animation:slideInFrame 0.6s ease-out;">
-                <div class="card wheel-card">
-                    <h2 style="text-align:center;margin-bottom:24px;">🎡 จะทำอะไรกันดี? 🎡</h2>
-                    <p style="text-align:center;color:var(--muted);margin-bottom:28px;font-weight:500">หมุนล้อเพื่อตัดสินใจว่าจะทำอะไรให้ดีย์</p>
-                    
-                    <div class="wheel-container">
-                      <div class="wheel" id="spinnerWheel">
-                        <div class="wheel-label" style="--angle:36">เลี้ยงขนม 🍪</div>
-                            <div class="wheel-label" style="--angle:108">เลี้ยงน้ำหวาน 🍮</div>
-                            <div class="wheel-label" style="--angle:180">เลี้ยงไอติม 🍦</div>
-                            <div class="wheel-label" style="--angle:252">อดกิน 😤</div>
-                            <div class="wheel-label" style="--angle:324">ดูหนังกัน 🎬</div>
-                      </div>
-                        <div class="wheel-pointer"></div>
-                    </div>
-
-                    <div style="text-align:center;margin-top:32px;">
-                        <button class="btn-spin" onclick="spinWheel()" id="spinBtn">🎲 หมุนล้อ</button>
-                    </div>
-
-                    <div id="wheelResult" style="margin-top:24px;padding:20px;background:linear-gradient(135deg,rgba(255,235,242,0.8),rgba(255,250,252,0.9));border-radius:14px;text-align:center;display:none;animation:slideInFrame 0.4s ease-out;">
-                        <p style="color:var(--muted);font-size:0.95rem;margin:0 0 8px;">ผลที่ได้คือ... ✨</p>
-                        <h3 id="resultText" style="color:var(--primary-1);font-size:1.6rem;margin:0;font-weight:700;"></h3>
-                    </div>
-                </div>
-            </div>
-
-        </main>
-
-        <div class="carousel-nav" id="carouselNav" style="display:none;">
-            <button class="nav-prev" onclick="prevSlide()">← ย้อนกลับ</button>
-            <div class="carousel-progress">
-                <span class="progress-text" id="progressText">1 / 6</span>
-                <div id="progressDots"></div>
-            </div>
-            <button class="nav-next" onclick="nextSlide()">ถัดไป →</button>
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-banner-bg">
+      <img src="assets/Banner Luxury WP Full.jpg" alt="Luxury Hub Banner" />
+    </div>
+    <div class="hero-deco hero-deco-tl">
+      <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0 60 L0 0 L60 0" stroke="rgba(201,160,85,0.4)" stroke-width="1" fill="none"/>
+        <path d="M10 60 L10 10 L60 10" stroke="rgba(201,160,85,0.2)" stroke-width="0.7" fill="none"/>
+        <circle cx="0" cy="0" r="4" fill="rgba(201,160,85,0.5)"/>
+        <circle cx="60" cy="0" r="2" fill="rgba(201,160,85,0.3)"/>
+        <circle cx="0" cy="60" r="2" fill="rgba(201,160,85,0.3)"/>
+      </svg>
+    </div>
+    <div class="hero-deco hero-deco-br">
+      <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M80 20 L80 80 L20 80" stroke="rgba(201,160,85,0.4)" stroke-width="1" fill="none"/>
+        <path d="M70 20 L70 70 L20 70" stroke="rgba(201,160,85,0.2)" stroke-width="0.7" fill="none"/>
+        <circle cx="80" cy="80" r="4" fill="rgba(201,160,85,0.5)"/>
+      </svg>
+    </div>
+    <div class="scanline-overlay"></div>
+    <div class="hero-content">
+      <div class="hero-id-tag">LUXURY HUB EVO · v3.0.0 · ONLINE</div>
+      <h1 class="hero-title-main" data-text="LUXURY">LUXURY</h1>
+      <div class="hero-title-sub">HUB EVO EDITION</div>
+      <div class="hero-jp">ラグジュアリーハブ · 最高品質スクリプト</div>
+      <div class="hero-divider"></div>
+      <p class="hero-desc">
+        แหล่งรวม Script &amp; GUI คุณภาพสูงสำหรับ Roblox<br>
+        อัปเดตต่อเนื่อง · ซัพพอร์ต 24/7 · รับประกันทุกสินค้า
+      </p>
+      <div class="hero-stats-row">
+        <div class="hero-stat">
+          <div class="hero-stat-num" data-count="1240" data-suffix="+">0</div>
+          <div class="hero-stat-label">ลูกค้า</div>
         </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <div class="hero-stat-num" data-count="98" data-suffix="%">0</div>
+          <div class="hero-stat-label">ความพึงพอใจ</div>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <div class="hero-stat-num" data-count="50" data-suffix="+">0</div>
+          <div class="hero-stat-label">สินค้า</div>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <div class="hero-stat-num" data-count="24" data-suffix="/7">0</div>
+          <div class="hero-stat-label">ซัพพอร์ต</div>
+        </div>
+      </div>
+      <div class="hero-cta-row">
+        <button class="btn btn-gold" onclick="scrollToSection('products')">◆ เลือกซื้อสินค้า</button>
+        <button class="btn btn-ghost" onclick="scrollToSection('topup')">เติมเงิน</button>
+      </div>
     </div>
+  </section>
 
-    <audio id="bg-music">
-        <source src="https://cdn.discordapp.com/attachments/1340708357618794536/1448670608643850333/Hold_Me_Down.mp3?ex=69587364&is=695721e4&hm=79d172293b827b18375f22744bc6fe9a56874fd95b1228d25cfb2dc08d7b605e&" type="audio/mpeg">
-    </audio>
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="section-wrap">
+      <div class="section-head reveal">
+        <div class="section-eyebrow">บริการของเรา</div>
+        <h2 class="section-title">ทำไมต้อง <span class="accent">Luxury Hub</span></h2>
+        <p class="section-sub">คุณภาพที่คัดสรรมาอย่างดี พร้อมให้บริการทุกระดับ</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card reveal delay-100">
+          <span class="feat-num">01</span>
+          <div class="feat-icon-wrap">⚡</div>
+          <div class="feat-title">อัปเดตรวดเร็ว</div>
+          <p class="feat-desc">Script และ GUI ทุกตัวได้รับการอัปเดตภายใน 24 ชั่วโมงหลัง Roblox ปล่อยแพทช์ใหม่</p>
+        </div>
+        <div class="feature-card reveal delay-200">
+          <span class="feat-num">02</span>
+          <div class="feat-icon-wrap">🛡️</div>
+          <div class="feat-title">ปลอดภัย 100%</div>
+          <p class="feat-desc">ทุกสินค้าผ่านการทดสอบ Anti-Detect ไม่ถูก Ban รับประกันความปลอดภัย</p>
+        </div>
+        <div class="feature-card reveal delay-300">
+          <span class="feat-num">03</span>
+          <div class="feat-icon-wrap">💬</div>
+          <div class="feat-title">ซัพพอร์ต 24/7</div>
+          <p class="feat-desc">ทีมงานพร้อมช่วยเหลือตลอด 24 ชั่วโมง ทุกวัน ผ่าน Discord และ Line</p>
+        </div>
+        <div class="feature-card reveal delay-400">
+          <span class="feat-num">04</span>
+          <div class="feat-icon-wrap">🏆</div>
+          <div class="feat-title">รับประกันสินค้า</div>
+          <p class="feat-desc">รับประกันทุกสินค้า หากพบปัญหาจะแก้ไขหรือคืนเงินภายใน 24 ชั่วโมง</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    <script>
-        // 🎠 Carousel/Slide Management
-        let currentSlide = 0;
-        const totalSlides = 6;
-        let isTransitioning = false; // prevent double navigation during animation
-    
-        function updateCarousel() {
-          const slides = document.querySelectorAll('.section-slide');
-          slides.forEach((slide, index) => {
-            if (index === currentSlide) {
-              slide.classList.add('active');
-            } else {
-              slide.classList.remove('active');
-            }
-          });
-    
-          // Update controls (dots/buttons/text) separately to avoid re-triggering slide animations
-          updateControls();
-    
-          // Scroll to top (instant to avoid visual jump/flicker)
-          window.scrollTo({ top: 0, behavior: 'auto' });
-        }
-    
-        function nextSlide() {
-          if (isTransitioning) return;
-          if (currentSlide < totalSlides - 1) {
-            isTransitioning = true;
-            currentSlide++;
-            updateCarousel();
-            setTimeout(() => { isTransitioning = false; updateControls(); }, 650);
-          }
-        }
-    
-        function prevSlide() {
-          if (isTransitioning) return;
-          if (currentSlide > 0) {
-            isTransitioning = true;
-            currentSlide--;
-            updateCarousel();
-            setTimeout(() => { isTransitioning = false; updateControls(); }, 650);
-          }
-        }
-    
-        function goToSlide(index) {
-          if (isTransitioning || index === currentSlide) return;
-          isTransitioning = true;
-          currentSlide = index;
-          updateCarousel();
-          setTimeout(() => { isTransitioning = false; updateControls(); }, 650);
-        }
-    
-        // Update only controls: progress dots, progress text, and button disabled state
-        function updateControls() {
-          const progressDots = document.getElementById('progressDots');
-          if (progressDots) {
-            progressDots.innerHTML = '';
-            for (let i = 0; i < totalSlides; i++) {
-              const dot = document.createElement('div');
-              dot.className = 'progress-dot' + (i === currentSlide ? ' active' : '');
-              dot.onclick = () => goToSlide(i);
-              progressDots.appendChild(dot);
-            }
-          }
-    
-          const progressText = document.getElementById('progressText');
-          if (progressText) progressText.textContent = `${currentSlide + 1} / ${totalSlides}`;
-    
-          const prevBtn = document.querySelector('.nav-prev');
-          const nextBtn = document.querySelector('.nav-next');
-          if (prevBtn) prevBtn.disabled = currentSlide === 0 || isTransitioning;
-          if (nextBtn) nextBtn.disabled = currentSlide === totalSlides - 1 || isTransitioning;
-        }
-    
-        // ✨ Floating Hearts Background
-        function createFloatingHeart() {
-          const heart = document.createElement('div');
-          heart.className = 'floating-heart';
-          heart.innerHTML = '❤️';
-          heart.style.left = Math.random() * window.innerWidth + 'px';
-          heart.style.top = window.innerHeight + 'px';
-          document.body.appendChild(heart);
-          
-          setTimeout(() => heart.remove(), 3000);
-        }
-    
-        // Create hearts every 1.5s
-        setInterval(createFloatingHeart, 1500);
-    
-        // 🖱️ Heart Cursor Trail
-        document.addEventListener('mousemove', (e) => {
-          if (Math.random() > 0.7) {
-            const trail = document.createElement('div');
-            trail.className = 'heart-trail';
-            trail.innerHTML = '💕';
-            trail.style.left = e.clientX + 'px';
-            trail.style.top = e.clientY + 'px';
-            document.body.appendChild(trail);
-            
-            setTimeout(() => trail.remove(), 800);
-          }
-        });
-    
-        // 💌 Open Letter
-        function openLetter() {
-            const landing = document.getElementById('landing');
-            const page = document.getElementById('page');
-            const carouselNav = document.getElementById('carouselNav');
-            landing.style.opacity = '0';
-            setTimeout(() => {
-                landing.style.display = 'none';
-                page.style.display = 'block';
-                carouselNav.style.display = 'flex';
-                setTimeout(() => page.style.opacity = '1', 50);
-                updateCarousel();
-            }, 800);
-        }
-    
-        // ❌ No Button Text Management (New Logic)
-        const noButtonTexts = [
-            'แน่ใจแล้วหรอ? 🤨',
-            'แน่ใจจริงๆ นะ? 🤔',
-            'ไม่เป็นจริงหรอ? 🥺',
-            'กดอีกครั้งนึง จะไม่เป็นจริงๆ นะ! 😭',
-            'มั่นใจแล้วใช่มั้ย? 💔',
-            'ไม่เป็นจริงนะ... 😔',
-            'ว้ายย กดไม่เป็นไม่ได้หรอก ล็อคมง!' // Final state
-        ];
-        let noTextIndex = 0;
+  <!-- PRODUCTS -->
+  <section id="products">
+    <div class="section-wrap">
+      <div class="section-head reveal">
+        <div class="section-eyebrow">สินค้าทั้งหมด</div>
+        <h2 class="section-title">เลือก <span class="accent">สินค้า</span> ของคุณ</h2>
+        <p class="section-sub">Script, GUI, บัญชี และบริการคุณภาพสูงกว่า 50 รายการ</p>
+      </div>
+      <div class="filter-row">
+        <button class="filter-tab active" onclick="filterProducts('all', this)">ทั้งหมด</button>
+        <button class="filter-tab" onclick="filterProducts('script', this)">สคริปต์</button>
+        <button class="filter-tab" onclick="filterProducts('gui', this)">GUI</button>
+        <button class="filter-tab" onclick="filterProducts('account', this)">บัญชี</button>
+        <button class="filter-tab" onclick="filterProducts('service', this)">บริการ</button>
+      </div>
+      <div class="products-grid" id="productsGrid"></div>
+    </div>
+  </section>
 
-        function sayNo() {
-            const btn = document.getElementById('btnNo');
-            
-            if (noTextIndex < noButtonTexts.length - 1) { 
-                btn.textContent = noButtonTexts[noTextIndex];
-                noTextIndex++;
-            } else if (noTextIndex === noButtonTexts.length - 1) {
-                btn.textContent = noButtonTexts[noTextIndex];
-                btn.disabled = true; // Disable on the last text
-                noTextIndex++;
-            }
-        }
+  <!-- TOPUP -->
+  <section id="topup">
+    <div class="section-wrap">
+      <div class="section-head reveal">
+        <div class="section-eyebrow">เติมเงิน</div>
+        <h2 class="section-title">เติม <span class="accent">เครดิต</span> ของคุณ</h2>
+        <p class="section-sub">เติมเงินเพื่อซื้อสินค้าในระบบ รองรับหลายช่องทางการชำระเงิน</p>
+      </div>
+      <div class="topup-layout">
+        <div class="lx-panel reveal">
+          <div class="panel-title">เติมเครดิต</div>
+          <div class="panel-sub">SELECT AMOUNT · CHOOSE PAYMENT</div>
+          <div class="amount-grid" id="topupAmountGrid">
+            <div class="amount-tile" onclick="selectAmountTile(this, 50)">
+              <div class="amt-val">฿50</div><span class="amt-note">Starter</span>
+            </div>
+            <div class="amount-tile active" data-default onclick="selectAmountTile(this, 100)">
+              <div class="amt-val">฿100</div><span class="amt-note">Popular</span>
+            </div>
+            <div class="amount-tile" onclick="selectAmountTile(this, 200)">
+              <div class="amt-val">฿200</div><span class="amt-note">Value</span>
+            </div>
+            <div class="amount-tile" onclick="selectAmountTile(this, 500)">
+              <div class="amt-val">฿500</div><span class="amt-note">Premium</span>
+            </div>
+            <div class="amount-tile" onclick="selectAmountTile(this, 1000)">
+              <div class="amt-val">฿1,000</div><span class="amt-note">Elite</span>
+            </div>
+            <div class="amount-tile" onclick="selectAmountTile(this, 'custom')">
+              <div class="amt-val">กำหนด</div><span class="amt-note">Custom</span>
+            </div>
+          </div>
+          <div id="customAmtWrap" style="display:none;" class="field-group">
+            <label class="field-label">จำนวนเงินที่ต้องการ (บาท)</label>
+            <input type="number" class="field-input" id="customAmtInput" placeholder="ระบุจำนวน..." min="20" />
+          </div>
+          <input type="hidden" id="topupSelectedAmt" value="100" />
+          <div style="margin-bottom:8px;margin-top:20px;">
+            <label class="field-label">ช่องทางชำระเงิน</label>
+          </div>
+          <div class="pay-grid">
+            <div class="pay-tile pay-tile-btn" onclick="topupSelectPay(this,'bank')">
+              <span class="pay-icon">🏦</span><span class="pay-name">โอนเงิน</span>
+            </div>
+            <div class="pay-tile pay-tile-btn active" onclick="topupSelectPay(this,'promptpay')">
+              <span class="pay-icon">📱</span><span class="pay-name">PromptPay</span>
+            </div>
+            <div class="pay-tile pay-tile-btn" onclick="topupSelectPay(this,'truemoney')">
+              <span class="pay-icon">💳</span><span class="pay-name">TrueMoney</span>
+            </div>
+            <div class="pay-tile pay-tile-btn" onclick="topupSelectPay(this,'crypto')">
+              <span class="pay-icon">🪙</span><span class="pay-name">Crypto</span>
+            </div>
+          </div>
+          <input type="hidden" id="topupSelectedPay" value="promptpay" />
+          <button class="btn btn-gold btn-full" style="margin-top:20px;" onclick="handleTopupPay()">◆ ดำเนินการเติมเงิน</button>
+        </div>
+
+        <div>
+          <div class="lx-panel reveal delay-200">
+            <div class="panel-title">ข้อมูลการเติมเงิน</div>
+            <div class="panel-sub">HOW IT WORKS</div>
+            <div class="topup-info-item">
+              <div class="info-icon">⚡</div>
+              <div><div class="info-title">รวดเร็ว</div><p class="info-desc">เครดิตเข้าบัญชีทันทีหลังชำระเงิน ไม่ต้องรอนาน</p></div>
+            </div>
+            <div class="topup-info-item">
+              <div class="info-icon">🔒</div>
+              <div><div class="info-title">ปลอดภัย</div><p class="info-desc">ระบบชำระเงินเข้ารหัส SSL ข้อมูลของคุณปลอดภัย 100%</p></div>
+            </div>
+            <div class="topup-info-item">
+              <div class="info-icon">🎁</div>
+              <div><div class="info-title">โบนัสพิเศษ</div><p class="info-desc">เติม ฿500+ รับโบนัส 10% · เติม ฿1,000+ รับโบนัส 20%</p></div>
+            </div>
+            <div class="topup-info-item">
+              <div class="info-icon">💬</div>
+              <div><div class="info-title">มีปัญหา?</div><p class="info-desc">ติดต่อทีมงานผ่าน Discord หรือ Line ได้ตลอด 24 ชั่วโมง</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="section-wrap">
+      <div class="section-head reveal">
+        <div class="section-eyebrow">ติดต่อเรา</div>
+        <h2 class="section-title">พร้อม <span class="accent">ช่วยเหลือ</span> เสมอ</h2>
+        <p class="section-sub">ทีมงานพร้อมให้บริการ 24 ชั่วโมง ทุกวัน</p>
+      </div>
+      <div class="contact-grid">
+        <a class="contact-card reveal delay-100" href="https://discord.gg/" target="_blank">
+          <div class="contact-icon-wrap">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#7289da">
+              <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="contact-card-title">Discord Server</div>
+            <p class="contact-card-desc">เข้าร่วม Community · รับข่าวสาร · ติดต่อซัพพอร์ต</p>
+          </div>
+        </a>
+        <a class="contact-card reveal delay-200" href="https://line.me/" target="_blank">
+          <div class="contact-icon-wrap" style="font-size:1.5rem;">💬</div>
+          <div>
+            <div class="contact-card-title">Line Official</div>
+            <p class="contact-card-desc">แชทโดยตรง · ตอบกลับเร็ว · ซัพพอร์ต 24/7</p>
+          </div>
+        </a>
+        <a class="contact-card reveal delay-300" href="https://t.me/" target="_blank">
+          <div class="contact-icon-wrap" style="font-size:1.5rem;">✈️</div>
+          <div>
+            <div class="contact-card-title">Telegram</div>
+            <p class="contact-card-desc">ช่องทางสำรอง · ติดตามอัปเดต · รับโปรโมชั่น</p>
+          </div>
+        </a>
+        <a class="contact-card reveal delay-400" href="mailto:support@luxuryhub.th">
+          <div class="contact-icon-wrap" style="font-size:1.5rem;">📧</div>
+          <div>
+            <div class="contact-card-title">Email Support</div>
+            <p class="contact-card-desc">ร้องเรียน · ขอใบเสร็จ · ติดต่อทีมงาน</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="lxh-footer">
+    <div class="footer-logo">◆ Luxury Hub</div>
+    <div class="footer-copy">
+      © 2024 LUXURY HUB EVO · All rights reserved<br>
+      <span class="mono" style="font-size:0.6rem;color:var(--faint);">v3.0.0 · TH</span>
+    </div>
+    <div class="footer-links">
+      <a href="#">นโยบาย</a>
+      <a href="#">เงื่อนไข</a>
+      <a href="#">คืนเงิน</a>
+    </div>
+  </footer>
+
+  <!-- TOAST -->
+  <div class="lx-toast" id="lxToast">
+    <div class="toast-line"></div>
+    <div class="toast-icon-wrap" id="toastIcon">✦</div>
+    <div class="toast-body">
+      <div class="toast-head" id="toastHead">ข้อความ</div>
+      <div class="toast-msg"  id="toastMsg">รายละเอียด</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       AUTH MODAL (Login / Register)
+  ════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="authModal">
+    <div class="modal-panel">
+      <div class="modal-header-bar">
+        <span class="modal-title-text">◆ เข้าสู่ระบบ / สมัครสมาชิก</span>
+        <button class="icon-btn" onclick="Modal.close('authModal')">✕</button>
+      </div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="authTabLogin" onclick="switchAuthTab('login')">เข้าสู่ระบบ</button>
+        <button class="auth-tab" id="authTabRegister" onclick="switchAuthTab('register')">สมัครสมาชิก</button>
+      </div>
+
+      <!-- Login Form -->
+      <div id="authLoginForm">
+        <div class="field-group">
+          <label class="field-label">ชื่อผู้ใช้</label>
+          <input type="text" class="field-input" id="loginUsername" placeholder="username" autocomplete="username" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">รหัสผ่าน</label>
+          <input type="password" class="field-input" id="loginPassword" placeholder="••••••••" autocomplete="current-password"
+            onkeydown="if(event.key==='Enter') doLogin()" />
+        </div>
+        <button class="btn btn-gold btn-full" style="margin-top:20px;" onclick="doLogin()">◆ เข้าสู่ระบบ</button>
+        <div id="loginError" style="display:none;margin-top:12px;color:var(--danger);font-size:0.8rem;text-align:center;"></div>
+        <div style="margin-top:16px;text-align:center;font-size:0.78rem;color:var(--muted);">
+          ยังไม่มีบัญชี? <span style="color:var(--gold-base);cursor:pointer;" onclick="switchAuthTab('register')">สมัครสมาชิก</span>
+        </div>
+      </div>
+
+      <!-- Register Form -->
+      <div id="authRegisterForm" style="display:none;">
+        <div class="field-group">
+          <label class="field-label">ชื่อผู้ใช้ <span style="color:var(--muted);font-size:0.7rem;">(4+ ตัวอักษร)</span></label>
+          <input type="text" class="field-input" id="regUsername" placeholder="username" autocomplete="username" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">อีเมล <span style="color:var(--muted);font-size:0.7rem;">(ไม่บังคับ)</span></label>
+          <input type="email" class="field-input" id="regEmail" placeholder="email@example.com" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">รหัสผ่าน <span style="color:var(--muted);font-size:0.7rem;">(6+ ตัวอักษร)</span></label>
+          <input type="password" class="field-input" id="regPassword" placeholder="••••••••" autocomplete="new-password" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">ยืนยันรหัสผ่าน</label>
+          <input type="password" class="field-input" id="regPassword2" placeholder="••••••••" autocomplete="new-password"
+            onkeydown="if(event.key==='Enter') doRegister()" />
+        </div>
+        <button class="btn btn-gold btn-full" style="margin-top:20px;" onclick="doRegister()">◆ สมัครสมาชิก</button>
+        <div id="regError" style="display:none;margin-top:12px;color:var(--danger);font-size:0.8rem;text-align:center;"></div>
+        <div style="margin-top:16px;text-align:center;font-size:0.78rem;color:var(--muted);">
+          มีบัญชีแล้ว? <span style="color:var(--gold-base);cursor:pointer;" onclick="switchAuthTab('login')">เข้าสู่ระบบ</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       ADMIN PANEL MODAL
+  ════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="adminModal">
+    <div class="modal-panel" style="max-width:900px;width:96vw;max-height:88vh;overflow-y:auto;">
+      <div class="modal-header-bar">
+        <span class="modal-title-text">👑 ADMIN PANEL</span>
+        <button class="icon-btn" onclick="AdminPanel.close()">✕</button>
+      </div>
+      <div id="adminModalBody"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       PROMPTPAY MODAL
+  ════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="promptpayModal">
+    <div class="modal-panel">
+      <div class="modal-header-bar">
+        <span class="modal-title-text">📱 ชำระผ่าน PromptPay</span>
+        <button class="icon-btn" onclick="Modal.close('promptpayModal')">✕</button>
+      </div>
+      <div class="pp-qr-wrap">
+        <div class="pp-amount-display" id="ppAmount">฿100</div>
+        <canvas id="ppQRCanvas"></canvas>
+        <div class="pp-phone" id="ppPhoneDisplay">เบอร์: 095-240-8955</div>
+      </div>
+      <div class="pp-steps">
+        <div class="pp-step"><div class="pp-step-num">1</div><div>เปิดแอปธนาคารหรือ TrueMoney Wallet</div></div>
+        <div class="pp-step"><div class="pp-step-num">2</div><div>เลือก "สแกน QR" หรือ "PromptPay"</div></div>
+        <div class="pp-step"><div class="pp-step-num">3</div><div>สแกน QR Code ด้านบนและยืนยันยอดเงิน</div></div>
+        <div class="pp-step"><div class="pp-step-num">4</div><div>กดปุ่ม "แจ้งโอน" ด้านล่างเพื่อส่งหลักฐาน</div></div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">หมายเหตุ (ไม่บังคับ)</label>
+        <input type="text" class="field-input" id="ppSlipNote" placeholder="เช่น โอนเวลา 14:30 หรือชื่อบัญชีผู้โอน" />
+      </div>
+      <button class="btn btn-gold btn-full" style="margin-top:16px;" onclick="PaymentSystem.submitPromptPaySlip()">
+        ◆ แจ้งโอนเงินแล้ว
+      </button>
+      <div style="margin-top:10px;text-align:center;font-size:0.72rem;color:var(--muted);">
+        เครดิตจะเข้าบัญชีหลังแอดมินยืนยัน ปกติภายใน 5-15 นาที
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       TRUEMONEY MODAL
+  ════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="truemoneyModal">
+    <div class="modal-panel">
+      <div class="modal-header-bar">
+        <span class="modal-title-text">💳 ชำระผ่าน TrueMoney (อั่งเปา)</span>
+        <button class="icon-btn" onclick="Modal.close('truemoneyModal')">✕</button>
+      </div>
+      <div style="background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.2);padding:14px 16px;margin-bottom:20px;clip-path:var(--clip-tl);">
+        <div style="font-family:var(--font-display);font-size:0.78rem;font-weight:600;color:#f97316;letter-spacing:1px;margin-bottom:6px;">วิธีส่งอั่งเปา TrueMoney</div>
+        <div style="font-size:0.78rem;color:var(--text-secondary);line-height:1.7;">
+          1. เปิดแอป TrueMoney Wallet<br>
+          2. เลือก "อั่งเปา" → "สร้างอั่งเปา"<br>
+          3. ใส่จำนวนเงินที่ต้องการเติม<br>
+          4. คัดลอกลิ้งก์อั่งเปา และวางในช่องด้านล่าง
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">ลิ้งก์อั่งเปา TrueMoney *</label>
+        <input type="url" class="field-input" id="tmEnvelopeUrl" placeholder="https://gift.truemoney.com/campaign/?v=..." />
+      </div>
+      <div class="field-group">
+        <label class="field-label">จำนวนเงินในซอง (฿) *</label>
+        <input type="number" class="field-input" id="tmAmount" placeholder="ระบุยอดเงิน..." min="20" />
+      </div>
+      <button class="btn btn-gold btn-full" style="margin-top:16px;" onclick="PaymentSystem.submitTrueMoneyEnvelope()">
+        ◆ ส่งซองอั่งเปา
+      </button>
+      <div style="margin-top:10px;text-align:center;font-size:0.72rem;color:var(--muted);">
+        ระบบจะตรวจสอบและเติมเครดิตภายใน 5-15 นาที
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       BANK TRANSFER MODAL
+  ════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="bankModal">
+    <div class="modal-panel">
+      <div class="modal-header-bar">
+        <span class="modal-title-text">🏦 โอนเงินผ่านธนาคาร</span>
+        <button class="icon-btn" onclick="Modal.close('bankModal')">✕</button>
+      </div>
+      <div style="background:var(--bg-overlay);border:1px solid rgba(201,160,85,0.15);padding:20px;margin-bottom:20px;clip-path:var(--clip-tl);">
+        <div style="font-family:var(--font-display);font-size:0.78rem;color:var(--muted);letter-spacing:1px;margin-bottom:12px;text-transform:uppercase;">บัญชีรับโอน</div>
+        <div style="font-size:1.1rem;font-weight:700;color:var(--text-primary);font-family:var(--font-display);">ธนาคารกสิกรไทย (KBank)</div>
+        <div style="font-family:var(--font-mono);font-size:1rem;color:var(--gold-bright);margin:8px 0;letter-spacing:2px;">xxx-x-xxxxx-x</div>
+        <div style="font-size:0.82rem;color:var(--text-secondary);">ชื่อบัญชี: LUXURY HUB EVO</div>
+      </div>
+      <div class="pp-steps">
+        <div class="pp-step"><div class="pp-step-num">1</div><div>โอนเงินตามจำนวนที่ต้องการเติม</div></div>
+        <div class="pp-step"><div class="pp-step-num">2</div><div>ถ่ายสลิปการโอนเงิน</div></div>
+        <div class="pp-step"><div class="pp-step-num">3</div><div>ส่งสลิปพร้อมยูสเซอร์เนมใน Discord หรือ Line</div></div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">จำนวนเงินที่โอน (฿) *</label>
+        <input type="number" class="field-input" id="bankAmount" placeholder="ระบุยอดเงิน..." min="20" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">หมายเหตุ (ไม่บังคับ)</label>
+        <input type="text" class="field-input" id="bankNote" placeholder="เช่น ชื่อบัญชีที่โอน / เวลาที่โอน" />
+      </div>
+      <button class="btn btn-gold btn-full" style="margin-top:16px;" onclick="submitBankTransfer()">
+        ◆ แจ้งโอนเงินแล้ว
+      </button>
+      <div style="margin-top:10px;text-align:center;font-size:0.72rem;color:var(--muted);">
+        กรุณาส่งสลิปให้แอดมินยืนยันด้วย เครดิตจะเข้าภายใน 5-30 นาที
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       CART MODAL
+  ════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="cartModal">
+    <div class="modal-panel">
+      <div class="modal-header-bar">
+        <span class="modal-title-text">🛒 ตะกร้าสินค้า</span>
+        <button class="icon-btn" onclick="Modal.close('cartModal')">✕</button>
+      </div>
+      <div id="cartList"></div>
+      <div id="cartFooter" style="display:none;">
+        <div class="order-summary">
+          <div class="summary-row total-row">
+            <span class="label">ยอดรวม</span>
+            <span class="value" id="cartTotal">฿0</span>
+          </div>
+        </div>
+        <button class="btn btn-gold btn-full" onclick="openCheckout()">◆ ดำเนินการชำระเงิน</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       CHECKOUT MODAL
+  ════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="checkoutModal">
+    <div class="modal-panel">
+      <div class="modal-header-bar">
+        <span class="modal-title-text">◆ ชำระเงิน</span>
+        <button class="icon-btn" onclick="Modal.close('checkoutModal')">✕</button>
+      </div>
+      <div class="checkout-steps">
+        <div class="ck-step done"   id="ckStep1"><div class="step-dot">1</div><div class="step-lbl">ตะกร้า</div></div>
+        <div class="ck-step active" id="ckStep2"><div class="step-dot">2</div><div class="step-lbl">ชำระ</div></div>
+        <div class="ck-step"        id="ckStep3"><div class="step-dot">3</div><div class="step-lbl">เสร็จสิ้น</div></div>
+      </div>
+      <div id="ckContent">
+        <div class="order-summary">
+          <div class="summary-row">
+            <span class="label">ยอดสินค้า</span>
+            <span class="value" id="ckSubtotal">฿0</span>
+          </div>
+          <div class="summary-row total-row">
+            <span class="label">ยอดรวม</span>
+            <span class="value" id="ckTotal">฿0</span>
+          </div>
+        </div>
+        <div id="ckCreditInfo" style="display:none;padding:12px 16px;margin-bottom:16px;background:rgba(76,175,128,0.08);border:1px solid rgba(76,175,128,0.2);clip-path:var(--clip-tl);">
+          <div style="font-family:var(--font-mono);font-size:0.78rem;color:var(--success);">
+            💰 เครดิตของคุณ: <span id="ckUserCredit" style="font-weight:700;">฿0</span>
+          </div>
+        </div>
+        <div id="ckNoCredit" style="display:none;padding:12px 16px;margin-bottom:16px;background:rgba(224,64,80,0.08);border:1px solid rgba(224,64,80,0.2);clip-path:var(--clip-tl);">
+          <div style="font-family:var(--font-mono);font-size:0.78rem;color:var(--danger);">⚠ เครดิตไม่เพียงพอ กรุณา<span style="text-decoration:underline;cursor:pointer;" onclick="Modal.close('checkoutModal');scrollToSection('topup')">เติมเครดิต</span>ก่อน</div>
+        </div>
+        <div id="ckNotLoggedIn" style="display:none;padding:12px 16px;margin-bottom:16px;background:rgba(201,160,85,0.06);border:1px solid rgba(201,160,85,0.2);clip-path:var(--clip-tl);">
+          <div style="font-size:0.8rem;color:var(--text-secondary);">กรุณา <span style="color:var(--gold-base);cursor:pointer;text-decoration:underline;" onclick="Modal.close('checkoutModal');openAuthModal('login')">เข้าสู่ระบบ</span> ก่อนชำระเงิน</div>
+        </div>
+        <button class="btn btn-gold btn-full" style="margin-top:8px;" id="ckConfirmBtn" onclick="completeOrder()">◆ ยืนยันซื้อด้วยเครดิต</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       USER PROFILE MODAL
+  ════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="profileModal">
+    <div class="modal-panel" style="max-width:640px;">
+      <div class="modal-header-bar">
+        <span class="modal-title-text">◆ โปรไฟล์ของฉัน</span>
+        <button class="icon-btn" onclick="Modal.close('profileModal')">✕</button>
+      </div>
+      <div id="profileContent"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       DELIVERY MODAL (แสดงสินค้าที่ได้รับ)
+  ════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="deliveryModal">
+    <div class="modal-panel">
+      <div class="modal-header-bar">
+        <span class="modal-title-text">✦ สินค้าของคุณ</span>
+        <button class="icon-btn" onclick="Modal.close('deliveryModal')">✕</button>
+      </div>
+      <div id="deliveryContent"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       SCRIPTS — โหลดตามลำดับ
+  ════════════════════════════════════════════ -->
+  <script src="js/product.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/store-system.js"></script>
+  <script src="js/payment-system.js"></script>
+  <script src="js/admin-panel.js"></script>
+  <script src="js/main.js"></script>
+
+  <!-- ═══════════════════════════════════════════
+       GLUE SCRIPT — เชื่อมระบบทั้งหมด
+  ════════════════════════════════════════════ -->
+  <script>
+  // ══════════════════════════════════════════════
+  //  AUTH MODAL
+  // ══════════════════════════════════════════════
+  function openAuthModal(tab = 'login') {
+    switchAuthTab(tab);
+    Modal.open('authModal');
+  }
+
+  function switchAuthTab(tab) {
+    const isLogin = tab === 'login';
+    document.getElementById('authLoginForm').style.display    = isLogin ? 'block' : 'none';
+    document.getElementById('authRegisterForm').style.display = isLogin ? 'none' : 'block';
+    document.getElementById('authTabLogin').classList.toggle('active', isLogin);
+    document.getElementById('authTabRegister').classList.toggle('active', !isLogin);
+    document.getElementById('loginError').style.display = 'none';
+    document.getElementById('regError').style.display   = 'none';
+  }
+
+  function doLogin() {
+    const u = document.getElementById('loginUsername').value.trim();
+    const p = document.getElementById('loginPassword').value;
+    const r = Auth.login(u, p);
+    if (!r.ok) {
+      const el = document.getElementById('loginError');
+      el.textContent = r.msg; el.style.display = 'block';
+      return;
+    }
+    Modal.close('authModal');
+    document.getElementById('loginUsername').value = '';
+    document.getElementById('loginPassword').value = '';
+    updateNavUI();
+    Toast.show('✦', `ยินดีต้อนรับ ${r.user.username}`, 'เข้าสู่ระบบสำเร็จ');
+  }
+
+  function doRegister() {
+    const u  = document.getElementById('regUsername').value.trim();
+    const e  = document.getElementById('regEmail').value.trim();
+    const p  = document.getElementById('regPassword').value;
+    const p2 = document.getElementById('regPassword2').value;
+    const el = document.getElementById('regError');
+
+    if (p !== p2) { el.textContent = 'รหัสผ่านไม่ตรงกัน'; el.style.display = 'block'; return; }
+    const r = Auth.register(u, p, e);
+    if (!r.ok) { el.textContent = r.msg; el.style.display = 'block'; return; }
+
+    Modal.close('authModal');
+    ['regUsername','regEmail','regPassword','regPassword2'].forEach(id => document.getElementById(id).value = '');
+    updateNavUI();
+    Toast.show('✦', `สมัครสำเร็จ! ยินดีต้อนรับ ${r.user.username}`, 'เครดิตเริ่มต้น ฿0');
+  }
+
+  // ══════════════════════════════════════════════
+  //  NAV UI
+  // ══════════════════════════════════════════════
+  function updateNavUI() {
+    const user = Auth.getCurrentUser();
+    const authBtn    = document.getElementById('navAuthBtn');
+    const userMenu   = document.getElementById('navUserMenu');
+    const adminBtn   = document.getElementById('navAdminBtn');
+    const creditEl   = document.getElementById('navUserCredit');
+    const usernameEl = document.getElementById('navUsername');
+
+    if (user) {
+      authBtn.style.display  = 'none';
+      userMenu.style.display = 'flex';
+      if (usernameEl) usernameEl.textContent = user.username.toUpperCase();
+      if (creditEl)   creditEl.textContent   = `฿${user.credits || 0}`;
+      if (adminBtn)   adminBtn.style.display = user.isAdmin ? 'flex' : 'none';
+    } else {
+      authBtn.style.display  = 'flex';
+      userMenu.style.display = 'none';
+      if (adminBtn) adminBtn.style.display = 'none';
+    }
+  }
+
+  // Override Auth.updateNavUI to use our full version
+  const _origUpdateNavUI = Auth.updateNavUI;
+  Object.defineProperty(Auth, 'updateNavUI', {
+    get: () => updateNavUI,
+    set: () => {}
+  });
+
+  // ══════════════════════════════════════════════
+  //  PRODUCT GRID (overrides main.js to use StoreSystem)
+  // ══════════════════════════════════════════════
+  function renderProducts(filter = 'all') {
+    const grid = document.getElementById('productsGrid');
+    if (!grid) return;
+    StoreSystem.initProducts();
+    const allP = StoreSystem.getProducts().filter(p => p.active !== false);
+    const list = filter === 'all' ? allP : allP.filter(p => p.category === filter);
+
+    grid.innerHTML = list.map((p, i) => {
+      const stock = StoreSystem.getStockCount(p.id);
+      const soldOut = stock === 0;
+      return `
+        <div class="product-card reveal delay-${((i % 4) + 1) * 100}">
+          <div class="product-thumb">
+            <span style="position:relative;z-index:1;">${p.emoji}</span>
+            ${p.badge ? `<span class="product-badge badge-${p.badge}">${p.badge==='hot'?'🔥 HOT':p.badge==='new'?'✦ NEW':'◆ SALE'}</span>` : ''}
+            ${soldOut ? '<span class="product-badge" style="background:rgba(80,80,80,0.6);color:#888;top:10px;left:10px;right:auto;">หมดสต็อก</span>' : ''}
+          </div>
+          <div class="product-body">
+            <div class="product-cat">${CATEGORIES[p.category] || p.category}</div>
+            <div class="product-name">${p.name}</div>
+            <div class="product-desc">${p.desc || ''}</div>
+            <div class="product-footer">
+              <div class="product-price">
+                ${p.oldPrice ? `<span class="price-old">฿${p.oldPrice}</span>` : ''}
+                <span class="price-current">฿${p.price}<span class="price-unit"> /ชิ้น</span></span>
+              </div>
+              <button class="add-to-cart" id="atcBtn-${p.id}" onclick="handleAddToCart(${p.id})" ${soldOut?'disabled style="opacity:0.4;cursor:not-allowed;"':''}>
+                ${soldOut ? 'หมด' : '+ เพิ่ม'}
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    ScrollReveal.init();
+  }
+
+  // ══════════════════════════════════════════════
+  //  CHECKOUT — ใช้เครดิตในระบบ
+  // ══════════════════════════════════════════════
+  function openCheckout() {
+    Modal.close('cartModal');
+    const total = Cart.getTotal();
+    document.getElementById('ckSubtotal').textContent = `฿${total}`;
+    document.getElementById('ckTotal').textContent    = `฿${total}`;
+
+    const user = Auth.getCurrentUser();
+    const creditInfo   = document.getElementById('ckCreditInfo');
+    const noCredit     = document.getElementById('ckNoCredit');
+    const notLoggedIn  = document.getElementById('ckNotLoggedIn');
+    const confirmBtn   = document.getElementById('ckConfirmBtn');
+
+    creditInfo.style.display  = 'none';
+    noCredit.style.display    = 'none';
+    notLoggedIn.style.display = 'none';
+    confirmBtn.disabled       = false;
+
+    if (!user) {
+      notLoggedIn.style.display = 'block';
+      confirmBtn.disabled = true;
+    } else {
+      const credits = user.credits || 0;
+      document.getElementById('ckUserCredit').textContent = `฿${credits}`;
+      creditInfo.style.display = 'block';
+      if (credits < total) {
+        noCredit.style.display = 'block';
+        confirmBtn.disabled = true;
+      }
+    }
+
+    // Reset steps
+    document.getElementById('ckStep2').className = 'ck-step active';
+    document.getElementById('ckStep3').className = 'ck-step';
+    document.getElementById('ckContent').innerHTML = document.getElementById('ckContent').innerHTML; // reset
+    // Re-render checkout content
+    renderCheckoutContent();
+    Modal.open('checkoutModal');
+  }
+
+  function renderCheckoutContent() {
+    const total = Cart.getTotal();
+    const user = Auth.getCurrentUser();
+    const credits = user ? (user.credits || 0) : 0;
+
+    document.getElementById('ckContent').innerHTML = `
+      <div class="order-summary">
+        <div class="summary-row">
+          <span class="label">ยอดสินค้า</span>
+          <span class="value">฿${total}</span>
+        </div>
+        <div class="summary-row total-row">
+          <span class="label">ยอดรวม</span>
+          <span class="value">฿${total}</span>
+        </div>
+      </div>
+      ${!user ? `
+        <div style="padding:12px 16px;margin-bottom:16px;background:rgba(201,160,85,0.06);border:1px solid rgba(201,160,85,0.2);clip-path:var(--clip-tl);">
+          <div style="font-size:0.8rem;color:var(--text-secondary);">กรุณา <span style="color:var(--gold-base);cursor:pointer;text-decoration:underline;" onclick="Modal.close('checkoutModal');openAuthModal('login')">เข้าสู่ระบบ</span> ก่อนชำระเงิน</div>
+        </div>
+        <button class="btn btn-gold btn-full" disabled style="opacity:0.4;">◆ ยืนยันซื้อด้วยเครดิต</button>
+      ` : credits < total ? `
+        <div style="padding:12px 16px;margin-bottom:16px;background:rgba(224,64,80,0.08);border:1px solid rgba(224,64,80,0.2);clip-path:var(--clip-tl);">
+          <div style="font-family:var(--font-mono);font-size:0.78rem;color:var(--danger);">💰 เครดิตของคุณ: ฿${credits} &nbsp;|&nbsp; ต้องการ: ฿${total}</div>
+          <div style="font-size:0.75rem;color:var(--muted);margin-top:4px;">เครดิตไม่เพียงพอ กรุณาเติมเครดิตก่อน</div>
+        </div>
+        <button class="btn btn-ghost btn-full" onclick="Modal.close('checkoutModal');scrollToSection('topup')">◆ ไปเติมเครดิต</button>
+      ` : `
+        <div style="padding:12px 16px;margin-bottom:16px;background:rgba(76,175,128,0.08);border:1px solid rgba(76,175,128,0.2);clip-path:var(--clip-tl);">
+          <div style="font-family:var(--font-mono);font-size:0.78rem;color:var(--success);">💰 เครดิตของคุณ: ฿${credits} → หลังซื้อ: ฿${credits - total}</div>
+        </div>
+        <button class="btn btn-gold btn-full" onclick="completeOrder()">◆ ยืนยันซื้อด้วยเครดิต</button>
+      `}
+    `;
+  }
+
+  function completeOrder() {
+    const user = Auth.getCurrentUser();
+    if (!user) { Toast.show('⚠','กรุณาเข้าสู่ระบบ',''); return; }
+
+    const cartItems = Cart.getItems();
+    const result = StoreSystem.purchaseCart(cartItems);
+
+    if (!result.ok) {
+      Toast.show('⚠', 'ซื้อไม่สำเร็จ', result.msg);
+      return;
+    }
+
+    Cart.clear();
+    updateNavUI();
+
+    // Build delivery display
+    const deliveryHtml = result.orders.map(o => `
+      <div style="margin-bottom:12px;">
+        <div style="font-size:0.82rem;color:var(--gold-base);margin-bottom:6px;">${o.productEmoji} ${o.productName} — ฿${o.price}</div>
+        <div class="delivery-content-box" onclick="copyText(this)">${o.delivery}</div>
+      </div>
+    `).join('');
+
+    document.getElementById('ckContent').innerHTML = `
+      <div class="success-screen">
+        <span class="success-icon">✦</span>
+        <div class="success-title">ซื้อสำเร็จ!</div>
+        <div class="success-desc">ข้อมูลสินค้าของคุณด้านล่าง<br>กดที่กล่องเพื่อคัดลอก</div>
+        <div style="text-align:left;margin-top:20px;">${deliveryHtml}</div>
+        <div class="order-id-box" style="margin-top:16px;">ORDER: ${result.orders[0]?.id || ''}</div>
+        <div style="margin-top:20px;display:flex;gap:10px;justify-content:center;">
+          <button class="btn btn-gold" onclick="Modal.close('checkoutModal')">เสร็จสิ้น</button>
+          <button class="btn btn-ghost" onclick="Modal.close('checkoutModal');openProfileModal()">ดูออเดอร์</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('ckStep2').className = 'ck-step done';
+    document.getElementById('ckStep3').className = 'ck-step done';
+  }
+
+  function copyText(el) {
+    const text = el.textContent.replace('คลิกเพื่อคัดลอก','').trim();
+    navigator.clipboard?.writeText(text).then(() => Toast.show('✦','คัดลอกแล้ว',''));
+  }
+
+  // ══════════════════════════════════════════════
+  //  TOPUP SECTION
+  // ══════════════════════════════════════════════
+  function topupSelectPay(el, method) {
+    el.closest('.pay-grid').querySelectorAll('.pay-tile').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('topupSelectedPay').value = method;
+  }
+
+  function handleTopupPay() {
+    if (!Auth.isLoggedIn()) {
+      Toast.show('⚠','กรุณาเข้าสู่ระบบ','ต้องเข้าสู่ระบบก่อนเติมเงิน');
+      openAuthModal('login');
+      return;
+    }
+
+    const method = document.getElementById('topupSelectedPay').value;
+    let amount   = document.getElementById('topupSelectedAmt').value;
+    if (amount === 'custom') {
+      amount = document.getElementById('customAmtInput')?.value || '';
+    }
+    if (!amount || Number(amount) <= 0) {
+      Toast.show('⚠','เลือกจำนวนเงิน','กรุณาเลือกหรือกรอกจำนวนเงินที่ต้องการเติม');
+      return;
+    }
+
+    if (method === 'promptpay') {
+      PaymentSystem.openPromptPayModal(amount);
+    } else if (method === 'truemoney') {
+      PaymentSystem.openTrueMoneyModal();
+    } else if (method === 'bank') {
+      document.getElementById('bankAmount').value = amount;
+      Modal.open('bankModal');
+    } else if (method === 'crypto') {
+      Toast.show('⚠','Crypto','กรุณาติดต่อแอดมินผ่าน Discord เพื่อชำระด้วย Crypto');
+    }
+  }
+
+  function submitBankTransfer() {
+    const amount = document.getElementById('bankAmount')?.value || '';
+    const note   = document.getElementById('bankNote')?.value?.trim() || '';
+    if (!amount || Number(amount) <= 0) { Toast.show('⚠','ระบุจำนวนเงิน',''); return; }
+    const entry = PaymentSystem.addPendingPayment('bank', { amount: Number(amount), note });
+    Toast.show('✦','แจ้งโอนแล้ว', `รหัส: ${entry.id} · รอแอดมินยืนยัน`);
+    Modal.close('bankModal');
+  }
+
+  // ══════════════════════════════════════════════
+  //  PROFILE MODAL
+  // ══════════════════════════════════════════════
+  function openProfileModal() {
+    const user = Auth.getCurrentUser();
+    if (!user) { openAuthModal('login'); return; }
+
+    const orders = StoreSystem.getUserOrders(user.username).reverse().slice(0, 20);
+    document.getElementById('profileContent').innerHTML = `
+      <div class="profile-header">
+        <div class="profile-avatar">${user.isAdmin ? '👑' : '👤'}</div>
+        <div class="profile-info">
+          <div class="profile-name">${user.username.toUpperCase()}</div>
+          <div class="profile-role">${user.isAdmin ? '◆ ADMINISTRATOR' : '◆ MEMBER'} · สมัครเมื่อ ${new Date(user.createdAt).toLocaleDateString('th-TH')}</div>
+        </div>
+      </div>
+      <div class="profile-credit-box">
+        <div>
+          <div class="profile-credit-label">เครดิตคงเหลือ</div>
+          <div class="profile-credit-val">฿${user.credits || 0}</div>
+        </div>
+        <button class="btn btn-ghost" style="padding:8px 16px;font-size:0.75rem;" onclick="Modal.close('profileModal');scrollToSection('topup')">+ เติมเครดิต</button>
+      </div>
+      <div style="font-family:var(--font-display);font-size:0.75rem;font-weight:600;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;">
+        ประวัติออเดอร์ (${orders.length} รายการ)
+      </div>
+      ${orders.length === 0 ? `<div style="text-align:center;padding:32px;color:var(--muted);font-size:0.82rem;">ยังไม่มีการสั่งซื้อ</div>` : orders.map(o => `
+        <div class="order-history-item">
+          <div class="order-item-head">
+            <span class="order-item-id">${o.id}</span>
+            <span class="order-item-price">฿${o.price}</span>
+          </div>
+          <div class="order-item-name">${o.productEmoji} ${o.productName}</div>
+          <div class="order-item-date">${new Date(o.createdAt).toLocaleString('th-TH')}</div>
+          <div class="order-delivery-box" onclick="copyText(this)">${o.delivery}</div>
+        </div>
+      `).join('')}
+    `;
+    Modal.open('profileModal');
+  }
+
+  // ══════════════════════════════════════════════
+  //  AMOUNT TILE (override to save value)
+  // ══════════════════════════════════════════════
+  function selectAmountTile(el, val) {
+    document.querySelectorAll('.amount-tile').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    const customWrap = document.getElementById('customAmtWrap');
+    if (customWrap) customWrap.style.display = val === 'custom' ? 'block' : 'none';
+    const hiddenAmt = document.getElementById('topupSelectedAmt');
+    if (hiddenAmt) hiddenAmt.value = val;
+  }
+
+// Init
+
+  document.addEventListener('DOMContentLoaded', () => {
+    Auth.ensureAdmin();
+    StoreSystem.initProducts();
+    updateNavUI();
+    renderProducts();
+    ScrollReveal.init();
+
+    // Animate hero counters
     
-        // 🎊 Enhanced Confetti
-        function celebrateWithConfetti() {
-          // First burst
-          confetti({
-            particleCount: 100,
-            spread: 70,
-            origin: { y: 0.6 }
-          });
-          
-          // Second burst
-          setTimeout(() => {
-            confetti({
-              particleCount: 80,
-              spread: 120,
-              origin: { y: 0.5 }
-            });
-          }, 300);
-    
-          // Third burst
-          setTimeout(() => {
-            confetti({
-              particleCount: 60,
-              spread: 100,
-              origin: { y: 0.7 },
-              startVelocity: 30
-            });
-          }, 600);
-    
-          // Heart confetti
-          setTimeout(() => {
-            const heartConfetti = () => {
-              for (let i = 0; i < 5; i++) {
-                const heart = document.createElement('div');
-                heart.className = 'floating-heart';
-                heart.innerHTML = '💕';
-                heart.style.left = Math.random() * window.innerWidth + 'px';
-                heart.style.top = '0px';
-                document.body.appendChild(heart);
-                setTimeout(() => heart.remove(), 3000);
-              }
-            };
-            heartConfetti();
-          }, 1000);
-        }
-    
-        // ✅ Accept Confession
-        function sayYes() {
-            // 1. Toggle views via .active (accepted view is part of slide 5, not a separate carousel slide)
-            const q = document.getElementById('questionCard');
-            const a = document.getElementById('acceptedView');
-            const wheelSec = document.getElementById('wheelSection');
-            if (q) q.classList.remove('active');
-            if (a) a.classList.add('active');
-    
-            // Show wheel section after music box appears
-            setTimeout(() => {
-                if (wheelSec) {
-                    wheelSec.style.display = 'block';
-                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-                }
-            }, 1500);
-    
-            // Stay on slide 5 state and disable Next button
-            const nextBtn = document.querySelector('.nav-next');
-            if (nextBtn) nextBtn.disabled = true;
-    
-            // 2. Hide navigation after transition
-            setTimeout(() => {
-                const nav = document.getElementById('carouselNav');
-                if (nav) nav.style.display = 'none';
-            }, 700);
-    
-            // 3. Play music (user gesture from button click should allow play)
-            const audio = document.getElementById('bg-music');
-            if (audio) {
-              audio.volume = 0.5;
-              audio.play().catch(e => console.log('Audio play failed:', e));
-            }
-    
-            // 4. Start celebration
-            celebrateWithConfetti();
-    
-            // 5. Create floating emojis - more particles for fuller effect
-            const emojis = ['💕', '✨', '💖', '🎊', '🥰', '💗', '🎉', '💝'];
-            for (let i = 0; i < 15; i++) {
-              setTimeout(() => {
-                const emoji = document.createElement('div');
-                emoji.className = 'floating-heart';
-                emoji.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
-                emoji.style.left = Math.random() * window.innerWidth + 'px';
-                emoji.style.top = window.innerHeight + 'px';
-                emoji.style.fontSize = Math.random() * 32 + 18 + 'px';
-                emoji.style.filter = 'drop-shadow(0 4px 12px rgba(255,122,154,0.3))';
-                document.body.appendChild(emoji);
-                setTimeout(() => emoji.remove(), 3500);
-              }, i * 120);
-            }
-            
-            // 6. Create heart rain effect (continuous for 3 seconds)
-            const heartRainInterval = setInterval(() => {
-              for (let i = 0; i < 3; i++) {
-                const heart = document.createElement('div');
-                heart.className = 'floating-heart';
-                heart.innerHTML = '❤️';
-                heart.style.left = Math.random() * window.innerWidth + 'px';
-                heart.style.top = '-30px';
-                heart.style.fontSize = '20px';
-                heart.style.opacity = '0.8';
-                document.body.appendChild(heart);
-                setTimeout(() => heart.remove(), 3000);
-              }
-            }, 300);
-            
-            // Stop heart rain after 3 seconds
-            setTimeout(() => clearInterval(heartRainInterval), 3000);
-            
-            // 7. Extra confetti bursts at intervals
-            setTimeout(() => {
-              confetti({
-                particleCount: 50,
-                spread: 60,
-                origin: { y: 0.5, x: 0.2 }
-              });
-            }, 1200);
-            
-            setTimeout(() => {
-              confetti({
-                particleCount: 50,
-                spread: 60,
-                origin: { y: 0.5, x: 0.8 }
-              });
-            }, 1400);
-        }
-
-        // 🎡 Spinning Wheel Game
-        let isSpinning = false;
-        const wheelOptions = [
-            '🍪 เลี้ยงขนม',
-            '🍮 เลี้ยงน้ำหวาน',
-            '🍦 เลี้ยงไอติม',
-            '😤 อดกิน',
-            '🎬 ดูหนังกัน'
-        ];
-
-        function spinWheel() {
-          if (isSpinning) return;
-
-          const wheel = document.getElementById('spinnerWheel');
-          const resultDiv = document.getElementById('wheelResult');
-          const resultText = document.getElementById('resultText');
-          const spinBtn = document.getElementById('spinBtn');
-
-          isSpinning = true;
-          spinBtn.disabled = true;
-
-          const baseRotations = 1800; // 5 full rotations
-          const segmentAngle = 360 / wheelOptions.length; // 72 for 5 segments
-          const randomIndex = Math.floor(Math.random() * wheelOptions.length);
-
-          // center angle of chosen segment
-          const centerAngle = (randomIndex * segmentAngle) + (segmentAngle / 2);
-
-          // allow small jitter around center but avoid edges (margin degrees)
-          const margin = 8; // degrees away from edges
-          const half = segmentAngle / 2;
-          const jitterRange = Math.max(0, half - margin);
-          const jitter = (Math.random() * (jitterRange * 2)) - jitterRange; // -j..+j
-
-          // pointer is at top (0deg). To align centerAngle under pointer we rotate
-          // by (360 - (centerAngle + jitter)) plus base rotations.
-          const target = 360 - (centerAngle + jitter);
-          const totalRotation = baseRotations + target;
-
-          // use transform+transition (avoid conflicting keyframe animation)
-          const duration = 3000; // ms
-          wheel.style.transition = 'none';
-          wheel.style.transform = 'rotate(0deg)';
-
-          // trigger transition next frame
-          requestAnimationFrame(() => {
-            wheel.style.transition = `transform ${duration}ms cubic-bezier(0.25,0.46,0.45,0.94)`;
-            wheel.style.transform = `rotate(${totalRotation}deg)`;
-          });
-
-          // Show result after transition ends (duration + small buffer)
-          setTimeout(() => {
-            resultText.textContent = wheelOptions[randomIndex];
-            resultDiv.style.display = 'block';
-            isSpinning = false;
-            spinBtn.disabled = false;
-
-            confetti({ particleCount: 40, spread: 50, origin: { y: 0.6 } });
-          }, duration + 150);
-        }
-    
-        // 🎈 Setup after page loads
-        document.addEventListener('DOMContentLoaded', () => {
-          // No button interaction logic (fleeing) has been removed and replaced with onclick event in HTML.
-          
-          // Initialize carousel dots
-          updateCarousel();
-        });
-    </script>
-
+    document.querySelectorAll('[data-count]').forEach(el => {
+      const target = parseInt(el.dataset.count);
+      let current = 0;
+      const step = Math.ceil(target / 60);
+      const tick = setInterval(() => {
+        current = Math.min(current + step, target);
+        el.textContent = current.toLocaleString() + (el.dataset.suffix || '');
+        if (current >= target) clearInterval(tick);
+      }, 20);
+    });
+  });
+  </script>
 </body>
-
 </html>
