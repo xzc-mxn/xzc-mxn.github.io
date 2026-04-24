@@ -42,6 +42,7 @@ const StoreSystem = (() => {
       name: data.name,
       category: data.category || 'other',
       emoji: data.emoji || '📦',
+      image: data.image || '',
       price: Number(data.price) || 0,
       oldPrice: data.oldPrice ? Number(data.oldPrice) : null,
       badge: data.badge || null,
@@ -172,6 +173,9 @@ const StoreSystem = (() => {
     const orders = getOrders();
     orders.push(order);
     saveOrders(orders);
+
+    // แจ้งเตือน Discord Webhook
+    if (typeof Webhook !== 'undefined') Webhook.notifyPurchase(order);
 
     return { ok: true, order };
   };
