@@ -101,6 +101,7 @@ const AdminPanel = (() => {
             </select>
           </div>
         </div>
+        <div class="field-group"><label class="field-label">URL รูปภาพสินค้า</label><input class="field-input" id="apImage" placeholder="https://... (ว่างเว้น = ใช้ emoji แทน)"/></div>
         <div class="field-group"><label class="field-label">รายละเอียด</label><textarea class="field-input" id="apDesc" rows="2" style="resize:vertical;"></textarea></div>
         <div style="display:flex;gap:10px;margin-top:12px;">
           <button class="btn btn-gold" onclick="AdminPanel.saveNewProduct()">💾 บันทึก</button>
@@ -150,6 +151,7 @@ const AdminPanel = (() => {
       name, price: Number(price),
       oldPrice: document.getElementById('apOldPrice')?.value || null,
       emoji: document.getElementById('apEmoji')?.value || '📦',
+      image: document.getElementById('apImage')?.value?.trim() || '',
       category: document.getElementById('apCategory')?.value || 'other',
       badge: document.getElementById('apBadge')?.value || null,
       desc: document.getElementById('apDesc')?.value || ''
@@ -178,8 +180,9 @@ const AdminPanel = (() => {
     if (name === null) return;
     const price    = prompt('ราคา (฿):', p.price);
     if (price === null) return;
+    const image    = prompt('URL รูปภาพสินค้า (ว่างเว้น = ใช้ emoji):', p.image || '');
     const desc     = prompt('รายละเอียด:', p.desc);
-    StoreSystem.updateProduct(id, { name: name.trim(), price: Number(price), desc: desc || p.desc });
+    StoreSystem.updateProduct(id, { name: name.trim(), price: Number(price), image: (image || '').trim(), desc: desc || p.desc });
     Toast.show('✦','อัปเดตสินค้าแล้ว', name);
     renderProductsTab();
   };
