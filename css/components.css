@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   LUXURY HUB EVO — Components
+   LUXURY HUB EVO — Components v4.0
    ═══════════════════════════════════════════════ */
 
 /* ── BUTTONS ─────────────────────────────────── */
@@ -37,12 +37,14 @@
   color: var(--bg-void);
   clip-path: var(--clip-tl);
   box-shadow: 0 0 30px rgba(201,160,85,0.2), inset 0 1px 0 rgba(255,255,255,0.2);
+  font-weight: 700;
 }
 .btn-gold:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 50px rgba(201,160,85,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+  transform: translateY(-3px);
+  box-shadow: 0 0 50px rgba(201,160,85,0.4), 0 8px 25px rgba(201,160,85,0.2), inset 0 1px 0 rgba(255,255,255,0.2);
+  filter: brightness(1.1);
 }
-.btn-gold:active { transform: translateY(0); }
+.btn-gold:active { transform: translateY(0); filter: brightness(0.95); }
 
 /* Outlined ghost */
 .btn-ghost {
@@ -175,38 +177,39 @@
 /* ── FEATURE CARDS ───────────────────────────── */
 .feature-card {
   background: var(--bg-raised);
-  border: 1px solid rgba(201,160,85,0.1);
+  border: 1px solid rgba(201,160,85,0.08);
   clip-path: var(--clip-tl);
-  padding: 28px 24px;
+  padding: 32px 28px;
   position: relative;
   overflow: hidden;
-  transition: all 0.35s var(--ease-out);
+  transition: all 0.4s var(--ease-out);
+  backdrop-filter: blur(4px);
 }
 
 .feature-card::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, var(--gold-base), transparent);
+  height: 2px;
+  background: linear-gradient(90deg, var(--gold-base), var(--gold-bright), transparent);
   transform: scaleX(0);
   transform-origin: left;
-  transition: transform 0.4s var(--ease-out);
+  transition: transform 0.5s var(--ease-out);
 }
 
 .feature-card::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(201,160,85,0.04) 0%, transparent 60%);
+  background: linear-gradient(135deg, rgba(201,160,85,0.06) 0%, transparent 60%);
   opacity: 0;
-  transition: opacity 0.3s;
+  transition: opacity 0.35s;
 }
 
 .feature-card:hover {
   border-color: rgba(201,160,85,0.3);
-  transform: translateY(-4px);
-  box-shadow: 0 20px 50px rgba(0,0,0,0.4), 0 0 30px rgba(201,160,85,0.06);
+  transform: translateY(-6px);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.45), 0 0 40px rgba(201,160,85,0.08);
 }
 
 .feature-card:hover::before { transform: scaleX(1); }
@@ -256,19 +259,20 @@
 /* ── PRODUCT CARDS ───────────────────────────── */
 .product-card {
   background: var(--bg-raised);
-  border: 1px solid rgba(201,160,85,0.1);
+  border: 1px solid rgba(201,160,85,0.08);
   clip-path: var(--clip-tl);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: all 0.35s var(--ease-out);
+  transition: all 0.4s var(--ease-out);
   position: relative;
+  backdrop-filter: blur(4px);
 }
 
 .product-card:hover {
   border-color: rgba(201,160,85,0.35);
-  transform: translateY(-5px);
-  box-shadow: 0 24px 60px rgba(0,0,0,0.5), 0 0 40px rgba(201,160,85,0.07);
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 28px 70px rgba(0,0,0,0.5), 0 0 50px rgba(201,160,85,0.08);
 }
 
 .product-thumb {
