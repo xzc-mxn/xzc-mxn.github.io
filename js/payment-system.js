@@ -4,7 +4,7 @@
    ═══════════════════════════════════════════════ */
 
 const PaymentSystem = (() => {
-  const PHONE       = '0952408955';
+  const PHONE       = (typeof CONFIG !== 'undefined' && CONFIG.promptpay?.phone) || '0952408955';
   const KEY_PENDING = 'lxh_pending_payments';
 
   // ══════════════════════════════════════════════
@@ -141,6 +141,7 @@ const PaymentSystem = (() => {
       Toast.show('⚠', 'ระบุจำนวนเงิน', 'กรุณาระบุจำนวนเงินที่โอน'); return;
     }
     const entry = addPendingPayment('promptpay', { amount: Number(amount), note });
+    if (typeof Webhook !== 'undefined') Webhook.notifyPaymentRequest(entry);
     Toast.show('✦', 'ส่งคำขอแล้ว', `รหัส: ${entry.id} · รอแอดมินยืนยัน`);
     Modal.closeAll();
   };
@@ -166,6 +167,7 @@ const PaymentSystem = (() => {
       Toast.show('⚠', 'ลิ้งก์ไม่ถูกต้อง', 'กรุณาวางลิ้งก์ซองอั่งเปา TrueMoney ที่ถูกต้อง'); return;
     }
     const entry = addPendingPayment('truemoney', { amount: Number(amount), envelopeUrl: url });
+    if (typeof Webhook !== 'undefined') Webhook.notifyPaymentRequest(entry);
     document.getElementById('tmEnvelopeUrl').value = '';
     document.getElementById('tmAmount').value = '';
     Toast.show('✦', 'ส่งซองแล้ว', `รหัส: ${entry.id} · ระบบกำลังตรวจสอบ`);
