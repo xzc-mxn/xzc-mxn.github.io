@@ -1,6 +1,11 @@
-ewport" content="width=device-width, initial-scale=1.0" />
-  <title>LUXURY HUB EVO — Premium Roblox Scripts</title>
-  <meta name="description" content="แหล่งรวม Script, GUI, Account และบริการ Roblox คุณภาพสูง" />
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LUXURY HUB EVO — Premium Roblox Scripts & Services</title>
+  <meta name="description" content="แหล่งรวม Script, GUI, Account และบริการ Roblox คุณภาพสูง อัปเดตต่อเนื่อง ซัพพอร์ต 24/7" />
+  <meta name="theme-color" content="#c9a055" />
   <link rel="stylesheet" href="css/variables.css" />
   <link rel="stylesheet" href="css/base.css" />
   <link rel="stylesheet" href="css/animations.css" />
@@ -279,14 +284,52 @@ ewport" content="width=device-width, initial-scale=1.0" />
 </head>
 <body>
 
+  <!-- LOADING SCREEN -->
+  <div id="loadingScreen">
+    <svg class="loader-logo" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="40,4 76,22 76,58 40,76 4,58 4,22" stroke="rgba(201,160,85,0.6)" stroke-width="1.5" fill="rgba(201,160,85,0.04)"/>
+      <polygon points="40,16 64,28 64,52 40,64 16,52 16,28" stroke="rgba(201,160,85,0.3)" stroke-width="1" fill="none"/>
+      <text x="40" y="46" text-anchor="middle" font-family="'Orbitron',sans-serif" font-size="16" font-weight="700" fill="#c9a055" letter-spacing="2">LH</text>
+    </svg>
+    <div class="loader-bar-wrap"><div class="loader-bar"></div></div>
+    <div class="loader-text">INITIALIZING</div>
+  </div>
+
+  <!-- PARTICLE CANVAS -->
+  <canvas id="particleCanvas"></canvas>
+
+  <!-- BACK TO TOP -->
+  <button id="backToTop" onclick="scrollToSection('hero')" aria-label="Back to top">▲</button>
+
+  <!-- MOBILE DRAWER -->
+  <div class="mobile-drawer-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
+  <div class="mobile-drawer" id="mobileDrawer">
+    <button class="mobile-drawer-close" onclick="closeMobileMenu()">✕</button>
+    <div class="drawer-links">
+      <a href="#hero" onclick="closeMobileMenu()">หน้าแรก</a>
+      <a href="#features" onclick="closeMobileMenu()">บริการ</a>
+      <a href="#products" onclick="closeMobileMenu()">สินค้า</a>
+      <a href="#topup" onclick="closeMobileMenu()">เติมเงิน</a>
+      <a href="#reviews" onclick="closeMobileMenu()">รีวิว</a>
+      <a href="#contact" onclick="closeMobileMenu()">ติดต่อ</a>
+    </div>
+    <div class="drawer-actions">
+      <button class="btn btn-gold btn-full" onclick="closeMobileMenu();openAuthModal('login')" id="drawerAuthBtn">◆ เข้าสู่ระบบ</button>
+      <button class="btn-discord" style="width:100%;justify-content:center;" onclick="window.open('https://discord.gg/','_blank')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.36-.698.772-1.362 1.225-1.993a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.12-.098.246-.198.373-.292a.074.074 0 0 1 .078-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+        Discord
+      </button>
+    </div>
+  </div>
+
   <!-- NAV -->
-  <nav class="lxh-nav">
+  <nav class="lxh-nav" id="mainNav">
     <a href="#hero" class="nav-logo" style="text-decoration:none;">
       <div class="nav-logo-mark">
         <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
           <polygon points="20,2 38,11 38,29 20,38 2,29 2,11" stroke="rgba(201,160,85,0.6)" stroke-width="1" fill="rgba(201,160,85,0.06)"/>
           <polygon points="20,8 32,14 32,26 20,32 8,26 8,14" stroke="rgba(201,160,85,0.35)" stroke-width="0.8" fill="none"/>
-          <text x="20" y="24" text-anchor="middle" font-family="'Rajdhani',sans-serif" font-size="11" font-weight="700" fill="#c9a055" letter-spacing="1">LH</text>
+          <text x="20" y="24" text-anchor="middle" font-family="'Orbitron',sans-serif" font-size="10" font-weight="700" fill="#c9a055" letter-spacing="1">LH</text>
         </svg>
       </div>
       <div class="nav-logo-text">
@@ -300,6 +343,7 @@ ewport" content="width=device-width, initial-scale=1.0" />
       <a href="#features" data-section="features">บริการ</a>
       <a href="#products" data-section="products">สินค้า</a>
       <a href="#topup"    data-section="topup">เติมเงิน</a>
+      <a href="#reviews"  data-section="reviews">รีวิว</a>
       <a href="#contact"  data-section="contact">ติดต่อ</a>
     </div>
 
@@ -311,12 +355,12 @@ ewport" content="width=device-width, initial-scale=1.0" />
         Discord
       </button>
 
-      <!-- Auth Button (เมื่อยังไม่ได้ login) -->
+      <!-- Auth Button -->
       <button id="navAuthBtn" onclick="openAuthModal('login')">
         ◆ เข้าสู่ระบบ
       </button>
 
-      <!-- User Menu (เมื่อ login แล้ว) -->
+      <!-- User Menu -->
       <div id="navUserMenu">
         <button id="navAdminBtn" onclick="AdminPanel.open()">👑 ADMIN</button>
         <span class="nav-credit-wrap" style="display:flex;align-items:center;gap:6px;cursor:pointer;" onclick="openProfileModal()">
@@ -331,6 +375,8 @@ ewport" content="width=device-width, initial-scale=1.0" />
         <span>ตะกร้า</span>
         <span class="cart-badge" id="cartBadge">0</span>
       </button>
+
+      <button class="nav-mobile-toggle" id="mobileMenuBtn" onclick="openMobileMenu()">☰</button>
     </div>
   </nav>
 
@@ -391,6 +437,10 @@ ewport" content="width=device-width, initial-scale=1.0" />
         <button class="btn btn-gold" onclick="scrollToSection('products')">◆ เลือกซื้อสินค้า</button>
         <button class="btn btn-ghost" onclick="scrollToSection('topup')">เติมเงิน</button>
       </div>
+    </div>
+    <div class="hero-scroll-indicator">
+      <div class="scroll-line"></div>
+      <span>SCROLL</span>
     </div>
   </section>
 
@@ -534,6 +584,52 @@ ewport" content="width=device-width, initial-scale=1.0" />
     </div>
   </section>
 
+  <!-- REVIEWS -->
+  <section id="reviews">
+    <div class="section-wrap">
+      <div class="section-head reveal">
+        <div class="section-eyebrow">รีวิวจากลูกค้า</div>
+        <h2 class="section-title">ลูกค้า <span class="accent">พูดถึงเรา</span></h2>
+        <p class="section-sub">ความเชื่อมั่นจากผู้ใช้งานจริงกว่า 1,200+ คน</p>
+      </div>
+      <div class="reviews-grid">
+        <div class="review-card reveal delay-100">
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">"สคริปต์ดีมาก ทำงานลื่นไม่มีสะดุด อัปเดตเร็วมากด้วย แนะนำเลยครับ!"</p>
+          <div class="review-author">
+            <div class="review-avatar">🎮</div>
+            <div class="review-author-info">
+              <div class="review-name">PLAYERONE</div>
+              <div class="review-role">Blox Fruit Script User</div>
+            </div>
+          </div>
+        </div>
+        <div class="review-card reveal delay-200">
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">"GUI สวยมาก ฟังก์ชั่นครบ ใช้งานง่าย ซัพพอร์ตตอบเร็วมาก ประทับใจครับ"</p>
+          <div class="review-author">
+            <div class="review-avatar">💎</div>
+            <div class="review-author-info">
+              <div class="review-name">DIAMONDPRO</div>
+              <div class="review-role">Custom GUI Customer</div>
+            </div>
+          </div>
+        </div>
+        <div class="review-card reveal delay-300">
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">"ซื้อบัญชีมาแล้ว 3 บัญชี ทุกครั้งได้ของดี ไม่เคยผิดหวัง รับประกันจริง!"</p>
+          <div class="review-author">
+            <div class="review-avatar">🏆</div>
+            <div class="review-author-info">
+              <div class="review-name">ELITEGAMER</div>
+              <div class="review-role">Account Buyer · VIP</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- CONTACT -->
   <section id="contact">
     <div class="section-wrap">
@@ -581,15 +677,35 @@ ewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- FOOTER -->
   <footer class="lxh-footer">
-    <div class="footer-logo">◆ Luxury Hub</div>
-    <div class="footer-copy">
-      © 2024 LUXURY HUB EVO · All rights reserved<br>
-      <span class="mono" style="font-size:0.6rem;color:var(--faint);">v3.0.0 · TH</span>
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="footer-brand-name">◆ Luxury Hub</div>
+        <p class="footer-brand-desc">แหล่งรวม Script, GUI, บัญชี และบริการ Roblox คุณภาพสูง อัปเดตต่อเนื่อง ซัพพอร์ต 24/7</p>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">ลิงก์ด่วน</div>
+        <a href="#products">สินค้าทั้งหมด</a>
+        <a href="#topup">เติมเครดิต</a>
+        <a href="#reviews">รีวิว</a>
+        <a href="#contact">ติดต่อเรา</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">นโยบาย</div>
+        <a href="#">เงื่อนไขการใช้งาน</a>
+        <a href="#">นโยบายความเป็นส่วนตัว</a>
+        <a href="#">การคืนเงิน</a>
+        <a href="#">FAQ</a>
+      </div>
     </div>
-    <div class="footer-links">
-      <a href="#">นโยบาย</a>
-      <a href="#">เงื่อนไข</a>
-      <a href="#">คืนเงิน</a>
+    <div class="footer-bottom">
+      <div class="footer-copy">
+        © 2024 LUXURY HUB EVO · All rights reserved · <span style="color:var(--faint);">v4.0.0 · TH</span>
+      </div>
+      <div class="footer-socials">
+        <a class="footer-social-btn" href="https://discord.gg/" target="_blank" title="Discord">💬</a>
+        <a class="footer-social-btn" href="https://line.me/" target="_blank" title="Line">📱</a>
+        <a class="footer-social-btn" href="https://t.me/" target="_blank" title="Telegram">✈️</a>
+      </div>
     </div>
   </footer>
 
@@ -687,7 +803,7 @@ ewport" content="width=device-width, initial-scale=1.0" />
       </div>
       <div class="pp-qr-wrap">
         <div class="pp-amount-display" id="ppAmount">฿100</div>
-        <canvas id="ppQRCanvas"></canvas>
+        <div id="ppQRCanvas" style="display:inline-block;"></div>
         <div class="pp-phone" id="ppPhoneDisplay">เบอร์: 095-240-8955</div>
       </div>
       <div class="pp-steps">
@@ -1239,19 +1355,34 @@ ewport" content="width=device-width, initial-scale=1.0" />
     updateNavUI();
     renderProducts();
     ScrollReveal.init();
+    ParticleSystem.init();
+    hideLoadingScreen();
 
-    // Animate hero counters
-    
-    document.querySelectorAll('[data-count]').forEach(el => {
-      const target = parseInt(el.dataset.count);
-      let current = 0;
-      const step = Math.ceil(target / 60);
-      const tick = setInterval(() => {
-        current = Math.min(current + step, target);
-        el.textContent = current.toLocaleString() + (el.dataset.suffix || '');
-        if (current >= target) clearInterval(tick);
-      }, 20);
-    });
+    // Animate hero counters with easing
+    const counterObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.querySelectorAll('[data-count]').forEach(el => {
+            const target = parseInt(el.dataset.count);
+            const duration = 1200;
+            const start = performance.now();
+            const tick = (now) => {
+              const elapsed = now - start;
+              const progress = Math.min(elapsed / duration, 1);
+              const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+              const current = Math.round(eased * target);
+              el.textContent = current.toLocaleString() + (el.dataset.suffix || '');
+              if (progress < 1) requestAnimationFrame(tick);
+            };
+            requestAnimationFrame(tick);
+          });
+          counterObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.3 });
+
+    const statsRow = document.querySelector('.hero-stats-row');
+    if (statsRow) counterObserver.observe(statsRow);
   });
   </script>
 </body>
