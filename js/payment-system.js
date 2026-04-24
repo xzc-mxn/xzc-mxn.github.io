@@ -47,16 +47,22 @@ const PaymentSystem = (() => {
     return payload + crc16(payload);
   };
 
-  const generateQR = (canvasId, amount) => {
-    const payload = buildPromptPayPayload(PHONE, amount);
-    const canvas  = document.getElementById(canvasId);
-    if (!canvas || typeof QRCode === 'undefined') return payload;
+  const generateQR = (containerId, amount) => {
+    const payload   = buildPromptPayPayload(PHONE, amount);
+    const container = document.getElementById(containerId);
+    if (!container || typeof QRCode === 'undefined') return payload;
 
-    QRCode.toCanvas(canvas, payload, {
+    // Clear previous QR code
+    container.innerHTML = '';
+
+    new QRCode(container, {
+      text: payload,
       width: 220,
-      margin: 2,
-      color: { dark: '#c9a055', light: '#0c0c16' }
-    }, (err) => { if (err) console.error(err); });
+      height: 220,
+      colorDark: '#c9a055',
+      colorLight: '#0e0e1a',
+      correctLevel: QRCode.CorrectLevel.M
+    });
 
     return payload;
   };
