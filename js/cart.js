@@ -7,10 +7,16 @@ const Cart = (() => {
 
   // ── Core Methods ──────────────────────────────
   const add = (productId) => {
-    const product = PRODUCTS.find(p => p.id === productId);
+    const product = (typeof StoreSystem !== "undefined" ? StoreSystem.getProduct(productId) : null) || PRODUCTS.find(p => p.id == productId);
     if (!product) return false;
 
-    const existing = items.find(i => i.id === productId);
+    // ── ตรวจสต็อก ──────────────────────────────
+    if (typeof StoreSystem !== "undefined" && StoreSystem.getStockCount(productId) <= 0) {
+      Toast.show('🚫', 'สินค้าหมดสต็อก', 'กรุณาติดต่อแอดมินเพื่อเติมสินค้า');
+      return false;
+    }
+
+    const existing = items.find(i => i.id == productId);
     if (existing) {
       existing.qty++;
     } else {
@@ -22,12 +28,12 @@ const Cart = (() => {
   };
 
   const remove = (productId) => {
-    items = items.filter(i => i.id !== productId);
+    items = items.filter(i => i.id != productId);
     _sync();
   };
 
   const changeQty = (productId, delta) => {
-    const item = items.find(i => i.id === productId);
+    const item = items.find(i => i.id == productId);
     if (!item) return;
     item.qty += delta;
     if (item.qty <= 0) remove(productId);
