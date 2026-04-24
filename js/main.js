@@ -12,7 +12,7 @@ function renderProducts(filter = 'all') {
   grid.innerHTML = list.map((p, i) => `
     <div class="product-card reveal delay-${((i % 4) + 1) * 100}">
       <div class="product-thumb">
-        <span style="position:relative;z-index:1;">${p.emoji}</span>
+        ${productThumbHTML(p)}
         ${p.badge ? `<span class="product-badge badge-${p.badge}">${
           p.badge === 'hot' ? '🔥 HOT' : p.badge === 'new' ? '✦ NEW' : '◆ SALE'
         }</span>` : ''}
@@ -26,8 +26,9 @@ function renderProducts(filter = 'all') {
             ${p.oldPrice ? `<span class="price-old">฿${p.oldPrice}</span>` : ''}
             <span class="price-current">฿${p.price}<span class="price-unit"> /ชิ้น</span></span>
           </div>
-          <button class="add-to-cart" id="atcBtn-${p.id}" onclick="handleAddToCart(${p.id})">
-            + เพิ่ม
+          <button class="add-to-cart" id="atcBtn-${p.id}" onclick="handleAddToCart(${p.id})"
+            ${StoreSystem.getStockCount(p.id) <= 0 ? 'disabled style="opacity:0.4;cursor:not-allowed;" title="สินค้าหมด"' : ''}>
+            ${StoreSystem.getStockCount(p.id) <= 0 ? '🚫 หมดสต็อก' : '+ เพิ่ม'}
           </button>
         </div>
       </div>
