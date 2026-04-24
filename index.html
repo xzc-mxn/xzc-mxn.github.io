@@ -871,8 +871,8 @@
       </div>
       <div style="background:var(--bg-overlay);border:1px solid rgba(201,160,85,0.15);padding:20px;margin-bottom:20px;clip-path:var(--clip-tl);">
         <div style="font-family:var(--font-display);font-size:0.78rem;color:var(--muted);letter-spacing:1px;margin-bottom:12px;text-transform:uppercase;">บัญชีรับโอน</div>
-        <div style="font-size:1.1rem;font-weight:700;color:var(--text-primary);font-family:var(--font-display);">ธนาคารกสิกรไทย (KBank)</div>
-        <div style="font-family:var(--font-mono);font-size:1rem;color:var(--gold-bright);margin:8px 0;letter-spacing:2px;">xxx-x-xxxxx-x</div>
+        <div style="font-size:1.1rem;font-weight:700;color:var(--text-primary);font-family:var(--font-display);">ธนาคารออมสิน (GSB)</div>
+        <div style="font-family:var(--font-mono);font-size:1rem;color:var(--gold-bright);margin:8px 0;letter-spacing:2px;">020-3998-83081-7</div>
         <div style="font-size:0.82rem;color:var(--text-secondary);">ชื่อบัญชี: LUXURY HUB EVO</div>
       </div>
       <div class="pp-steps">
@@ -989,6 +989,8 @@
   <!-- ═══════════════════════════════════════════
        SCRIPTS — โหลดตามลำดับ
   ════════════════════════════════════════════ -->
+  <script src="js/config.js"></script>
+  <script src="js/webhook.js"></script>
   <script src="js/product.js"></script>
   <script src="js/cart.js"></script>
   <script src="js/ui.js"></script>
@@ -1100,7 +1102,7 @@
       return `
         <div class="product-card reveal delay-${((i % 4) + 1) * 100}">
           <div class="product-thumb">
-            <span style="position:relative;z-index:1;">${p.emoji}</span>
+            ${productThumbHTML(p)}
             ${p.badge ? `<span class="product-badge badge-${p.badge}">${p.badge==='hot'?'🔥 HOT':p.badge==='new'?'✦ NEW':'◆ SALE'}</span>` : ''}
             ${soldOut ? '<span class="product-badge" style="background:rgba(80,80,80,0.6);color:#888;top:10px;left:10px;right:auto;">หมดสต็อก</span>' : ''}
           </div>
@@ -1113,8 +1115,8 @@
                 ${p.oldPrice ? `<span class="price-old">฿${p.oldPrice}</span>` : ''}
                 <span class="price-current">฿${p.price}<span class="price-unit"> /ชิ้น</span></span>
               </div>
-              <button class="add-to-cart" id="atcBtn-${p.id}" onclick="handleAddToCart(${p.id})" ${soldOut?'disabled style="opacity:0.4;cursor:not-allowed;"':''}>
-                ${soldOut ? 'หมด' : '+ เพิ่ม'}
+              <button class="add-to-cart" id="atcBtn-${p.id}" onclick="handleAddToCart(${p.id})">
+                + เพิ่ม
               </button>
             </div>
           </div>
