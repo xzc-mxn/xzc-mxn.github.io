@@ -4,25 +4,27 @@
 
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
-/* ── iOS Touch Fix — ป้องกัน text selection บน mobile ── */
-button, a, .btn, .nav-logo, .nav-links a, .nav-actions button,
-.filter-tab, .product-card, .product-thumb, .product-body,
-.product-footer, .add-to-cart, .amount-tile, .pay-tile,
-.hero-content h1, .hero-content h2, .hero-content p,
-.hero-id-tag, .hero-actions, .section-header, .stat-item,
-.nav-mobile-toggle, .mobile-drawer, .drawer-links a,
-[onclick], label, .modal-backdrop, .modal-panel,
-.modal-close, .tab-btn, .auth-tabs button {
+/* ── Global Touch Fix — ป้องกัน text selection ทั้งหน้า ── */
+html, body {
   -webkit-user-select: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
+  -webkit-touch-callout: none;
 }
 
-/* ── Input fields ยังคงเลือก text ได้ ── */
-input, textarea, select, .delivery-content-box, .order-delivery-box {
-  -webkit-user-select: text;
-  user-select: text;
+/* ── คืนค่าให้ input fields ยังเลือก/วาง text ได้ ── */
+input, textarea, select,
+.delivery-content-box,
+.order-delivery-box {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+  -webkit-touch-callout: default !important;
+}
+
+/* ── ปุ่มและลิงก์: ลบ delay 300ms ── */
+button, a, [onclick], label {
+  touch-action: manipulation;
+  cursor: pointer;
 }
 
 html { scroll-behavior: smooth; font-size: 16px; }
