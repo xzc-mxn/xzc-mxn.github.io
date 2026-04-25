@@ -18,6 +18,10 @@
   border: none;
   position: relative;
   overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   transition: all 0.3s var(--ease-out);
 }
 
@@ -276,7 +280,8 @@
 }
 
 .product-thumb {
-  height: 155px;
+  aspect-ratio: 16 / 9;
+  width: 100%;
   background: linear-gradient(135deg, var(--bg-surface), var(--bg-overlay));
   display: flex;
   align-items: center;
