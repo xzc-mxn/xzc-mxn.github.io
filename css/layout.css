@@ -167,10 +167,12 @@
   background: rgba(0,0,0,0.6);
   backdrop-filter: blur(4px);
   opacity: 0;
+  pointer-events: none;
   transition: opacity 0.3s;
 }
 .mobile-drawer-overlay.open {
   opacity: 1;
+  pointer-events: all;
 }
 .mobile-drawer .drawer-links {
   display: flex;
@@ -293,6 +295,7 @@
   position: absolute;
   inset: 0;
   z-index: 0;
+  pointer-events: none;
 }
 
 .hero-banner-bg img {
