@@ -1,1391 +1,1153 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>LUXURY HUB EVO — Premium Roblox Scripts & Services</title>
-  <meta name="description" content="แหล่งรวม Script, GUI, Account และบริการ Roblox คุณภาพสูง อัปเดตต่อเนื่อง ซัพพอร์ต 24/7" />
-  <meta name="theme-color" content="#c9a055" />
-  <link rel="stylesheet" href="css/variables.css" />
-  <link rel="stylesheet" href="css/base.css" />
-  <link rel="stylesheet" href="css/animations.css" />
-  <link rel="stylesheet" href="css/components.css" />
-  <link rel="stylesheet" href="css/layout.css" />
-  <!-- QRCode.js for PromptPay QR generation -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <style>
-    /* ── AUTH MODAL STYLES ──────────────────────── */
-    .auth-tabs { display:flex; gap:0; margin-bottom:24px; border-bottom:1px solid rgba(201,160,85,0.15); }
-    .auth-tab {
-      flex:1; padding:12px; background:transparent; border:none;
-      font-family:var(--font-display); font-weight:600; font-size:0.82rem;
-      letter-spacing:2px; text-transform:uppercase; color:var(--muted);
-      cursor:pointer; transition:all 0.25s; border-bottom:2px solid transparent;
-      margin-bottom:-1px;
-    }
-    .auth-tab.active { color:var(--gold-base); border-bottom-color:var(--gold-base); }
-    .auth-tab:hover:not(.active) { color:var(--text-primary); }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyPath — วางแผนสอบวิศวกรรม</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script type="module">
+// ═══════════════════════════ FIREBASE ═══════════════════════════
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    /* ── ADMIN PANEL STYLES ─────────────────────── */
-    #adminModal .modal-panel {
-      max-width: 900px;
-      width: 96vw;
-      max-height: 88vh;
-      overflow-y: auto;
-    }
-    .adm-tabs {
-      display: flex; gap: 6px; flex-wrap: wrap;
-      margin-bottom: 20px; padding-bottom: 16px;
-      border-bottom: 1px solid rgba(201,160,85,0.15);
-    }
-    .adm-tab {
-      padding: 8px 16px; background: var(--bg-overlay);
-      border: 1px solid rgba(201,160,85,0.12);
-      color: var(--muted); font-family: var(--font-display);
-      font-size: 0.75rem; font-weight: 600; letter-spacing: 1px;
-      text-transform: uppercase; cursor: pointer;
-      clip-path: var(--clip-tl); transition: all 0.2s;
-    }
-    .adm-tab.active { background: rgba(201,160,85,0.12); color: var(--gold-base); border-color: rgba(201,160,85,0.35); }
-    .adm-tab:hover:not(.active) { color: var(--text-primary); }
+const firebaseConfig = {
+  apiKey: "AIzaSyBRmQhtjspXxYzn4k2DnOngKIfngVY7WnY",
+  authDomain: "study-project-a.firebaseapp.com",
+  projectId: "study-project-a",
+  storageBucket: "study-project-a.firebasestorage.app",
+  messagingSenderId: "426333975738",
+  appId: "1:426333975738:web:66f58f385cc5cd7cfa3e83",
+  measurementId: "G-2LHGJH40DD"
+};
 
-    .adm-section-head {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 14px; padding-bottom: 10px;
-      border-bottom: 1px solid rgba(201,160,85,0.1);
-      font-family: var(--font-display); font-size: 0.82rem;
-      font-weight: 600; letter-spacing: 1px; color: var(--text-secondary);
-      text-transform: uppercase;
-    }
-    .adm-table-wrap { overflow-x: auto; }
-    .adm-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-    .adm-table th {
-      text-align: left; padding: 8px 12px;
-      background: var(--bg-overlay); color: var(--muted);
-      font-family: var(--font-display); font-weight: 600;
-      letter-spacing: 1px; text-transform: uppercase; font-size: 0.7rem;
-    }
-    .adm-table td { padding: 10px 12px; border-bottom: 1px solid rgba(201,160,85,0.06); vertical-align: middle; }
-    .adm-table tr:hover td { background: rgba(201,160,85,0.03); }
-    .adm-badge {
-      display: inline-block; padding: 2px 8px;
-      background: rgba(201,160,85,0.1); border: 1px solid rgba(201,160,85,0.2);
-      color: var(--gold-base); font-family: var(--font-mono);
-      font-size: 0.68rem; border-radius: 2px;
-    }
-    .adm-badge.admin { background: rgba(224,64,80,0.1); border-color: rgba(224,64,80,0.25); color: var(--danger); }
-    .adm-badge-type.promptpay { color: #00aeef; }
-    .adm-badge-type.truemoney { color: #f97316; }
-    .adm-stock-ok { color: var(--success); font-family: var(--font-mono); font-size: 0.82rem; }
-    .adm-stock-empty { color: var(--danger); font-family: var(--font-mono); font-size: 0.82rem; }
-    .adm-empty { text-align:center; padding: 32px; color: var(--muted); font-size: 0.82rem; }
-    .adm-form-box {
-      background: var(--bg-overlay); border: 1px solid rgba(201,160,85,0.1);
-      padding: 20px; margin-bottom: 20px; clip-path: var(--clip-tl);
-    }
-    .adm-form-title { font-family:var(--font-display); font-weight:600; font-size:0.82rem; letter-spacing:1px; color:var(--gold-base); margin-bottom:16px; text-transform:uppercase; }
-    .adm-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .adm-stat-box {
-      flex:1; min-width:80px; padding: 14px 18px;
-      background: var(--bg-overlay); border: 1px solid rgba(201,160,85,0.1);
-      clip-path: var(--clip-tl); text-align: center;
-    }
-    .adm-stat-n { font-family:var(--font-display); font-size:1.4rem; font-weight:700; color:var(--gold-base); }
-    .adm-stat-l { font-size:0.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-top:2px; }
-    .adm-pay-card {
-      padding:16px; margin-bottom:12px;
-      background: var(--bg-overlay); border: 1px solid rgba(201,160,85,0.12);
-      clip-path: var(--clip-tl);
-    }
-    .adm-pay-card.pending { border-color: rgba(201,160,85,0.3); }
-    .adm-pay-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
-    .adm-pay-info { display:flex; gap:16px; flex-wrap:wrap; font-size:0.8rem; margin-bottom:8px; }
-    .adm-content-pre {
-      background: var(--bg-deep); padding: 8px 10px; margin: 0;
-      font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-secondary);
-      white-space: pre-wrap; word-break: break-all; max-width: 300px;
-    }
-    .adm-toggle { position:relative; display:inline-block; width:36px; height:20px; }
-    .adm-toggle input { opacity:0; width:0; height:0; }
-    .adm-toggle-slider {
-      position:absolute; inset:0; background:var(--bg-void);
-      border:1px solid var(--faint); cursor:pointer; transition:.3s;
-      border-radius:10px;
-    }
-    .adm-toggle input:checked + .adm-toggle-slider { background:rgba(201,160,85,0.2); border-color:var(--gold-base); }
-    .adm-toggle-slider::before {
-      content:''; position:absolute; height:12px; width:12px; left:3px; bottom:3px;
-      background:var(--muted); transition:.3s; border-radius:50%;
-    }
-    .adm-toggle input:checked + .adm-toggle-slider::before { transform:translateX(16px); background:var(--gold-base); }
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
 
-    /* ── NAV ADDITIONS ──────────────────────────── */
-    #navAuthBtn {
-      display:flex; align-items:center; gap:8px;
-      background:rgba(201,160,85,0.08); border:1px solid rgba(201,160,85,0.25);
-      color:var(--gold-base); padding:8px 18px;
-      font-family:var(--font-display); font-size:0.78rem;
-      font-weight:600; letter-spacing:2px; text-transform:uppercase;
-      cursor:pointer; clip-path:var(--clip-tl); transition:all 0.25s;
-    }
-    #navAuthBtn:hover { background:rgba(201,160,85,0.15); color:var(--gold-bright); }
-    #navUserMenu {
-      display:none; align-items:center; gap:10px;
-    }
-    .nav-user-credit {
-      font-family:var(--font-mono); font-size:0.78rem;
-      color:var(--gold-bright); background:rgba(201,160,85,0.08);
-      border:1px solid rgba(201,160,85,0.2); padding:6px 12px;
-      clip-path:var(--clip-hex);
-    }
-    .nav-username {
-      font-family:var(--font-display); font-size:0.78rem;
-      font-weight:600; color:var(--text-secondary); letter-spacing:1px;
-    }
-    #navAdminBtn {
-      display:none; align-items:center; gap:6px;
-      background:rgba(224,64,80,0.1); border:1px solid rgba(224,64,80,0.25);
-      color:var(--danger); padding:7px 14px;
-      font-family:var(--font-display); font-size:0.75rem;
-      font-weight:600; letter-spacing:1.5px; text-transform:uppercase;
-      cursor:pointer; clip-path:var(--clip-tl); transition:all 0.25s;
-    }
-    #navAdminBtn:hover { background:rgba(224,64,80,0.18); }
-    #navLogoutBtn {
-      background:transparent; border:1px solid rgba(201,160,85,0.15);
-      color:var(--muted); padding:7px 12px;
-      font-family:var(--font-display); font-size:0.72rem;
-      font-weight:600; letter-spacing:1px; text-transform:uppercase;
-      cursor:pointer; clip-path:var(--clip-br); transition:all 0.2s;
-    }
-    #navLogoutBtn:hover { color:var(--danger); border-color:rgba(224,64,80,0.3); }
+let currentUser = null;
+let unsubSnapshot = null;
 
-    /* ── PROMPTPAY / TRUEMONEY MODALS ───────────── */
-    .pp-qr-wrap {
-      display:flex; flex-direction:column; align-items:center;
-      padding: 20px; background:var(--bg-overlay);
-      border:1px solid rgba(201,160,85,0.15); margin-bottom:16px;
-      clip-path: var(--clip-tl);
-    }
-    .pp-amount-display {
-      font-family:var(--font-display); font-size:1.6rem; font-weight:700;
-      color:var(--gold-bright); letter-spacing:3px; margin-bottom:12px;
-    }
-    .pp-phone {
-      font-family:var(--font-mono); font-size:0.75rem;
-      color:var(--muted); margin-top:10px; letter-spacing:2px;
-    }
-    .pp-steps { margin-bottom:18px; }
-    .pp-step {
-      display:flex; gap:12px; align-items:flex-start;
-      padding: 8px 0; border-bottom:1px solid rgba(201,160,85,0.06);
-      font-size:0.8rem; color:var(--text-secondary);
-    }
-    .pp-step-num {
-      min-width:22px; height:22px;
-      background:rgba(201,160,85,0.15); border:1px solid rgba(201,160,85,0.3);
-      color:var(--gold-base); font-family:var(--font-mono); font-size:0.7rem;
-      display:flex; align-items:center; justify-content:center; flex-shrink:0;
-    }
+// ─── AUTH UI ───
+function renderAuthBar(user) {
+  const bar = document.getElementById('auth-bar');
+  if (user) {
+    bar.innerHTML = `
+      <img src="${user.photoURL}" style="width:28px;height:28px;border-radius:50%;border:2px solid var(--amber)">
+      <span style="font-size:12px;color:var(--text2);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${user.displayName||user.email}</span>
+      <button class="btn btn-sm btn-secondary" id="btn-signout">ออกจากระบบ</button>`;
+    document.getElementById('btn-signout').onclick = () => signOut(auth);
+  } else {
+    bar.innerHTML = `
+      <button class="btn btn-primary btn-sm" id="btn-signin">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle;margin-right:4px"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        เข้าสู่ระบบ Google
+      </button>`;
+    document.getElementById('btn-signin').onclick = () => {
+      signInWithPopup(auth, provider).catch(e => showToast('Login ไม่สำเร็จ: ' + e.message));
+    };
+  }
+}
 
-    /* ── USER PROFILE MODAL ─────────────────────── */
-    .profile-header {
-      display:flex; align-items:center; gap:16px;
-      padding:20px; background:var(--bg-overlay);
-      border:1px solid rgba(201,160,85,0.12); margin-bottom:20px;
-      clip-path:var(--clip-tl);
-    }
-    .profile-avatar {
-      width:56px; height:56px;
-      background:rgba(201,160,85,0.1); border:1px solid rgba(201,160,85,0.3);
-      clip-path:var(--clip-hex); display:flex; align-items:center;
-      justify-content:center; font-size:1.5rem; flex-shrink:0;
-    }
-    .profile-info { flex:1; }
-    .profile-name { font-family:var(--font-display); font-size:1rem; font-weight:700; color:var(--text-primary); letter-spacing:2px; }
-    .profile-role { font-family:var(--font-mono); font-size:0.7rem; color:var(--muted); margin-top:2px; }
-    .profile-credit-box {
-      padding:16px 20px; background:var(--bg-overlay);
-      border:1px solid rgba(201,160,85,0.2); margin-bottom:16px;
-      clip-path:var(--clip-br); display:flex; align-items:center; justify-content:space-between;
-    }
-    .profile-credit-label { font-family:var(--font-display); font-size:0.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
-    .profile-credit-val { font-family:var(--font-display); font-size:1.5rem; font-weight:700; color:var(--gold-bright); }
-    .order-history-item {
-      padding:12px 14px; background:var(--bg-overlay);
-      border:1px solid rgba(201,160,85,0.08); margin-bottom:8px;
-      clip-path:var(--clip-tl);
-    }
-    .order-item-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
-    .order-item-id { font-family:var(--font-mono); font-size:0.68rem; color:var(--muted); }
-    .order-item-price { font-family:var(--font-mono); font-size:0.82rem; color:var(--gold-base); }
-    .order-item-name { font-size:0.82rem; color:var(--text-primary); }
-    .order-item-date { font-family:var(--font-mono); font-size:0.65rem; color:var(--muted); }
-    .order-delivery-box {
-      margin-top:8px; padding:8px 10px;
-      background:var(--bg-deep); border:1px solid rgba(201,160,85,0.1);
-      font-family:var(--font-mono); font-size:0.72rem; color:var(--text-secondary);
-      white-space:pre-wrap; word-break:break-all; cursor:pointer;
-      position:relative;
-    }
-    .order-delivery-box::after {
-      content:'คลิกเพื่อคัดลอก'; position:absolute; right:8px; top:8px;
-      font-size:0.6rem; color:var(--muted); opacity:0.7;
-    }
-    .order-delivery-box:hover { border-color:rgba(201,160,85,0.3); color:var(--gold-bright); }
+// ─── CLOUD SAVE/LOAD ───
+async function saveToCloud(d) {
+  if (!currentUser) return;
+  try {
+    await setDoc(doc(db, 'users', currentUser.uid), { studypath: JSON.stringify(d) });
+  } catch(e) { console.error('Save error:', e); }
+}
 
-    /* ── TOPUP CONNECT ──────────────────────────── */
-    .pay-tile-btn {
-      cursor:pointer; transition:all 0.25s;
+function subscribeUserData(uid) {
+  if (unsubSnapshot) unsubSnapshot();
+  unsubSnapshot = onSnapshot(doc(db, 'users', uid), snap => {
+    if (snap.exists()) {
+      const cloud = JSON.parse(snap.data().studypath || 'null');
+      if (cloud) {
+        window.data = cloud;
+        // ensure arrays exist
+        if (!window.data.chapters) window.data.chapters = {tgat:[],tpat:[],phys:[],math:[]};
+        renderDashboard();
+        renderLog();
+        renderSubjects();
+        renderGoals();
+      }
     }
-    .pay-tile-btn:hover { transform:translateY(-2px); }
+    document.getElementById('loading-overlay').style.display = 'none';
+  });
+}
 
-    /* ── SUCCESS SCREEN ─────────────────────────── */
-    .success-screen { text-align:center; padding:40px 20px; }
-    .success-icon {
-      font-size:3rem; color:var(--gold-bright);
-      margin-bottom:16px; display:block;
-      animation: pulse-gold 2s ease-in-out infinite;
-    }
-    @keyframes pulse-gold {
-      0%,100%{ text-shadow:0 0 20px rgba(201,160,85,0.4); }
-      50%{ text-shadow:0 0 40px rgba(201,160,85,0.8); }
-    }
-    .success-title { font-family:var(--font-display); font-size:1.4rem; font-weight:700; color:var(--gold-bright); letter-spacing:3px; margin-bottom:10px; }
-    .success-desc { color:var(--text-secondary); font-size:0.85rem; line-height:1.7; margin-bottom:20px; }
-    .order-id-box {
-      display:inline-block; padding:10px 20px;
-      background:rgba(201,160,85,0.08); border:1px solid rgba(201,160,85,0.25);
-      font-family:var(--font-mono); font-size:0.82rem; color:var(--gold-base);
-      clip-path:var(--clip-hex); letter-spacing:2px;
-    }
+// ─── AUTH STATE ───
+onAuthStateChanged(auth, user => {
+  currentUser = user;
+  renderAuthBar(user);
+  if (user) {
+    document.getElementById('loading-overlay').style.display = 'flex';
+    subscribeUserData(user.uid);
+    showToast('ยินดีต้อนรับ ' + (user.displayName || user.email) + ' 👋');
+  } else {
+    if (unsubSnapshot) { unsubSnapshot(); unsubSnapshot = null; }
+    document.getElementById('loading-overlay').style.display = 'none';
+    // Load from localStorage as fallback when not logged in
+    window.data = JSON.parse(localStorage.getItem('studypath')||'null') || {
+      logs:[], chapters:{tgat:[],tpat:[],phys:[],math:[]}, streak:0, bestStreak:0, lastStudyDate:null, pomoDone:0
+    };
+    renderDashboard(); renderLog(); renderSubjects(); renderGoals();
+  }
+});
 
-    /* ── FIELD ADDITIONS ────────────────────────── */
-    .field-select {
-      width:100%; padding:10px 14px;
-      background:var(--bg-void); border:1px solid rgba(201,160,85,0.2);
-      color:var(--text-primary); font-family:var(--font-body); font-size:0.82rem;
-      outline:none; cursor:pointer; appearance:none;
-    }
-    .field-select:focus { border-color:var(--gold-base); }
-    .field-select option { background:var(--bg-deep); }
-
-    /* ── DELIVERY MODAL ─────────────────────────── */
-    .delivery-content-box {
-      background:var(--bg-deep); border:1px solid rgba(201,160,85,0.2);
-      padding:20px; font-family:var(--font-mono); font-size:0.85rem;
-      color:var(--gold-bright); white-space:pre-wrap; word-break:break-all;
-      line-height:1.7; margin-bottom:16px; clip-path:var(--clip-tl);
-    }
-
-    /* ── TOPUP PAY TILES CLICKABLE ───────────────── */
-    #topup .pay-tile { cursor:pointer; }
-  </style>
+// ─── EXPOSE to global scope ───
+window.fbSave = saveToCloud;
+window.currentUserFn = () => currentUser;
+</script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e1117;--bg2:#161b27;--bg3:#1e2535;--bg4:#252d3d;
+  --border:#2a3348;--border2:#364057;
+  --text:#e8ecf4;--text2:#94a3b8;--text3:#5c6b88;
+  --amber:#f59e0b;--amber2:#d97706;--amber3:#fbbf24;
+  --teal:#0d9488;--teal2:#14b8a6;
+  --blue:#3b82f6;--blue2:#60a5fa;
+  --green:#22c55e;--green2:#4ade80;
+  --red:#ef4444;--red2:#f87171;
+  --purple:#8b5cf6;--purple2:#a78bfa;
+  --coral:#f97316;
+  --r8:8px;--r12:12px;--r16:16px;--r20:20px;
+  --shadow:0 4px 24px rgba(0,0,0,.4);
+}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(14,17,23,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center;padding:0 20px;gap:0}
+.nav-brand{font-size:17px;font-weight:700;color:var(--amber);letter-spacing:-.5px;margin-right:28px;white-space:nowrap}
+.nav-tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.nav-tabs::-webkit-scrollbar{display:none}
+.nav-tab{background:none;border:none;color:var(--text2);font-family:'Sarabun',sans-serif;font-size:13px;padding:6px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;transition:all .15s;font-weight:500}
+.nav-tab:hover{background:var(--bg3);color:var(--text)}
+.nav-tab.active{background:rgba(245,158,11,.12);color:var(--amber)}
+.phase-badge{font-size:11px;background:rgba(139,92,246,.15);color:var(--purple2);border:1px solid rgba(139,92,246,.25);padding:2px 8px;border-radius:20px;margin-left:auto;white-space:nowrap}
+/* LAYOUT */
+.page{display:none;padding:76px 20px 40px;max-width:1100px;margin:0 auto}
+.page.active{display:block}
+/* GRID */
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:700px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
+@media(max-width:900px){.grid3{grid-template-columns:repeat(2,1fr)}.grid4{grid-template-columns:repeat(2,1fr)}}
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r16);padding:20px}
+.card-sm{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r12);padding:16px}
+.card-title{font-size:12px;font-weight:600;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;margin-bottom:12px}
+/* STAT CARDS */
+.stat-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r12);padding:16px 18px}
+.stat-label{font-size:11px;color:var(--text3);font-weight:500;letter-spacing:.3px;margin-bottom:6px}
+.stat-value{font-size:28px;font-weight:700;color:var(--text);line-height:1}
+.stat-sub{font-size:12px;color:var(--text2);margin-top:4px}
+/* COUNTDOWN */
+.countdown-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.cd-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r12);padding:14px;position:relative;overflow:hidden}
+.cd-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.cd-card.tgat::before,.cd-card.tpat::before{background:var(--amber)}
+.cd-card.phys::before{background:var(--teal)}
+.cd-card.math::before{background:var(--blue)}
+.cd-subj{font-size:11px;font-weight:600;letter-spacing:.4px;color:var(--text2);margin-bottom:4px}
+.cd-days{font-size:32px;font-weight:700;font-family:'DM Mono',monospace;line-height:1}
+.cd-date{font-size:11px;color:var(--text3);margin-top:2px}
+/* PROGRESS */
+.subj-progress{margin-bottom:14px}
+.subj-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.subj-name{font-size:13px;font-weight:600}
+.subj-pct{font-size:12px;font-family:'DM Mono',monospace;color:var(--text2)}
+.prog-track{height:6px;background:var(--bg4);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+/* STREAK */
+.streak-display{display:flex;align-items:center;gap:16px;padding:16px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-radius:var(--r12);margin-bottom:16px}
+.streak-num{font-size:42px;font-weight:700;color:var(--amber);font-family:'DM Mono',monospace;line-height:1}
+.streak-dots{display:flex;gap:4px;flex-wrap:wrap;margin-top:10px}
+.streak-dot{width:22px;height:22px;border-radius:50%;background:var(--bg4);border:1px solid var(--border);font-size:9px;display:flex;align-items:center;justify-content:center;color:var(--text3)}
+.streak-dot.done{background:rgba(245,158,11,.25);border-color:var(--amber);color:var(--amber)}
+.streak-dot.today{background:var(--amber);border-color:var(--amber);color:#000}
+/* TIMER */
+.timer-display{text-align:center;padding:32px 0 24px}
+.timer-circle{width:180px;height:180px;border-radius:50%;border:3px solid var(--border);margin:0 auto 20px;display:flex;align-items:center;justify-content:center;position:relative;background:var(--bg3)}
+.timer-circle svg{position:absolute;top:0;left:0;transform:rotate(-90deg)}
+.timer-time{font-size:42px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text)}
+.timer-phase{font-size:12px;color:var(--text2);margin-bottom:16px}
+.timer-btns{display:flex;gap:10px;justify-content:center}
+.btn{font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;padding:9px 20px;border-radius:8px;border:none;cursor:pointer;transition:all .15s}
+.btn-primary{background:var(--amber);color:#000}
+.btn-primary:hover{background:var(--amber3)}
+.btn-secondary{background:var(--bg4);color:var(--text);border:1px solid var(--border2)}
+.btn-secondary:hover{background:var(--bg3);border-color:var(--amber)}
+.btn-danger{background:rgba(239,68,68,.15);color:var(--red2);border:1px solid rgba(239,68,68,.25)}
+.btn-danger:hover{background:rgba(239,68,68,.25)}
+.btn-sm{padding:6px 14px;font-size:12px}
+/* SELECT + INPUT */
+select,input[type=number],input[type=text],input[type=date],textarea{
+  background:var(--bg3);border:1px solid var(--border2);border-radius:8px;
+  color:var(--text);font-family:'Sarabun',sans-serif;font-size:14px;padding:9px 12px;width:100%;outline:none;
+  transition:border-color .15s}
+select:focus,input:focus,textarea:focus{border-color:var(--amber)}
+select option{background:var(--bg2)}
+label{font-size:13px;color:var(--text2);display:block;margin-bottom:5px;font-weight:500}
+.form-group{margin-bottom:14px}
+/* WEEKLY PLAN */
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;min-width:680px}
+.week-wrap{overflow-x:auto}
+.day-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r12);padding:12px;min-height:160px}
+.day-card.today{border-color:var(--amber);background:rgba(245,158,11,.04)}
+.day-name{font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--text2);margin-bottom:8px;text-transform:uppercase}
+.day-date{font-size:10px;color:var(--text3);margin-bottom:10px}
+.session{border-radius:6px;padding:6px 8px;margin-bottom:6px;font-size:11px;font-weight:600}
+.session.tgat{background:rgba(245,158,11,.15);color:var(--amber3);border:1px solid rgba(245,158,11,.2)}
+.session.tpat{background:rgba(139,92,246,.15);color:var(--purple2);border:1px solid rgba(139,92,246,.2)}
+.session.phys{background:rgba(13,148,136,.15);color:var(--teal2);border:1px solid rgba(13,148,136,.2)}
+.session.math{background:rgba(59,130,246,.15);color:var(--blue2);border:1px solid rgba(59,130,246,.2)}
+.session.review{background:rgba(34,197,94,.12);color:var(--green2);border:1px solid rgba(34,197,94,.2)}
+.session.mock{background:rgba(249,115,22,.12);color:#fb923c;border:1px solid rgba(249,115,22,.2)}
+.day-hours{font-size:10px;color:var(--text3);margin-top:auto;padding-top:6px;border-top:1px solid var(--border)}
+/* LOG TABLE */
+.log-table{width:100%;border-collapse:collapse;font-size:13px}
+.log-table th{text-align:left;padding:10px 12px;color:var(--text3);font-size:11px;font-weight:600;letter-spacing:.4px;border-bottom:1px solid var(--border)}
+.log-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text)}
+.log-table tr:last-child td{border-bottom:none}
+.log-table tr:hover td{background:rgba(255,255,255,.02)}
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.3px}
+/* CHAPTERS */
+.chapter-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
+.chapter-item:last-child{border-bottom:none}
+.chapter-check{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.chapter-check.done{background:var(--green);border-color:var(--green)}
+.chapter-title{font-size:13px;flex:1}
+.chapter-title.done{color:var(--text3);text-decoration:line-through}
+/* RECOMMENDATION */
+.rec-item{display:flex;gap:12px;padding:14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r12);margin-bottom:10px}
+.rec-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.rec-title{font-size:13px;font-weight:600;margin-bottom:3px}
+.rec-desc{font-size:12px;color:var(--text2)}
+/* PHASE PROGRESS */
+.phase-row{display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg3);border-radius:var(--r12);margin-bottom:8px}
+.phase-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.phase-info{flex:1}
+.phase-name{font-size:13px;font-weight:600}
+.phase-range{font-size:11px;color:var(--text3)}
+.phase-check{font-size:18px}
+/* ANALYSIS */
+.insight-card{background:var(--bg3);border-left:3px solid var(--amber);border-radius:0 var(--r12) var(--r12) 0;padding:14px 16px;margin-bottom:10px}
+.insight-title{font-size:13px;font-weight:600;margin-bottom:4px}
+.insight-desc{font-size:12px;color:var(--text2);line-height:1.6}
+/* SECTION HEADERS */
+h2{font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px}
+h3{font-size:15px;font-weight:600;margin-bottom:12px}
+.page-sub{font-size:13px;color:var(--text2);margin-bottom:24px}
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px 18px;font-size:13px;color:var(--text);z-index:999;opacity:0;transform:translateY(10px);transition:all .25s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+/* ACHIEVEMENT */
+.achievement{display:flex;align-items:center;gap:12px;padding:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-radius:var(--r12);margin-bottom:8px}
+.ach-icon{font-size:24px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:rgba(245,158,11,.1);border-radius:10px}
+.ach-name{font-size:13px;font-weight:700;color:var(--amber)}
+.ach-desc{font-size:11px;color:var(--text2);margin-top:2px}
+.ach-locked{filter:grayscale(1);opacity:.4}
+/* Divider */
+.divider{border:none;border-top:1px solid var(--border);margin:20px 0}
+/* Range */
+input[type=range]{-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;background:var(--bg4);border:none;padding:0;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--amber);cursor:pointer}
+/* POMODORO ring */
+#pomo-ring{fill:none;stroke:var(--border);stroke-width:8}
+#pomo-progress{fill:none;stroke:var(--amber);stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset .5s linear}
+.pomo-counts{display:flex;gap:8px;justify-content:center;margin-bottom:16px}
+.pomo-dot{width:10px;height:10px;border-radius:50%;background:var(--bg4);border:1px solid var(--border2)}
+.pomo-dot.done{background:var(--amber)}
+/* CHART containers */
+.chart-box{position:relative;height:220px;width:100%}
+/* subject colors util */
+.c-tgat{color:var(--amber)}
+.c-tpat{color:var(--purple2)}
+.c-phys{color:var(--teal2)}
+.c-math{color:var(--blue2)}
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+</style>
 </head>
 <body>
 
-  <!-- LOADING SCREEN -->
-  <div id="loadingScreen">
-    <svg class="loader-logo" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <polygon points="40,4 76,22 76,58 40,76 4,58 4,22" stroke="rgba(201,160,85,0.6)" stroke-width="1.5" fill="rgba(201,160,85,0.04)"/>
-      <polygon points="40,16 64,28 64,52 40,64 16,52 16,28" stroke="rgba(201,160,85,0.3)" stroke-width="1" fill="none"/>
-      <text x="40" y="46" text-anchor="middle" font-family="'Orbitron',sans-serif" font-size="16" font-weight="700" fill="#c9a055" letter-spacing="2">LH</text>
-    </svg>
-    <div class="loader-bar-wrap"><div class="loader-bar"></div></div>
-    <div class="loader-text">INITIALIZING</div>
+<nav>
+  <div class="nav-brand">📚 StudyPath</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('dashboard')">Dashboard</button>
+    <button class="nav-tab" onclick="showPage('plan')">แผนอ่าน</button>
+    <button class="nav-tab" onclick="showPage('timer')">จับเวลา</button>
+    <button class="nav-tab" onclick="showPage('log')">บันทึก</button>
+    <button class="nav-tab" onclick="showPage('subjects')">เนื้อหา</button>
+    <button class="nav-tab" onclick="showPage('analysis')">วิเคราะห์</button>
+    <button class="nav-tab" onclick="showPage('goals')">เป้าหมาย</button>
+  </div>
+  <div class="phase-badge" id="current-phase-badge">ระยะปูพื้น</div>
+  <div id="auth-bar" style="display:flex;align-items:center;gap:8px;margin-left:12px;flex-shrink:0"></div>
+</nav>
+
+<!-- Loading overlay -->
+<div id="loading-overlay" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(14,17,23,.85);align-items:center;justify-content:center;flex-direction:column;gap:12px">
+  <div style="width:40px;height:40px;border:3px solid var(--border2);border-top-color:var(--amber);border-radius:50%;animation:spin 0.8s linear infinite"></div>
+  <div style="font-size:13px;color:var(--text2)">กำลังโหลดข้อมูลจาก Cloud...</div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+<!-- ═══════════════════════════════ DASHBOARD ═══════════════════════════════ -->
+<div class="page active" id="page-dashboard">
+  <h2>Dashboard</h2>
+  <p class="page-sub">ภาพรวมการเตรียมสอบวิศวกรรม</p>
+
+  <!-- Countdown -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">⏳ นับถอยหลังถึงวันสอบ</div>
+    <div class="countdown-grid">
+      <div class="cd-card tgat">
+        <div class="cd-subj">TGAT</div>
+        <div class="cd-days c-tgat" id="cd-tgat">—</div>
+        <div class="cd-date">30 มกราคม 2570</div>
+      </div>
+      <div class="cd-card tpat">
+        <div class="cd-subj">TPAT 3</div>
+        <div class="cd-days c-tpat" id="cd-tpat">—</div>
+        <div class="cd-date">30 มกราคม 2570</div>
+      </div>
+      <div class="cd-card phys">
+        <div class="cd-subj">A-Level Physics</div>
+        <div class="cd-days c-phys" id="cd-phys">—</div>
+        <div class="cd-date">13 มีนาคม 2570</div>
+      </div>
+      <div class="cd-card math">
+        <div class="cd-subj">A-Level Math 1</div>
+        <div class="cd-days c-math" id="cd-math">—</div>
+        <div class="cd-date">14 มีนาคม 2570</div>
+      </div>
+    </div>
   </div>
 
-  <!-- PARTICLE CANVAS -->
-  <canvas id="particleCanvas"></canvas>
-
-  <!-- BACK TO TOP -->
-  <button id="backToTop" onclick="scrollToSection('hero')" aria-label="Back to top">▲</button>
-
-  <!-- MOBILE DRAWER -->
-  <div class="mobile-drawer-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
-  <div class="mobile-drawer" id="mobileDrawer">
-    <button class="mobile-drawer-close" onclick="closeMobileMenu()">✕</button>
-    <div class="drawer-links">
-      <a href="#hero" onclick="closeMobileMenu()">หน้าแรก</a>
-      <a href="#features" onclick="closeMobileMenu()">บริการ</a>
-      <a href="#products" onclick="closeMobileMenu()">สินค้า</a>
-      <a href="#topup" onclick="closeMobileMenu()">เติมเงิน</a>
-      <a href="#reviews" onclick="closeMobileMenu()">รีวิว</a>
-      <a href="#contact" onclick="closeMobileMenu()">ติดต่อ</a>
+  <!-- Stats row -->
+  <div class="grid4" style="margin-bottom:16px">
+    <div class="stat-card">
+      <div class="stat-label">🔥 Streak</div>
+      <div class="stat-value c-tgat" id="dash-streak">0</div>
+      <div class="stat-sub">วันต่อเนื่อง</div>
     </div>
-    <div class="drawer-actions">
-      <button class="btn btn-gold btn-full" onclick="closeMobileMenu();openAuthModal('login')" id="drawerAuthBtn">◆ เข้าสู่ระบบ</button>
-      <button class="btn-discord" style="width:100%;justify-content:center;" onclick="window.open('https://discord.gg/','_blank')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.36-.698.772-1.362 1.225-1.993a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.12-.098.246-.198.373-.292a.074.074 0 0 1 .078-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
-        Discord
-      </button>
+    <div class="stat-card">
+      <div class="stat-label">⏱ ชั่วโมงรวม</div>
+      <div class="stat-value" id="dash-total-hours">0</div>
+      <div class="stat-sub">ชั่วโมงทั้งหมด</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">📅 เฉลี่ย/วัน</div>
+      <div class="stat-value" id="dash-avg">0</div>
+      <div class="stat-sub">ชั่วโมง</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">📖 บทเรียน</div>
+      <div class="stat-value" id="dash-chapters">0</div>
+      <div class="stat-sub">บทที่อ่านแล้ว</div>
     </div>
   </div>
 
-  <!-- NAV -->
-  <nav class="lxh-nav" id="mainNav">
-    <a href="#hero" class="nav-logo" style="text-decoration:none;">
-      <div class="nav-logo-mark">
-        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <polygon points="20,2 38,11 38,29 20,38 2,29 2,11" stroke="rgba(201,160,85,0.6)" stroke-width="1" fill="rgba(201,160,85,0.06)"/>
-          <polygon points="20,8 32,14 32,26 20,32 8,26 8,14" stroke="rgba(201,160,85,0.35)" stroke-width="0.8" fill="none"/>
-          <text x="20" y="24" text-anchor="middle" font-family="'Orbitron',sans-serif" font-size="10" font-weight="700" fill="#c9a055" letter-spacing="1">LH</text>
-        </svg>
-      </div>
-      <div class="nav-logo-text">
-        <span class="brand">Luxury Hub</span>
-        <span class="sub">EVO Edition</span>
-      </div>
-    </a>
-
-    <div class="nav-links">
-      <a href="#hero"     data-section="hero">หน้าแรก</a>
-      <a href="#features" data-section="features">บริการ</a>
-      <a href="#products" data-section="products">สินค้า</a>
-      <a href="#topup"    data-section="topup">เติมเงิน</a>
-      <a href="#reviews"  data-section="reviews">รีวิว</a>
-      <a href="#contact"  data-section="contact">ติดต่อ</a>
-    </div>
-
-    <div class="nav-actions">
-      <button class="btn-discord" onclick="window.open('https://discord.gg/','_blank')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>
-        </svg>
-        Discord
-      </button>
-
-      <!-- Auth Button -->
-      <button id="navAuthBtn" onclick="openAuthModal('login')">
-        ◆ เข้าสู่ระบบ
-      </button>
-
-      <!-- User Menu -->
-      <div id="navUserMenu">
-        <button id="navAdminBtn" onclick="AdminPanel.open()">👑 ADMIN</button>
-        <span class="nav-credit-wrap" style="display:flex;align-items:center;gap:6px;cursor:pointer;" onclick="openProfileModal()">
-          <span class="nav-username" id="navUsername">USER</span>
-          <span class="nav-user-credit" id="navUserCredit">฿0</span>
-        </span>
-        <button id="navLogoutBtn" onclick="Auth.logout()">ออก</button>
-      </div>
-
-      <button class="cart-trigger" onclick="openCartModal()">
-        <span>🛒</span>
-        <span>ตะกร้า</span>
-        <span class="cart-badge" id="cartBadge">0</span>
-      </button>
-
-      <button class="nav-mobile-toggle" id="mobileMenuBtn" onclick="openMobileMenu()">☰</button>
-    </div>
-  </nav>
-
-  <!-- HERO -->
-  <section id="hero">
-    <div class="hero-banner-bg">
-      <img src="assets/Banner Luxury WP Full.jpg" alt="Luxury Hub Banner" />
-    </div>
-    <div class="hero-deco hero-deco-tl">
-      <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M0 60 L0 0 L60 0" stroke="rgba(201,160,85,0.4)" stroke-width="1" fill="none"/>
-        <path d="M10 60 L10 10 L60 10" stroke="rgba(201,160,85,0.2)" stroke-width="0.7" fill="none"/>
-        <circle cx="0" cy="0" r="4" fill="rgba(201,160,85,0.5)"/>
-        <circle cx="60" cy="0" r="2" fill="rgba(201,160,85,0.3)"/>
-        <circle cx="0" cy="60" r="2" fill="rgba(201,160,85,0.3)"/>
-      </svg>
-    </div>
-    <div class="hero-deco hero-deco-br">
-      <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M80 20 L80 80 L20 80" stroke="rgba(201,160,85,0.4)" stroke-width="1" fill="none"/>
-        <path d="M70 20 L70 70 L20 70" stroke="rgba(201,160,85,0.2)" stroke-width="0.7" fill="none"/>
-        <circle cx="80" cy="80" r="4" fill="rgba(201,160,85,0.5)"/>
-      </svg>
-    </div>
-    <div class="scanline-overlay"></div>
-    <div class="hero-content">
-      <div class="hero-id-tag">LUXURY HUB EVO · v3.0.0 · ONLINE</div>
-      <h1 class="hero-title-main" data-text="LUXURY">LUXURY</h1>
-      <div class="hero-title-sub">HUB EVO EDITION</div>
-      <div class="hero-jp">ラグジュアリーハブ · 最高品質スクリプト</div>
-      <div class="hero-divider"></div>
-      <p class="hero-desc">
-        แหล่งรวม Script &amp; GUI คุณภาพสูงสำหรับ Roblox<br>
-        อัปเดตต่อเนื่อง · ซัพพอร์ต 24/7 · รับประกันทุกสินค้า
-      </p>
-      <div class="hero-stats-row">
-        <div class="hero-stat">
-          <div class="hero-stat-num" data-count="1240" data-suffix="+">0</div>
-          <div class="hero-stat-label">ลูกค้า</div>
+  <div class="grid2" style="margin-bottom:16px">
+    <!-- Progress per subject -->
+    <div class="card">
+      <div class="card-title">📊 Progress รายวิชา</div>
+      <div id="subj-progress-list">
+        <div class="subj-progress">
+          <div class="subj-header"><span class="subj-name c-tgat">TGAT</span><span class="subj-pct" id="prog-tgat-pct">0%</span></div>
+          <div class="prog-track"><div class="prog-fill" id="prog-tgat" style="width:0%;background:var(--amber)"></div></div>
         </div>
-        <div class="hero-stat-divider"></div>
-        <div class="hero-stat">
-          <div class="hero-stat-num" data-count="98" data-suffix="%">0</div>
-          <div class="hero-stat-label">ความพึงพอใจ</div>
+        <div class="subj-progress">
+          <div class="subj-header"><span class="subj-name c-tpat">TPAT 3</span><span class="subj-pct" id="prog-tpat-pct">0%</span></div>
+          <div class="prog-track"><div class="prog-fill" id="prog-tpat" style="width:0%;background:var(--purple2)"></div></div>
         </div>
-        <div class="hero-stat-divider"></div>
-        <div class="hero-stat">
-          <div class="hero-stat-num" data-count="50" data-suffix="+">0</div>
-          <div class="hero-stat-label">สินค้า</div>
+        <div class="subj-progress">
+          <div class="subj-header"><span class="subj-name c-phys">Physics</span><span class="subj-pct" id="prog-phys-pct">0%</span></div>
+          <div class="prog-track"><div class="prog-fill" id="prog-phys" style="width:0%;background:var(--teal2)"></div></div>
         </div>
-        <div class="hero-stat-divider"></div>
-        <div class="hero-stat">
-          <div class="hero-stat-num" data-count="24" data-suffix="/7">0</div>
-          <div class="hero-stat-label">ซัพพอร์ต</div>
-        </div>
-      </div>
-      <div class="hero-cta-row">
-        <button class="btn btn-gold" onclick="scrollToSection('products')">◆ เลือกซื้อสินค้า</button>
-        <button class="btn btn-ghost" onclick="scrollToSection('topup')">เติมเงิน</button>
-      </div>
-    </div>
-    <div class="hero-scroll-indicator">
-      <div class="scroll-line"></div>
-      <span>SCROLL</span>
-    </div>
-  </section>
-
-  <!-- FEATURES -->
-  <section id="features">
-    <div class="section-wrap">
-      <div class="section-head reveal">
-        <div class="section-eyebrow">บริการของเรา</div>
-        <h2 class="section-title">ทำไมต้อง <span class="accent">Luxury Hub</span></h2>
-        <p class="section-sub">คุณภาพที่คัดสรรมาอย่างดี พร้อมให้บริการทุกระดับ</p>
-      </div>
-      <div class="features-grid">
-        <div class="feature-card reveal delay-100">
-          <span class="feat-num">01</span>
-          <div class="feat-icon-wrap">⚡</div>
-          <div class="feat-title">อัปเดตรวดเร็ว</div>
-          <p class="feat-desc">Script และ GUI ทุกตัวได้รับการอัปเดตภายใน 24 ชั่วโมงหลัง Roblox ปล่อยแพทช์ใหม่</p>
-        </div>
-        <div class="feature-card reveal delay-200">
-          <span class="feat-num">02</span>
-          <div class="feat-icon-wrap">🛡️</div>
-          <div class="feat-title">ปลอดภัย 100%</div>
-          <p class="feat-desc">ทุกสินค้าผ่านการทดสอบ Anti-Detect ไม่ถูก Ban รับประกันความปลอดภัย</p>
-        </div>
-        <div class="feature-card reveal delay-300">
-          <span class="feat-num">03</span>
-          <div class="feat-icon-wrap">💬</div>
-          <div class="feat-title">ซัพพอร์ต 24/7</div>
-          <p class="feat-desc">ทีมงานพร้อมช่วยเหลือตลอด 24 ชั่วโมง ทุกวัน ผ่าน Discord และ Line</p>
-        </div>
-        <div class="feature-card reveal delay-400">
-          <span class="feat-num">04</span>
-          <div class="feat-icon-wrap">🏆</div>
-          <div class="feat-title">รับประกันสินค้า</div>
-          <p class="feat-desc">รับประกันทุกสินค้า หากพบปัญหาจะแก้ไขหรือคืนเงินภายใน 24 ชั่วโมง</p>
+        <div class="subj-progress">
+          <div class="subj-header"><span class="subj-name c-math">Math 1</span><span class="subj-pct" id="prog-math-pct">0%</span></div>
+          <div class="prog-track"><div class="prog-fill" id="prog-math" style="width:0%;background:var(--blue2)"></div></div>
         </div>
       </div>
     </div>
-  </section>
-
-  <!-- PRODUCTS -->
-  <section id="products">
-    <div class="section-wrap">
-      <div class="section-head reveal">
-        <div class="section-eyebrow">สินค้าทั้งหมด</div>
-        <h2 class="section-title">เลือก <span class="accent">สินค้า</span> ของคุณ</h2>
-        <p class="section-sub">Script, GUI, บัญชี และบริการคุณภาพสูงกว่า 50 รายการ</p>
-      </div>
-      <div class="filter-row">
-        <button class="filter-tab active" onclick="filterProducts('all', this)">ทั้งหมด</button>
-        <button class="filter-tab" onclick="filterProducts('script', this)">สคริปต์</button>
-        <button class="filter-tab" onclick="filterProducts('gui', this)">GUI</button>
-        <button class="filter-tab" onclick="filterProducts('account', this)">บัญชี</button>
-        <button class="filter-tab" onclick="filterProducts('service', this)">บริการ</button>
-      </div>
-      <div class="products-grid" id="productsGrid"></div>
+    <!-- Recommendation box -->
+    <div class="card">
+      <div class="card-title">💡 แนะนำวันนี้</div>
+      <div id="today-rec"></div>
+      <hr class="divider">
+      <div class="card-title">📈 การทำนาย</div>
+      <div id="prediction-box" style="font-size:13px;color:var(--text2);line-height:1.7"></div>
     </div>
-  </section>
+  </div>
 
-  <!-- TOPUP -->
-  <section id="topup">
-    <div class="section-wrap">
-      <div class="section-head reveal">
-        <div class="section-eyebrow">เติมเงิน</div>
-        <h2 class="section-title">เติม <span class="accent">เครดิต</span> ของคุณ</h2>
-        <p class="section-sub">เติมเงินเพื่อซื้อสินค้าในระบบ รองรับหลายช่องทางการชำระเงิน</p>
+  <!-- Weekly chart -->
+  <div class="card">
+    <div class="card-title">📈 ชั่วโมงอ่านรายสัปดาห์ (7 วันล่าสุด)</div>
+    <div class="chart-box">
+      <canvas id="weekChart" role="img" aria-label="Bar chart showing study hours for last 7 days"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ PLAN ═══════════════════════════════ -->
+<div class="page" id="page-plan">
+  <h2>แผนการอ่านหนังสือ</h2>
+  <p class="page-sub">ตารางอ่านแบบ 7 วัน แบ่ง 3 ระยะ</p>
+
+  <!-- Phases -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">🗺 ระยะการเตรียมสอบ</div>
+    <div class="phase-row">
+      <div class="phase-dot" style="background:var(--green)"></div>
+      <div class="phase-info">
+        <div class="phase-name">ระยะที่ 1 — ปูพื้นฐาน <span style="font-size:11px;color:var(--text3)">(Foundation)</span></div>
+        <div class="phase-range">พ.ค. 2569 – ต.ค. 2569 · อ่านทุกบทให้ครบ เน้นเข้าใจ</div>
       </div>
-      <div class="topup-layout">
-        <div class="lx-panel reveal">
-          <div class="panel-title">เติมเครดิต</div>
-          <div class="panel-sub">SELECT AMOUNT · CHOOSE PAYMENT</div>
-          <div class="amount-grid" id="topupAmountGrid">
-            <div class="amount-tile" onclick="selectAmountTile(this, 50)">
-              <div class="amt-val">฿50</div><span class="amt-note">Starter</span>
-            </div>
-            <div class="amount-tile active" data-default onclick="selectAmountTile(this, 100)">
-              <div class="amt-val">฿100</div><span class="amt-note">Popular</span>
-            </div>
-            <div class="amount-tile" onclick="selectAmountTile(this, 200)">
-              <div class="amt-val">฿200</div><span class="amt-note">Value</span>
-            </div>
-            <div class="amount-tile" onclick="selectAmountTile(this, 500)">
-              <div class="amt-val">฿500</div><span class="amt-note">Premium</span>
-            </div>
-            <div class="amount-tile" onclick="selectAmountTile(this, 1000)">
-              <div class="amt-val">฿1,000</div><span class="amt-note">Elite</span>
-            </div>
-            <div class="amount-tile" onclick="selectAmountTile(this, 'custom')">
-              <div class="amt-val">กำหนด</div><span class="amt-note">Custom</span>
-            </div>
+      <div class="phase-check" id="phase1-check">🟢</div>
+    </div>
+    <div class="phase-row">
+      <div class="phase-dot" style="background:var(--amber)"></div>
+      <div class="phase-info">
+        <div class="phase-name">ระยะที่ 2 — ทำโจทย์ <span style="font-size:11px;color:var(--text3)">(Practice)</span></div>
+        <div class="phase-range">พ.ย. 2569 – ธ.ค. 2569 · ทำโจทย์ทุกบท + ทบทวนจุดอ่อน</div>
+      </div>
+      <div class="phase-check">⚪</div>
+    </div>
+    <div class="phase-row">
+      <div class="phase-dot" style="background:var(--red)"></div>
+      <div class="phase-info">
+        <div class="phase-name">ระยะที่ 3 — ตะลุยข้อสอบ <span style="font-size:11px;color:var(--text3)">(Mock Exam)</span></div>
+        <div class="phase-range">ม.ค. 2570 – ก.ม. 2570 · สอบเสมือนจริงทุกสัปดาห์</div>
+      </div>
+      <div class="phase-check">⚪</div>
+    </div>
+  </div>
+
+  <!-- Recommended hours -->
+  <div class="grid2" style="margin-bottom:16px">
+    <div class="card-sm" style="background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.2)">
+      <div class="card-title">จันทร์ – ศุกร์</div>
+      <div style="font-size:32px;font-weight:700;color:var(--amber);font-family:'DM Mono',monospace">4–5 <span style="font-size:16px;color:var(--text2)">ชั่วโมง/วัน</span></div>
+      <div style="font-size:12px;color:var(--text2);margin-top:6px">แบ่งเช้า 2h + เย็น/ดึก 2-3h</div>
+    </div>
+    <div class="card-sm" style="background:rgba(59,130,246,.06);border-color:rgba(59,130,246,.2)">
+      <div class="card-title">เสาร์ – อาทิตย์</div>
+      <div style="font-size:32px;font-weight:700;color:var(--blue2);font-family:'DM Mono',monospace">6–8 <span style="font-size:16px;color:var(--text2)">ชั่วโมง/วัน</span></div>
+      <div style="font-size:12px;color:var(--text2);margin-top:6px">เช้า 3h + บ่าย 3-5h</div>
+    </div>
+  </div>
+
+  <!-- Weekly schedule -->
+  <div class="card">
+    <div class="card-title">📅 ตารางอ่าน 7 วัน (ระยะปูพื้น)</div>
+    <div class="week-wrap">
+      <div class="week-grid" id="week-grid"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">💡 คำแนะนำเพิ่มเติม</div>
+    <div style="font-size:13px;color:var(--text2);line-height:2;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div>✅ อ่านก่อนนอน 30 นาที = ทบทวนวันนั้น</div>
+      <div>✅ ทำ Pomodoro 25/5 นาที ลด burnout</div>
+      <div>✅ วันเสาร์ = Mock test ทั้งวิชา</div>
+      <div>✅ อาทิตย์ = ทบทวนจุดอ่อน + วางแผนอาทิตย์ถัดไป</div>
+      <div>✅ ไม่อ่านวิชาเดิมเกิน 2.5h ต่อเนื่อง</div>
+      <div>✅ บันทึกทุกคืน ใช้เวลา 2 นาที</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ TIMER ═══════════════════════════════ -->
+<div class="page" id="page-timer">
+  <h2>จับเวลาอ่าน</h2>
+  <p class="page-sub">Pomodoro Timer บันทึกอัตโนมัติ</p>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="timer-display">
+        <div class="timer-circle">
+          <svg width="180" height="180" viewBox="0 0 180 180">
+            <circle id="pomo-ring" cx="90" cy="90" r="80" stroke-dasharray="502" stroke-dashoffset="0"/>
+            <circle id="pomo-progress" cx="90" cy="90" r="80" stroke-dasharray="502" stroke-dashoffset="502"/>
+          </svg>
+          <div>
+            <div class="timer-time" id="timer-display">25:00</div>
           </div>
-          <div id="customAmtWrap" style="display:none;" class="field-group">
-            <label class="field-label">จำนวนเงินที่ต้องการ (บาท)</label>
-            <input type="number" class="field-input" id="customAmtInput" placeholder="ระบุจำนวน..." min="20" />
-          </div>
-          <input type="hidden" id="topupSelectedAmt" value="100" />
-          <div style="margin-bottom:8px;margin-top:20px;">
-            <label class="field-label">ช่องทางชำระเงิน</label>
-          </div>
-          <div class="pay-grid">
-            <div class="pay-tile pay-tile-btn" onclick="topupSelectPay(this,'bank')">
-              <span class="pay-icon">🏦</span><span class="pay-name">โอนเงิน</span>
-            </div>
-            <div class="pay-tile pay-tile-btn active" onclick="topupSelectPay(this,'promptpay')">
-              <span class="pay-icon">📱</span><span class="pay-name">PromptPay</span>
-            </div>
-            <div class="pay-tile pay-tile-btn" onclick="topupSelectPay(this,'truemoney')">
-              <span class="pay-icon">💳</span><span class="pay-name">TrueMoney</span>
-            </div>
-            <div class="pay-tile pay-tile-btn" onclick="topupSelectPay(this,'crypto')">
-              <span class="pay-icon">🪙</span><span class="pay-name">Crypto</span>
-            </div>
-          </div>
-          <input type="hidden" id="topupSelectedPay" value="promptpay" />
-          <button class="btn btn-gold btn-full" style="margin-top:20px;" onclick="handleTopupPay()">◆ ดำเนินการเติมเงิน</button>
         </div>
+        <div class="timer-phase" id="timer-phase-label">🍅 โฟกัส</div>
+        <div class="pomo-counts" id="pomo-dots"></div>
+        <div class="timer-btns">
+          <button class="btn btn-primary" id="timer-start-btn" onclick="timerToggle()">เริ่ม</button>
+          <button class="btn btn-secondary" onclick="timerReset()">รีเซ็ต</button>
+        </div>
+      </div>
 
+      <hr class="divider">
+      <div class="form-group">
+        <label>วิชาที่กำลังอ่าน</label>
+        <select id="timer-subject">
+          <option value="tgat">TGAT</option>
+          <option value="tpat">TPAT 3</option>
+          <option value="phys">A-Level Physics</option>
+          <option value="math">A-Level Math 1</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>โหมด Pomodoro</label>
+        <select id="pomo-mode" onchange="setPomoMode(this.value)">
+          <option value="25-5">คลาสสิก 25/5</option>
+          <option value="50-10">ยาว 50/10</option>
+          <option value="90-20">Deep Work 90/20</option>
+        </select>
+      </div>
+      <div style="font-size:12px;color:var(--text2)">เซสชันที่ทำเสร็จจะถูกบันทึกอัตโนมัติ</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📋 Session วันนี้</div>
+      <div id="today-sessions">
+        <div style="font-size:13px;color:var(--text3);padding:20px 0;text-align:center">ยังไม่มีเซสชัน<br>กดเริ่มเพื่อเริ่มจับเวลา</div>
+      </div>
+      <hr class="divider">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:13px;color:var(--text2)">รวมวันนี้</div>
+        <div style="font-size:18px;font-weight:700;font-family:'DM Mono',monospace" id="today-total-timer">0:00</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ LOG ═══════════════════════════════ -->
+<div class="page" id="page-log">
+  <h2>บันทึกการอ่าน</h2>
+  <p class="page-sub">กรอกชั่วโมงอ่านประจำวัน · รองรับแก้ไขย้อนหลัง</p>
+
+  <div class="grid2" style="margin-bottom:16px">
+    <div class="card">
+      <div class="card-title">➕ เพิ่มรายการ</div>
+      <div class="form-group">
+        <label>วันที่</label>
+        <input type="date" id="log-date">
+      </div>
+      <div class="form-group">
+        <label>วิชา</label>
+        <select id="log-subject">
+          <option value="tgat">TGAT</option>
+          <option value="tpat">TPAT 3</option>
+          <option value="phys">A-Level Physics</option>
+          <option value="math">A-Level Math 1</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>ชั่วโมง</label>
+        <input type="number" id="log-hours" min="0" max="12" step="0.5" placeholder="0.0">
+      </div>
+      <div class="form-group">
+        <label>หมายเหตุ (ไม่บังคับ)</label>
+        <input type="text" id="log-note" placeholder="เช่น อ่านบท 3-4 ทำโจทย์">
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="addLog()">บันทึก</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📊 สรุปรายสัปดาห์</div>
+      <div class="chart-box" style="height:180px">
+        <canvas id="logWeekChart" role="img" aria-label="Study hours per subject this week"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📝 ประวัติการบันทึก</div>
+    <div style="overflow-x:auto">
+      <table class="log-table">
+        <thead>
+          <tr><th>วันที่</th><th>วิชา</th><th>ชั่วโมง</th><th>หมายเหตุ</th><th></th></tr>
+        </thead>
+        <tbody id="log-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ SUBJECTS ═══════════════════════════════ -->
+<div class="page" id="page-subjects">
+  <h2>เนื้อหาและบทเรียน</h2>
+  <p class="page-sub">ติ๊กบทที่อ่านจบแล้ว ติดตาม progress รายวิชา</p>
+
+  <div class="grid2" id="subjects-grid"></div>
+</div>
+
+<!-- ═══════════════════════════════ ANALYSIS ═══════════════════════════════ -->
+<div class="page" id="page-analysis">
+  <h2>วิเคราะห์การเรียน</h2>
+  <p class="page-sub">ดูข้อมูลเชิงลึก หาจุดอ่อน ปรับแผน</p>
+
+  <div class="grid2" style="margin-bottom:16px">
+    <div class="card">
+      <div class="card-title">📊 ชั่วโมงสะสมรายวิชา</div>
+      <div class="chart-box">
+        <canvas id="subjectHoursChart" role="img" aria-label="Total hours per subject"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📅 ชั่วโมงรายวัน (30 วัน)</div>
+      <div class="chart-box">
+        <canvas id="dailyChart" role="img" aria-label="Daily study hours for past 30 days"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">🔍 Insights อัตโนมัติ</div>
+    <div id="insights-box"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">⚡ เปรียบเทียบ แผน vs จริง (สัปดาห์นี้)</div>
+    <div class="chart-box" style="height:180px">
+      <canvas id="planVsActualChart" role="img" aria-label="Planned vs actual hours per day this week"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ GOALS ═══════════════════════════════ -->
+<div class="page" id="page-goals">
+  <h2>เป้าหมายและ Achievements</h2>
+  <p class="page-sub">Milestones · Streak · Badges</p>
+
+  <div class="grid2" style="margin-bottom:16px">
+    <div class="card">
+      <div class="card-title">🔥 Streak ปัจจุบัน</div>
+      <div class="streak-display">
         <div>
-          <div class="lx-panel reveal delay-200">
-            <div class="panel-title">ข้อมูลการเติมเงิน</div>
-            <div class="panel-sub">HOW IT WORKS</div>
-            <div class="topup-info-item">
-              <div class="info-icon">⚡</div>
-              <div><div class="info-title">รวดเร็ว</div><p class="info-desc">เครดิตเข้าบัญชีทันทีหลังชำระเงิน ไม่ต้องรอนาน</p></div>
-            </div>
-            <div class="topup-info-item">
-              <div class="info-icon">🔒</div>
-              <div><div class="info-title">ปลอดภัย</div><p class="info-desc">ระบบชำระเงินเข้ารหัส SSL ข้อมูลของคุณปลอดภัย 100%</p></div>
-            </div>
-            <div class="topup-info-item">
-              <div class="info-icon">🎁</div>
-              <div><div class="info-title">โบนัสพิเศษ</div><p class="info-desc">เติม ฿500+ รับโบนัส 10% · เติม ฿1,000+ รับโบนัส 20%</p></div>
-            </div>
-            <div class="topup-info-item">
-              <div class="info-icon">💬</div>
-              <div><div class="info-title">มีปัญหา?</div><p class="info-desc">ติดต่อทีมงานผ่าน Discord หรือ Line ได้ตลอด 24 ชั่วโมง</p></div>
-            </div>
-          </div>
+          <div class="streak-num" id="streak-num">0</div>
+          <div style="font-size:12px;color:var(--text2)">วันต่อเนื่อง</div>
+        </div>
+        <div>
+          <div style="font-size:13px;color:var(--text2);margin-bottom:6px">Best: <span style="color:var(--amber)" id="best-streak">0</span> วัน</div>
+          <div style="font-size:12px;color:var(--text3)">อ่านหนังสือทุกวัน<br>อย่างน้อย 30 นาที</div>
         </div>
       </div>
+      <div class="card-title" style="margin-top:4px">7 วันล่าสุด</div>
+      <div class="streak-dots" id="streak-dots-7"></div>
     </div>
-  </section>
 
-  <!-- REVIEWS -->
-  <section id="reviews">
-    <div class="section-wrap">
-      <div class="section-head reveal">
-        <div class="section-eyebrow">รีวิวจากลูกค้า</div>
-        <h2 class="section-title">ลูกค้า <span class="accent">พูดถึงเรา</span></h2>
-        <p class="section-sub">ความเชื่อมั่นจากผู้ใช้งานจริงกว่า 1,200+ คน</p>
-      </div>
-      <div class="reviews-grid">
-        <div class="review-card reveal delay-100">
-          <div class="review-stars">★★★★★</div>
-          <p class="review-text">"สคริปต์ดีมาก ทำงานลื่นไม่มีสะดุด อัปเดตเร็วมากด้วย แนะนำเลยครับ!"</p>
-          <div class="review-author">
-            <div class="review-avatar">🎮</div>
-            <div class="review-author-info">
-              <div class="review-name">PLAYERONE</div>
-              <div class="review-role">Blox Fruit Script User</div>
-            </div>
-          </div>
-        </div>
-        <div class="review-card reveal delay-200">
-          <div class="review-stars">★★★★★</div>
-          <p class="review-text">"GUI สวยมาก ฟังก์ชั่นครบ ใช้งานง่าย ซัพพอร์ตตอบเร็วมาก ประทับใจครับ"</p>
-          <div class="review-author">
-            <div class="review-avatar">💎</div>
-            <div class="review-author-info">
-              <div class="review-name">DIAMONDPRO</div>
-              <div class="review-role">Custom GUI Customer</div>
-            </div>
-          </div>
-        </div>
-        <div class="review-card reveal delay-300">
-          <div class="review-stars">★★★★★</div>
-          <p class="review-text">"ซื้อบัญชีมาแล้ว 3 บัญชี ทุกครั้งได้ของดี ไม่เคยผิดหวัง รับประกันจริง!"</p>
-          <div class="review-author">
-            <div class="review-avatar">🏆</div>
-            <div class="review-author-info">
-              <div class="review-name">ELITEGAMER</div>
-              <div class="review-role">Account Buyer · VIP</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- CONTACT -->
-  <section id="contact">
-    <div class="section-wrap">
-      <div class="section-head reveal">
-        <div class="section-eyebrow">ติดต่อเรา</div>
-        <h2 class="section-title">พร้อม <span class="accent">ช่วยเหลือ</span> เสมอ</h2>
-        <p class="section-sub">ทีมงานพร้อมให้บริการ 24 ชั่วโมง ทุกวัน</p>
-      </div>
-      <div class="contact-grid">
-        <a class="contact-card reveal delay-100" href="https://discord.gg/" target="_blank">
-          <div class="contact-icon-wrap">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="#7289da">
-              <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>
-            </svg>
-          </div>
-          <div>
-            <div class="contact-card-title">Discord Server</div>
-            <p class="contact-card-desc">เข้าร่วม Community · รับข่าวสาร · ติดต่อซัพพอร์ต</p>
-          </div>
-        </a>
-        <a class="contact-card reveal delay-200" href="https://line.me/" target="_blank">
-          <div class="contact-icon-wrap" style="font-size:1.5rem;">💬</div>
-          <div>
-            <div class="contact-card-title">Line Official</div>
-            <p class="contact-card-desc">แชทโดยตรง · ตอบกลับเร็ว · ซัพพอร์ต 24/7</p>
-          </div>
-        </a>
-        <a class="contact-card reveal delay-300" href="https://t.me/" target="_blank">
-          <div class="contact-icon-wrap" style="font-size:1.5rem;">✈️</div>
-          <div>
-            <div class="contact-card-title">Telegram</div>
-            <p class="contact-card-desc">ช่องทางสำรอง · ติดตามอัปเดต · รับโปรโมชั่น</p>
-          </div>
-        </a>
-        <a class="contact-card reveal delay-400" href="mailto:support@luxuryhub.th">
-          <div class="contact-icon-wrap" style="font-size:1.5rem;">📧</div>
-          <div>
-            <div class="contact-card-title">Email Support</div>
-            <p class="contact-card-desc">ร้องเรียน · ขอใบเสร็จ · ติดต่อทีมงาน</p>
-          </div>
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- FOOTER -->
-  <footer class="lxh-footer">
-    <div class="footer-top">
-      <div class="footer-brand">
-        <div class="footer-brand-name">◆ Luxury Hub</div>
-        <p class="footer-brand-desc">แหล่งรวม Script, GUI, บัญชี และบริการ Roblox คุณภาพสูง อัปเดตต่อเนื่อง ซัพพอร์ต 24/7</p>
-      </div>
-      <div class="footer-col">
-        <div class="footer-col-title">ลิงก์ด่วน</div>
-        <a href="#products">สินค้าทั้งหมด</a>
-        <a href="#topup">เติมเครดิต</a>
-        <a href="#reviews">รีวิว</a>
-        <a href="#contact">ติดต่อเรา</a>
-      </div>
-      <div class="footer-col">
-        <div class="footer-col-title">นโยบาย</div>
-        <a href="#">เงื่อนไขการใช้งาน</a>
-        <a href="#">นโยบายความเป็นส่วนตัว</a>
-        <a href="#">การคืนเงิน</a>
-        <a href="#">FAQ</a>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <div class="footer-copy">
-        © 2024 LUXURY HUB EVO · All rights reserved · <span style="color:var(--faint);">v4.0.0 · TH</span>
-      </div>
-      <div class="footer-socials">
-        <a class="footer-social-btn" href="https://discord.gg/" target="_blank" title="Discord">💬</a>
-        <a class="footer-social-btn" href="https://line.me/" target="_blank" title="Line">📱</a>
-        <a class="footer-social-btn" href="https://t.me/" target="_blank" title="Telegram">✈️</a>
-      </div>
-    </div>
-  </footer>
-
-  <!-- TOAST -->
-  <div class="lx-toast" id="lxToast">
-    <div class="toast-line"></div>
-    <div class="toast-icon-wrap" id="toastIcon">✦</div>
-    <div class="toast-body">
-      <div class="toast-head" id="toastHead">ข้อความ</div>
-      <div class="toast-msg"  id="toastMsg">รายละเอียด</div>
+    <div class="card">
+      <div class="card-title">🎯 Milestones</div>
+      <div id="milestones-list"></div>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════
-       AUTH MODAL (Login / Register)
-  ════════════════════════════════════════════ -->
-  <div class="modal-backdrop" id="authModal">
-    <div class="modal-panel">
-      <div class="modal-header-bar">
-        <span class="modal-title-text">◆ เข้าสู่ระบบ / สมัครสมาชิก</span>
-        <button class="icon-btn" onclick="Modal.close('authModal')">✕</button>
-      </div>
-      <div class="auth-tabs">
-        <button class="auth-tab active" id="authTabLogin" onclick="switchAuthTab('login')">เข้าสู่ระบบ</button>
-        <button class="auth-tab" id="authTabRegister" onclick="switchAuthTab('register')">สมัครสมาชิก</button>
-      </div>
-
-      <!-- Login Form -->
-      <div id="authLoginForm">
-        <div class="field-group">
-          <label class="field-label">ชื่อผู้ใช้</label>
-          <input type="text" class="field-input" id="loginUsername" placeholder="username" autocomplete="username" />
-        </div>
-        <div class="field-group">
-          <label class="field-label">รหัสผ่าน</label>
-          <input type="password" class="field-input" id="loginPassword" placeholder="••••••••" autocomplete="current-password"
-            onkeydown="if(event.key==='Enter') doLogin()" />
-        </div>
-        <button class="btn btn-gold btn-full" style="margin-top:20px;" onclick="doLogin()">◆ เข้าสู่ระบบ</button>
-        <div id="loginError" style="display:none;margin-top:12px;color:var(--danger);font-size:0.8rem;text-align:center;"></div>
-        <div style="margin-top:16px;text-align:center;font-size:0.78rem;color:var(--muted);">
-          ยังไม่มีบัญชี? <span style="color:var(--gold-base);cursor:pointer;" onclick="switchAuthTab('register')">สมัครสมาชิก</span>
-        </div>
-      </div>
-
-      <!-- Register Form -->
-      <div id="authRegisterForm" style="display:none;">
-        <div class="field-group">
-          <label class="field-label">ชื่อผู้ใช้ <span style="color:var(--muted);font-size:0.7rem;">(4+ ตัวอักษร)</span></label>
-          <input type="text" class="field-input" id="regUsername" placeholder="username" autocomplete="username" />
-        </div>
-        <div class="field-group">
-          <label class="field-label">อีเมล <span style="color:var(--muted);font-size:0.7rem;">(ไม่บังคับ)</span></label>
-          <input type="email" class="field-input" id="regEmail" placeholder="email@example.com" />
-        </div>
-        <div class="field-group">
-          <label class="field-label">รหัสผ่าน <span style="color:var(--muted);font-size:0.7rem;">(6+ ตัวอักษร)</span></label>
-          <input type="password" class="field-input" id="regPassword" placeholder="••••••••" autocomplete="new-password" />
-        </div>
-        <div class="field-group">
-          <label class="field-label">ยืนยันรหัสผ่าน</label>
-          <input type="password" class="field-input" id="regPassword2" placeholder="••••••••" autocomplete="new-password"
-            onkeydown="if(event.key==='Enter') doRegister()" />
-        </div>
-        <button class="btn btn-gold btn-full" style="margin-top:20px;" onclick="doRegister()">◆ สมัครสมาชิก</button>
-        <div id="regError" style="display:none;margin-top:12px;color:var(--danger);font-size:0.8rem;text-align:center;"></div>
-        <div style="margin-top:16px;text-align:center;font-size:0.78rem;color:var(--muted);">
-          มีบัญชีแล้ว? <span style="color:var(--gold-base);cursor:pointer;" onclick="switchAuthTab('login')">เข้าสู่ระบบ</span>
-        </div>
-      </div>
-    </div>
+  <div class="card">
+    <div class="card-title">🏆 Achievements</div>
+    <div class="grid2" id="achievements-grid"></div>
   </div>
+</div>
 
-  <!-- ═══════════════════════════════════════════
-       ADMIN PANEL MODAL
-  ════════════════════════════════════════════ -->
-  <div class="modal-backdrop" id="adminModal">
-    <div class="modal-panel" style="max-width:900px;width:96vw;max-height:88vh;overflow-y:auto;">
-      <div class="modal-header-bar">
-        <span class="modal-title-text">👑 ADMIN PANEL</span>
-        <button class="icon-btn" onclick="AdminPanel.close()">✕</button>
-      </div>
-      <div id="adminModalBody"></div>
-    </div>
-  </div>
+<div class="toast" id="toast"></div>
 
-  <!-- ═══════════════════════════════════════════
-       PROMPTPAY MODAL
-  ════════════════════════════════════════════ -->
-  <div class="modal-backdrop" id="promptpayModal">
-    <div class="modal-panel">
-      <div class="modal-header-bar">
-        <span class="modal-title-text">📱 ชำระผ่าน PromptPay</span>
-        <button class="icon-btn" onclick="Modal.close('promptpayModal')">✕</button>
-      </div>
-      <div class="pp-qr-wrap">
-        <div class="pp-amount-display" id="ppAmount">฿100</div>
-        <div id="ppQRCanvas" style="display:inline-block;"></div>
-        <div class="pp-phone" id="ppPhoneDisplay">เบอร์: 095-240-8955</div>
-      </div>
-      <div class="pp-steps">
-        <div class="pp-step"><div class="pp-step-num">1</div><div>เปิดแอปธนาคารหรือ TrueMoney Wallet</div></div>
-        <div class="pp-step"><div class="pp-step-num">2</div><div>เลือก "สแกน QR" หรือ "PromptPay"</div></div>
-        <div class="pp-step"><div class="pp-step-num">3</div><div>สแกน QR Code ด้านบนและยืนยันยอดเงิน</div></div>
-        <div class="pp-step"><div class="pp-step-num">4</div><div>กดปุ่ม "แจ้งโอน" ด้านล่างเพื่อส่งหลักฐาน</div></div>
-      </div>
-      <div class="field-group">
-        <label class="field-label">หมายเหตุ (ไม่บังคับ)</label>
-        <input type="text" class="field-input" id="ppSlipNote" placeholder="เช่น โอนเวลา 14:30 หรือชื่อบัญชีผู้โอน" />
-      </div>
-      <button class="btn btn-gold btn-full" style="margin-top:16px;" onclick="PaymentSystem.submitPromptPaySlip()">
-        ◆ แจ้งโอนเงินแล้ว
-      </button>
-      <div style="margin-top:10px;text-align:center;font-size:0.72rem;color:var(--muted);">
-        เครดิตจะเข้าบัญชีหลังแอดมินยืนยัน ปกติภายใน 5-15 นาที
-      </div>
-    </div>
-  </div>
+<script type="module">
+// ═══════════════════════════ STATE ═══════════════════════════
+const EXAMS={
+  tgat:{name:'TGAT',date:'2027-01-30',color:'#f59e0b'},
+  tpat:{name:'TPAT 3',date:'2027-01-30',color:'#8b5cf6'},
+  phys:{name:'A-Level Physics',date:'2027-03-13',color:'#0d9488'},
+  math:{name:'A-Level Math 1',date:'2027-03-14',color:'#3b82f6'}
+};
 
-  <!-- ═══════════════════════════════════════════
-       TRUEMONEY MODAL
-  ════════════════════════════════════════════ -->
-  <div class="modal-backdrop" id="truemoneyModal">
-    <div class="modal-panel">
-      <div class="modal-header-bar">
-        <span class="modal-title-text">💳 ชำระผ่าน TrueMoney (อั่งเปา)</span>
-        <button class="icon-btn" onclick="Modal.close('truemoneyModal')">✕</button>
-      </div>
-      <div style="background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.2);padding:14px 16px;margin-bottom:20px;clip-path:var(--clip-tl);">
-        <div style="font-family:var(--font-display);font-size:0.78rem;font-weight:600;color:#f97316;letter-spacing:1px;margin-bottom:6px;">วิธีส่งอั่งเปา TrueMoney</div>
-        <div style="font-size:0.78rem;color:var(--text-secondary);line-height:1.7;">
-          1. เปิดแอป TrueMoney Wallet<br>
-          2. เลือก "อั่งเปา" → "สร้างอั่งเปา"<br>
-          3. ใส่จำนวนเงินที่ต้องการเติม<br>
-          4. คัดลอกลิ้งก์อั่งเปา และวางในช่องด้านล่าง
-        </div>
-      </div>
-      <div class="field-group">
-        <label class="field-label">ลิ้งก์อั่งเปา TrueMoney *</label>
-        <input type="url" class="field-input" id="tmEnvelopeUrl" placeholder="https://gift.truemoney.com/campaign/?v=..." />
-      </div>
-      <div class="field-group">
-        <label class="field-label">จำนวนเงินในซอง (฿) *</label>
-        <input type="number" class="field-input" id="tmAmount" placeholder="ระบุยอดเงิน..." min="20" />
-      </div>
-      <button class="btn btn-gold btn-full" style="margin-top:16px;" onclick="PaymentSystem.submitTrueMoneyEnvelope()">
-        ◆ ส่งซองอั่งเปา
-      </button>
-      <div style="margin-top:10px;text-align:center;font-size:0.72rem;color:var(--muted);">
-        ระบบจะตรวจสอบและเติมเครดิตภายใน 5-15 นาที
-      </div>
-    </div>
-  </div>
+const SUBJECTS_DATA={
+  tgat:{name:'TGAT',color:'#f59e0b',chapters:[
+    'ความถนัดทั่วไป — การอ่านและเขียน','ความถนัดทั่วไป — คณิตศาสตร์','การคิดอย่างมีวิจารณญาณ',
+    'การแก้ปัญหาเชิงคณิตศาสตร์','ภาษาไทยเพื่อการสื่อสาร','เหตุผลเชิงตรรกะ','วิทยาศาสตร์และสังคม'
+  ]},
+  tpat:{name:'TPAT 3',color:'#8b5cf6',chapters:[
+    'มิติสัมพันธ์ (Spatial Reasoning)','การใช้เหตุผลเชิงกล (Mechanical)','ฟิสิกส์พื้นฐาน',
+    'คณิตศาสตร์พื้นฐานเชิงวิศวกรรม','การอ่านแบบทางเทคนิค','การวิเคราะห์แผนภาพวงจร','โจทย์บูรณาการ'
+  ]},
+  phys:{name:'A-Level Physics',color:'#0d9488',chapters:[
+    'กลศาสตร์ (Mechanics)','แรงและการเคลื่อนที่','พลังงานและโมเมนตัม','คลื่นและเสียง',
+    'แสงและทัศนศาสตร์','ไฟฟ้าสถิต','ไฟฟ้ากระแส','แม่เหล็กไฟฟ้า','ฟิสิกส์อะตอม','ฟิสิกส์นิวเคลียร์'
+  ]},
+  math:{name:'A-Level Math 1',color:'#3b82f6',chapters:[
+    'แคลคูลัส — ลิมิต','แคลคูลัส — อนุพันธ์','แคลคูลัส — การหาปริพันธ์','เวกเตอร์',
+    'เมทริกซ์และระบบสมการ','ลำดับและอนุกรม','สถิติเบื้องต้น','ความน่าจะเป็น',
+    'เรขาคณิตวิเคราะห์','จำนวนเชิงซ้อน'
+  ]}
+};
 
-  <!-- ═══════════════════════════════════════════
-       BANK TRANSFER MODAL
-  ════════════════════════════════════════════ -->
-  <div class="modal-backdrop" id="bankModal">
-    <div class="modal-panel">
-      <div class="modal-header-bar">
-        <span class="modal-title-text">🏦 โอนเงินผ่านธนาคาร</span>
-        <button class="icon-btn" onclick="Modal.close('bankModal')">✕</button>
-      </div>
-      <div style="background:var(--bg-overlay);border:1px solid rgba(201,160,85,0.15);padding:20px;margin-bottom:20px;clip-path:var(--clip-tl);">
-        <div style="font-family:var(--font-display);font-size:0.78rem;color:var(--muted);letter-spacing:1px;margin-bottom:12px;text-transform:uppercase;">บัญชีรับโอน</div>
-        <div style="font-size:1.1rem;font-weight:700;color:var(--text-primary);font-family:var(--font-display);">ธนาคารออมสิน (GSB)</div>
-        <div style="font-family:var(--font-mono);font-size:1rem;color:var(--gold-bright);margin:8px 0;letter-spacing:2px;">020-3998-83081-7</div>
-        <div style="font-size:0.82rem;color:var(--text-secondary);">ชื่อบัญชี: LUXURY HUB EVO</div>
-      </div>
-      <div class="pp-steps">
-        <div class="pp-step"><div class="pp-step-num">1</div><div>โอนเงินตามจำนวนที่ต้องการเติม</div></div>
-        <div class="pp-step"><div class="pp-step-num">2</div><div>ถ่ายสลิปการโอนเงิน</div></div>
-        <div class="pp-step"><div class="pp-step-num">3</div><div>ส่งสลิปพร้อมยูสเซอร์เนมใน Discord หรือ Line</div></div>
-      </div>
-      <div class="field-group">
-        <label class="field-label">จำนวนเงินที่โอน (฿) *</label>
-        <input type="number" class="field-input" id="bankAmount" placeholder="ระบุยอดเงิน..." min="20" />
-      </div>
-      <div class="field-group">
-        <label class="field-label">หมายเหตุ (ไม่บังคับ)</label>
-        <input type="text" class="field-input" id="bankNote" placeholder="เช่น ชื่อบัญชีที่โอน / เวลาที่โอน" />
-      </div>
-      <button class="btn btn-gold btn-full" style="margin-top:16px;" onclick="submitBankTransfer()">
-        ◆ แจ้งโอนเงินแล้ว
-      </button>
-      <div style="margin-top:10px;text-align:center;font-size:0.72rem;color:var(--muted);">
-        กรุณาส่งสลิปให้แอดมินยืนยันด้วย เครดิตจะเข้าภายใน 5-30 นาที
-      </div>
-    </div>
-  </div>
+const WEEK_PLAN=[
+  {day:'จันทร์',sessions:[{label:'Math 1',cls:'math',h:'2h'},{label:'TGAT',cls:'tgat',h:'2h'},{label:'ทบทวน',cls:'review',h:'30m'}],target:4.5},
+  {day:'อังคาร',sessions:[{label:'Physics',cls:'phys',h:'2h'},{label:'TPAT 3',cls:'tpat',h:'2h'},{label:'โจทย์',cls:'review',h:'30m'}],target:4.5},
+  {day:'พุธ',sessions:[{label:'Math 1',cls:'math',h:'2.5h'},{label:'Physics',cls:'phys',h:'2h'}],target:4.5},
+  {day:'พฤหัส',sessions:[{label:'TGAT',cls:'tgat',h:'2h'},{label:'TPAT 3',cls:'tpat',h:'2h'},{label:'โจทย์',cls:'review',h:'30m'}],target:4.5},
+  {day:'ศุกร์',sessions:[{label:'Physics',cls:'phys',h:'1.5h'},{label:'Math 1',cls:'math',h:'1.5h'},{label:'ทบทวนสัปดาห์',cls:'review',h:'1h'}],target:4},
+  {day:'เสาร์',sessions:[{label:'Mock Test',cls:'mock',h:'3h'},{label:'เฉลย+วิเคราะห์',cls:'review',h:'2h'},{label:'TPAT 3',cls:'tpat',h:'1.5h'}],target:7},
+  {day:'อาทิตย์',sessions:[{label:'จุดอ่อน',cls:'review',h:'2h'},{label:'TGAT',cls:'tgat',h:'1.5h'},{label:'วางแผนสัปดาห์ถัดไป',cls:'review',h:'30m'}],target:4}
+];
 
-  <!-- ═══════════════════════════════════════════
-       CART MODAL
-  ════════════════════════════════════════════ -->
-  <div class="modal-backdrop" id="cartModal">
-    <div class="modal-panel">
-      <div class="modal-header-bar">
-        <span class="modal-title-text">🛒 ตะกร้าสินค้า</span>
-        <button class="icon-btn" onclick="Modal.close('cartModal')">✕</button>
-      </div>
-      <div id="cartList"></div>
-      <div id="cartFooter" style="display:none;">
-        <div class="order-summary">
-          <div class="summary-row total-row">
-            <span class="label">ยอดรวม</span>
-            <span class="value" id="cartTotal">฿0</span>
-          </div>
-        </div>
-        <button class="btn btn-gold btn-full" onclick="openCheckout()">◆ ดำเนินการชำระเงิน</button>
-      </div>
-    </div>
-  </div>
+const ACHIEVEMENTS_DEF=[
+  {id:'first',icon:'🌱',name:'เริ่มต้นแล้ว!',desc:'บันทึกวันแรก',cond:s=>s.totalLogs>0},
+  {id:'week1',icon:'🔥',name:'ติดต่อ 7 วัน',desc:'Streak 7 วัน',cond:s=>s.streak>=7},
+  {id:'week4',icon:'💎',name:'มืออาชีพ',desc:'Streak 30 วัน',cond:s=>s.streak>=30},
+  {id:'h50',icon:'⏰',name:'50 ชั่วโมง',desc:'อ่านรวม 50h',cond:s=>s.totalHours>=50},
+  {id:'h200',icon:'🚀',name:'200 ชั่วโมง',desc:'อ่านรวม 200h',cond:s=>s.totalHours>=200},
+  {id:'chapter10',icon:'📖',name:'นักอ่านตัวจริง',desc:'อ่านครบ 10 บท',cond:s=>s.chapsDone>=10},
+  {id:'chapter30',icon:'🏆',name:'ครบทุกบท',desc:'อ่านครบ 30 บท',cond:s=>s.chapsDone>=30},
+  {id:'all4',icon:'⭐',name:'นักเรียนรอบด้าน',desc:'อ่านครบทุก 4 วิชา',cond:s=>s.subjTouched>=4},
+];
 
-  <!-- ═══════════════════════════════════════════
-       CHECKOUT MODAL
-  ════════════════════════════════════════════ -->
-  <div class="modal-backdrop" id="checkoutModal">
-    <div class="modal-panel">
-      <div class="modal-header-bar">
-        <span class="modal-title-text">◆ ชำระเงิน</span>
-        <button class="icon-btn" onclick="Modal.close('checkoutModal')">✕</button>
-      </div>
-      <div class="checkout-steps">
-        <div class="ck-step done"   id="ckStep1"><div class="step-dot">1</div><div class="step-lbl">ตะกร้า</div></div>
-        <div class="ck-step active" id="ckStep2"><div class="step-dot">2</div><div class="step-lbl">ชำระ</div></div>
-        <div class="ck-step"        id="ckStep3"><div class="step-dot">3</div><div class="step-lbl">เสร็จสิ้น</div></div>
-      </div>
-      <div id="ckContent">
-        <div class="order-summary">
-          <div class="summary-row">
-            <span class="label">ยอดสินค้า</span>
-            <span class="value" id="ckSubtotal">฿0</span>
-          </div>
-          <div class="summary-row total-row">
-            <span class="label">ยอดรวม</span>
-            <span class="value" id="ckTotal">฿0</span>
-          </div>
-        </div>
-        <div id="ckCreditInfo" style="display:none;padding:12px 16px;margin-bottom:16px;background:rgba(76,175,128,0.08);border:1px solid rgba(76,175,128,0.2);clip-path:var(--clip-tl);">
-          <div style="font-family:var(--font-mono);font-size:0.78rem;color:var(--success);">
-            💰 เครดิตของคุณ: <span id="ckUserCredit" style="font-weight:700;">฿0</span>
-          </div>
-        </div>
-        <div id="ckNoCredit" style="display:none;padding:12px 16px;margin-bottom:16px;background:rgba(224,64,80,0.08);border:1px solid rgba(224,64,80,0.2);clip-path:var(--clip-tl);">
-          <div style="font-family:var(--font-mono);font-size:0.78rem;color:var(--danger);">⚠ เครดิตไม่เพียงพอ กรุณา<span style="text-decoration:underline;cursor:pointer;" onclick="Modal.close('checkoutModal');scrollToSection('topup')">เติมเครดิต</span>ก่อน</div>
-        </div>
-        <div id="ckNotLoggedIn" style="display:none;padding:12px 16px;margin-bottom:16px;background:rgba(201,160,85,0.06);border:1px solid rgba(201,160,85,0.2);clip-path:var(--clip-tl);">
-          <div style="font-size:0.8rem;color:var(--text-secondary);">กรุณา <span style="color:var(--gold-base);cursor:pointer;text-decoration:underline;" onclick="Modal.close('checkoutModal');openAuthModal('login')">เข้าสู่ระบบ</span> ก่อนชำระเงิน</div>
-        </div>
-        <button class="btn btn-gold btn-full" style="margin-top:8px;" id="ckConfirmBtn" onclick="completeOrder()">◆ ยืนยันซื้อด้วยเครดิต</button>
-      </div>
-    </div>
-  </div>
+let data = window.data || {
+  logs:[], chapters:{tgat:[],tpat:[],phys:[],math:[]}, streak:0, bestStreak:0, lastStudyDate:null, pomoDone:0
+};
+// Keep window.data in sync
+Object.defineProperty(window, 'data', {
+  get: () => data,
+  set: (v) => { data = v; },
+  configurable: true
+});
 
-  <!-- ═══════════════════════════════════════════
-       USER PROFILE MODAL
-  ════════════════════════════════════════════ -->
-  <div class="modal-backdrop" id="profileModal">
-    <div class="modal-panel" style="max-width:640px;">
-      <div class="modal-header-bar">
-        <span class="modal-title-text">◆ โปรไฟล์ของฉัน</span>
-        <button class="icon-btn" onclick="Modal.close('profileModal')">✕</button>
-      </div>
-      <div id="profileContent"></div>
-    </div>
-  </div>
+function save() {
+  // Always backup to localStorage
+  localStorage.setItem('studypath', JSON.stringify(data));
+  // Save to Firebase if logged in
+  if (window.fbSave) window.fbSave(data);
+}
 
-  <!-- ═══════════════════════════════════════════
-       DELIVERY MODAL (แสดงสินค้าที่ได้รับ)
-  ════════════════════════════════════════════ -->
-  <div class="modal-backdrop" id="deliveryModal">
-    <div class="modal-panel">
-      <div class="modal-header-bar">
-        <span class="modal-title-text">✦ สินค้าของคุณ</span>
-        <button class="icon-btn" onclick="Modal.close('deliveryModal')">✕</button>
-      </div>
-      <div id="deliveryContent"></div>
-    </div>
-  </div>
+// ═══════════════════════════ NAV ═══════════════════════════
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t=>{if(t.textContent.trim()===({dashboard:'Dashboard',plan:'แผนอ่าน',timer:'จับเวลา',log:'บันทึก',subjects:'เนื้อหา',analysis:'วิเคราะห์',goals:'เป้าหมาย'}[id]))t.classList.add('active')});
+  if(id==='analysis')renderAnalysis();
+  if(id==='dashboard')renderDashboard();
+}
 
-  <!-- ═══════════════════════════════════════════
-       SCRIPTS — โหลดตามลำดับ
-  ════════════════════════════════════════════ -->
-  <script src="js/config.js"></script>
-  <script src="js/webhook.js"></script>
-  <script src="js/product.js"></script>
-  <script src="js/cart.js"></script>
-  <script src="js/ui.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/store-system.js"></script>
-  <script src="js/payment-system.js"></script>
-  <script src="js/admin-panel.js"></script>
-  <script src="js/main.js"></script>
+// ═══════════════════════════ COUNTDOWN ═══════════════════════════
+function daysUntil(dateStr){
+  const now=new Date();now.setHours(0,0,0,0);
+  const target=new Date(dateStr);
+  return Math.max(0,Math.ceil((target-now)/(1000*60*60*24)));
+}
+function renderCountdowns(){
+  const fmt=d=>{const n=daysUntil(d);return n===0?'วันนี้!':n+' วัน'};
+  document.getElementById('cd-tgat').textContent=fmt('2027-01-30');
+  document.getElementById('cd-tpat').textContent=fmt('2027-01-30');
+  document.getElementById('cd-phys').textContent=fmt('2027-03-13');
+  document.getElementById('cd-math').textContent=fmt('2027-03-14');
+}
 
-  <!-- ═══════════════════════════════════════════
-       GLUE SCRIPT — เชื่อมระบบทั้งหมด
-  ════════════════════════════════════════════ -->
-  <script>
-  // ══════════════════════════════════════════════
-  //  AUTH MODAL
-  // ══════════════════════════════════════════════
-  function openAuthModal(tab = 'login') {
-    switchAuthTab(tab);
-    Modal.open('authModal');
-  }
+// ═══════════════════════════ STREAK ═══════════════════════════
+function updateStreak(dateStr){
+  const today=dateStr||new Date().toISOString().split('T')[0];
+  if(data.lastStudyDate===today)return;
+  const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);
+  const yStr=yesterday.toISOString().split('T')[0];
+  if(data.lastStudyDate===yStr){data.streak++;} else if(data.lastStudyDate!==today){data.streak=1;}
+  data.lastStudyDate=today;
+  data.bestStreak=Math.max(data.bestStreak,data.streak);
+  save();
+}
 
-  function switchAuthTab(tab) {
-    const isLogin = tab === 'login';
-    document.getElementById('authLoginForm').style.display    = isLogin ? 'block' : 'none';
-    document.getElementById('authRegisterForm').style.display = isLogin ? 'none' : 'block';
-    document.getElementById('authTabLogin').classList.toggle('active', isLogin);
-    document.getElementById('authTabRegister').classList.toggle('active', !isLogin);
-    document.getElementById('loginError').style.display = 'none';
-    document.getElementById('regError').style.display   = 'none';
-  }
+// ═══════════════════════════ LOGS ═══════════════════════════
+function addLog(){
+  const date=document.getElementById('log-date').value;
+  const subj=document.getElementById('log-subject').value;
+  const hours=parseFloat(document.getElementById('log-hours').value)||0;
+  const note=document.getElementById('log-note').value;
+  if(!date||hours<=0){showToast('กรุณากรอกข้อมูลให้ครบ');return;}
+  data.logs.push({id:Date.now(),date,subj,hours,note});
+  data.logs.sort((a,b)=>b.date.localeCompare(a.date));
+  updateStreak(date);
+  save();renderLog();renderDashboard();showToast('บันทึกแล้ว ✅');
+  document.getElementById('log-hours').value='';
+  document.getElementById('log-note').value='';
+}
+function deleteLog(id){
+  data.logs=data.logs.filter(l=>l.id!==id);save();renderLog();renderDashboard();showToast('ลบแล้ว');
+}
+function renderLog(){
+  const tbody=document.getElementById('log-tbody');
+  if(!data.logs.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px">ยังไม่มีรายการ</td></tr>';return;}
+  tbody.innerHTML=data.logs.map(l=>{
+    const colors={tgat:'var(--amber)',tpat:'var(--purple2)',phys:'var(--teal2)',math:'var(--blue2)'};
+    const names={tgat:'TGAT',tpat:'TPAT 3',phys:'Physics',math:'Math 1'};
+    return`<tr>
+      <td style="font-family:'DM Mono',monospace;font-size:12px">${l.date}</td>
+      <td><span class="badge" style="background:${colors[l.subj]}20;color:${colors[l.subj]}">${names[l.subj]}</span></td>
+      <td style="font-family:'DM Mono',monospace">${l.hours}h</td>
+      <td style="color:var(--text2)">${l.note||'—'}</td>
+      <td><button class="btn btn-sm btn-danger" onclick="deleteLog(${l.id})">ลบ</button></td>
+    </tr>`;
+  }).join('');
+  renderLogChart();
+}
+function getHoursBySubj(){
+  const h={tgat:0,tpat:0,phys:0,math:0};
+  data.logs.forEach(l=>h[l.subj]=(h[l.subj]||0)+l.hours);return h;
+}
+function getHoursLast7(){
+  const days=[];const today=new Date();
+  for(let i=6;i>=0;i--){const d=new Date(today);d.setDate(d.getDate()-i);days.push(d.toISOString().split('T')[0]);}
+  return days.map(d=>({date:d,hours:data.logs.filter(l=>l.date===d).reduce((a,b)=>a+b.hours,0)}));
+}
+let weekChart,logWeekChart,subjectChart,dailyChart,planVsChart;
+function renderDashboard(){
+  renderCountdowns();
+  const total=data.logs.reduce((a,b)=>a+b.hours,0);
+  document.getElementById('dash-streak').textContent=data.streak;
+  document.getElementById('dash-total-hours').textContent=total.toFixed(1);
+  const days=new Set(data.logs.map(l=>l.date)).size;
+  document.getElementById('dash-avg').textContent=days?+(total/days).toFixed(1):0;
+  const chapsDone=Object.values(data.chapters).reduce((a,b)=>a+b.length,0);
+  document.getElementById('dash-chapters').textContent=chapsDone;
 
-  function doLogin() {
-    const u = document.getElementById('loginUsername').value.trim();
-    const p = document.getElementById('loginPassword').value;
-    const r = Auth.login(u, p);
-    if (!r.ok) {
-      const el = document.getElementById('loginError');
-      el.textContent = r.msg; el.style.display = 'block';
-      return;
-    }
-    Modal.close('authModal');
-    document.getElementById('loginUsername').value = '';
-    document.getElementById('loginPassword').value = '';
-    updateNavUI();
-    Toast.show('✦', `ยินดีต้อนรับ ${r.user.username}`, 'เข้าสู่ระบบสำเร็จ');
-  }
-
-  function doRegister() {
-    const u  = document.getElementById('regUsername').value.trim();
-    const e  = document.getElementById('regEmail').value.trim();
-    const p  = document.getElementById('regPassword').value;
-    const p2 = document.getElementById('regPassword2').value;
-    const el = document.getElementById('regError');
-
-    if (p !== p2) { el.textContent = 'รหัสผ่านไม่ตรงกัน'; el.style.display = 'block'; return; }
-    const r = Auth.register(u, p, e);
-    if (!r.ok) { el.textContent = r.msg; el.style.display = 'block'; return; }
-
-    Modal.close('authModal');
-    ['regUsername','regEmail','regPassword','regPassword2'].forEach(id => document.getElementById(id).value = '');
-    updateNavUI();
-    Toast.show('✦', `สมัครสำเร็จ! ยินดีต้อนรับ ${r.user.username}`, 'เครดิตเริ่มต้น ฿0');
-  }
-
-  // ══════════════════════════════════════════════
-  //  NAV UI
-  // ══════════════════════════════════════════════
-  function updateNavUI() {
-    const user = Auth.getCurrentUser();
-    const authBtn    = document.getElementById('navAuthBtn');
-    const userMenu   = document.getElementById('navUserMenu');
-    const adminBtn   = document.getElementById('navAdminBtn');
-    const creditEl   = document.getElementById('navUserCredit');
-    const usernameEl = document.getElementById('navUsername');
-
-    if (user) {
-      authBtn.style.display  = 'none';
-      userMenu.style.display = 'flex';
-      if (usernameEl) usernameEl.textContent = user.username.toUpperCase();
-      if (creditEl)   creditEl.textContent   = `฿${user.credits || 0}`;
-      if (adminBtn)   adminBtn.style.display = user.isAdmin ? 'flex' : 'none';
-    } else {
-      authBtn.style.display  = 'flex';
-      userMenu.style.display = 'none';
-      if (adminBtn) adminBtn.style.display = 'none';
-    }
-  }
-
-  // Override Auth.updateNavUI to use our full version
-  const _origUpdateNavUI = Auth.updateNavUI;
-  Object.defineProperty(Auth, 'updateNavUI', {
-    get: () => updateNavUI,
-    set: () => {}
+  // progress per subject
+  Object.keys(SUBJECTS_DATA).forEach(k=>{
+    const total_ch=SUBJECTS_DATA[k].chapters.length;
+    const done=data.chapters[k].length;
+    const pct=total_ch?Math.round(done/total_ch*100):0;
+    document.getElementById('prog-'+k).style.width=pct+'%';
+    document.getElementById('prog-'+k+'-pct').textContent=pct+'%';
   });
 
-  // ══════════════════════════════════════════════
-  //  PRODUCT GRID (overrides main.js to use StoreSystem)
-  // ══════════════════════════════════════════════
-  function renderProducts(filter = 'all') {
-    const grid = document.getElementById('productsGrid');
-    if (!grid) return;
-    StoreSystem.initProducts();
-    const allP = StoreSystem.getProducts().filter(p => p.active !== false);
-    const list = filter === 'all' ? allP : allP.filter(p => p.category === filter);
+  // week chart
+  const last7=getHoursLast7();
+  const labels=last7.map(d=>{const dt=new Date(d.date);return['อา','จ','อ','พ','พฤ','ศ','ส'][dt.getDay()]});
+  const vals=last7.map(d=>d.hours);
+  const ctx=document.getElementById('weekChart').getContext('2d');
+  if(weekChart)weekChart.destroy();
+  weekChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'ชั่วโมง',data:vals,backgroundColor:'rgba(245,158,11,0.7)',borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#5c6b88'}},y:{grid:{color:'#2a3348'},ticks:{color:'#5c6b88'},beginAtZero:true}}}});
 
-    grid.innerHTML = list.map((p, i) => {
-      const stock = StoreSystem.getStockCount(p.id);
-      const soldOut = stock === 0;
-      return `
-        <div class="product-card reveal delay-${((i % 4) + 1) * 100}">
-          <div class="product-thumb">
-            ${productThumbHTML(p)}
-            ${p.badge ? `<span class="product-badge badge-${p.badge}">${p.badge==='hot'?'🔥 HOT':p.badge==='new'?'✦ NEW':'◆ SALE'}</span>` : ''}
-            ${soldOut ? '<span class="product-badge" style="background:rgba(80,80,80,0.6);color:#888;top:10px;left:10px;right:auto;">หมดสต็อก</span>' : ''}
-          </div>
-          <div class="product-body">
-            <div class="product-cat">${CATEGORIES[p.category] || p.category}</div>
-            <div class="product-name">${p.name}</div>
-            <div class="product-desc">${p.desc || ''}</div>
-            <div class="product-footer">
-              <div class="product-price">
-                ${p.oldPrice ? `<span class="price-old">฿${p.oldPrice}</span>` : ''}
-                <span class="price-current">฿${p.price}<span class="price-unit"> /ชิ้น</span></span>
-              </div>
-              <button class="add-to-cart" id="atcBtn-${p.id}" onclick="handleAddToCart(${p.id})">
-                + เพิ่ม
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-    }).join('');
-    ScrollReveal.init();
-  }
+  renderRecommendation();renderPrediction();
+}
+function renderLogChart(){
+  const subj=getHoursBySubj();
+  const ctx2=document.getElementById('logWeekChart').getContext('2d');
+  if(logWeekChart)logWeekChart.destroy();
+  logWeekChart=new Chart(ctx2,{type:'doughnut',data:{labels:['TGAT','TPAT 3','Physics','Math 1'],datasets:[{data:Object.values(subj),backgroundColor:['#f59e0b99','#8b5cf699','#0d948899','#3b82f699'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',font:{size:11}}}}}});
+}
 
-  // ══════════════════════════════════════════════
-  //  CHECKOUT — ใช้เครดิตในระบบ
-  // ══════════════════════════════════════════════
-  function openCheckout() {
-    Modal.close('cartModal');
-    const total = Cart.getTotal();
-    document.getElementById('ckSubtotal').textContent = `฿${total}`;
-    document.getElementById('ckTotal').textContent    = `฿${total}`;
+// ═══════════════════════════ RECOMMENDATION ═══════════════════════════
+function renderRecommendation(){
+  const box=document.getElementById('today-rec');
+  const subj=getHoursBySubj();
+  const total=Object.values(subj).reduce((a,b)=>a+b,0)||1;
+  // find least studied
+  const target={tgat:.25,tpat:.2,phys:.3,math:.25};
+  let recs=[];
+  Object.keys(target).forEach(k=>{const actual=subj[k]/total;if(actual<target[k]-0.05)recs.push(k);});
+  if(!recs.length)recs=['math','phys'];
 
-    const user = Auth.getCurrentUser();
-    const creditInfo   = document.getElementById('ckCreditInfo');
-    const noCredit     = document.getElementById('ckNoCredit');
-    const notLoggedIn  = document.getElementById('ckNotLoggedIn');
-    const confirmBtn   = document.getElementById('ckConfirmBtn');
+  const day=new Date().getDay();// 0=sun
+  const dayPlan=WEEK_PLAN[day===0?6:day-1];
+  const colors={tgat:'#f59e0b',tpat:'#8b5cf6',phys:'#0d9488',math:'#3b82f6'};
+  const names={tgat:'TGAT',tpat:'TPAT 3',phys:'A-Level Physics',math:'A-Level Math 1'};
+  const icons={tgat:'📝',tpat:'🔧',phys:'⚡',math:'📐'};
 
-    creditInfo.style.display  = 'none';
-    noCredit.style.display    = 'none';
-    notLoggedIn.style.display = 'none';
-    confirmBtn.disabled       = false;
-
-    if (!user) {
-      notLoggedIn.style.display = 'block';
-      confirmBtn.disabled = true;
-    } else {
-      const credits = user.credits || 0;
-      document.getElementById('ckUserCredit').textContent = `฿${credits}`;
-      creditInfo.style.display = 'block';
-      if (credits < total) {
-        noCredit.style.display = 'block';
-        confirmBtn.disabled = true;
-      }
-    }
-
-    // Reset steps
-    document.getElementById('ckStep2').className = 'ck-step active';
-    document.getElementById('ckStep3').className = 'ck-step';
-    document.getElementById('ckContent').innerHTML = document.getElementById('ckContent').innerHTML; // reset
-    // Re-render checkout content
-    renderCheckoutContent();
-    Modal.open('checkoutModal');
-  }
-
-  function renderCheckoutContent() {
-    const total = Cart.getTotal();
-    const user = Auth.getCurrentUser();
-    const credits = user ? (user.credits || 0) : 0;
-
-    document.getElementById('ckContent').innerHTML = `
-      <div class="order-summary">
-        <div class="summary-row">
-          <span class="label">ยอดสินค้า</span>
-          <span class="value">฿${total}</span>
-        </div>
-        <div class="summary-row total-row">
-          <span class="label">ยอดรวม</span>
-          <span class="value">฿${total}</span>
-        </div>
+  box.innerHTML=`
+    <div class="rec-item">
+      <div class="rec-icon" style="background:${colors[recs[0]]}20">${icons[recs[0]]}</div>
+      <div>
+        <div class="rec-title">${names[recs[0]]}</div>
+        <div class="rec-desc">วิชานี้ใช้เวลาน้อยกว่าเป้า — เพิ่มอีก 1-2h วันนี้</div>
       </div>
-      ${!user ? `
-        <div style="padding:12px 16px;margin-bottom:16px;background:rgba(201,160,85,0.06);border:1px solid rgba(201,160,85,0.2);clip-path:var(--clip-tl);">
-          <div style="font-size:0.8rem;color:var(--text-secondary);">กรุณา <span style="color:var(--gold-base);cursor:pointer;text-decoration:underline;" onclick="Modal.close('checkoutModal');openAuthModal('login')">เข้าสู่ระบบ</span> ก่อนชำระเงิน</div>
-        </div>
-        <button class="btn btn-gold btn-full" disabled style="opacity:0.4;">◆ ยืนยันซื้อด้วยเครดิต</button>
-      ` : credits < total ? `
-        <div style="padding:12px 16px;margin-bottom:16px;background:rgba(224,64,80,0.08);border:1px solid rgba(224,64,80,0.2);clip-path:var(--clip-tl);">
-          <div style="font-family:var(--font-mono);font-size:0.78rem;color:var(--danger);">💰 เครดิตของคุณ: ฿${credits} &nbsp;|&nbsp; ต้องการ: ฿${total}</div>
-          <div style="font-size:0.75rem;color:var(--muted);margin-top:4px;">เครดิตไม่เพียงพอ กรุณาเติมเครดิตก่อน</div>
-        </div>
-        <button class="btn btn-ghost btn-full" onclick="Modal.close('checkoutModal');scrollToSection('topup')">◆ ไปเติมเครดิต</button>
-      ` : `
-        <div style="padding:12px 16px;margin-bottom:16px;background:rgba(76,175,128,0.08);border:1px solid rgba(76,175,128,0.2);clip-path:var(--clip-tl);">
-          <div style="font-family:var(--font-mono);font-size:0.78rem;color:var(--success);">💰 เครดิตของคุณ: ฿${credits} → หลังซื้อ: ฿${credits - total}</div>
-        </div>
-        <button class="btn btn-gold btn-full" onclick="completeOrder()">◆ ยืนยันซื้อด้วยเครดิต</button>
-      `}
-    `;
-  }
-
-  function completeOrder() {
-    const user = Auth.getCurrentUser();
-    if (!user) { Toast.show('⚠','กรุณาเข้าสู่ระบบ',''); return; }
-
-    const cartItems = Cart.getItems();
-    const result = StoreSystem.purchaseCart(cartItems);
-
-    if (!result.ok) {
-      Toast.show('⚠', 'ซื้อไม่สำเร็จ', result.msg);
-      return;
-    }
-
-    Cart.clear();
-    updateNavUI();
-
-    // Build delivery display
-    const deliveryHtml = result.orders.map(o => `
-      <div style="margin-bottom:12px;">
-        <div style="font-size:0.82rem;color:var(--gold-base);margin-bottom:6px;">${o.productEmoji} ${o.productName} — ฿${o.price}</div>
-        <div class="delivery-content-box" onclick="copyText(this)">${o.delivery}</div>
+    </div>
+    ${recs[1]?`<div class="rec-item">
+      <div class="rec-icon" style="background:${colors[recs[1]]}20">${icons[recs[1]]}</div>
+      <div>
+        <div class="rec-title">${names[recs[1]]}</div>
+        <div class="rec-desc">ตามแผนวันนี้: ${dayPlan?dayPlan.sessions.map(s=>s.label).join(', '):'—'}</div>
       </div>
-    `).join('');
+    </div>`:''}
+  `;
+}
+function renderPrediction(){
+  const box=document.getElementById('prediction-box');
+  const days=new Set(data.logs.map(l=>l.date)).size;
+  const total=data.logs.reduce((a,b)=>a+b.hours,0);
+  const avgPerDay=days?total/days:0;
+  const daysLeft=daysUntil('2027-01-30');
+  const projectedTotal=total+avgPerDay*daysLeft;
+  const targetTotal=500;// hrs
+  const onTrack=projectedTotal>=targetTotal;
+  box.innerHTML=`
+    <div style="font-size:12px;margin-bottom:8px">เฉลี่ยปัจจุบัน: <strong style="color:var(--amber)">${avgPerDay.toFixed(1)}h/วัน</strong></div>
+    <div style="font-size:12px;margin-bottom:8px">คาดการณ์รวม: <strong style="color:var(--amber)">${Math.round(projectedTotal)}h</strong> (เป้า ${targetTotal}h)</div>
+    <div style="font-size:12px;padding:8px 10px;border-radius:8px;background:${onTrack?'rgba(34,197,94,.1)':'rgba(239,68,68,.1)'};color:${onTrack?'var(--green2)':'var(--red2)'}">
+      ${onTrack?'✅ อยู่ในเกณฑ์ดี ต่อให้เท่าเดิมได้':'⚠️ ต้องเพิ่ม '+Math.ceil((targetTotal-projectedTotal)/daysLeft*10)/10+'h/วัน'}
+    </div>
+  `;
+}
 
-    document.getElementById('ckContent').innerHTML = `
-      <div class="success-screen">
-        <span class="success-icon">✦</span>
-        <div class="success-title">ซื้อสำเร็จ!</div>
-        <div class="success-desc">ข้อมูลสินค้าของคุณด้านล่าง<br>กดที่กล่องเพื่อคัดลอก</div>
-        <div style="text-align:left;margin-top:20px;">${deliveryHtml}</div>
-        <div class="order-id-box" style="margin-top:16px;">ORDER: ${result.orders[0]?.id || ''}</div>
-        <div style="margin-top:20px;display:flex;gap:10px;justify-content:center;">
-          <button class="btn btn-gold" onclick="Modal.close('checkoutModal')">เสร็จสิ้น</button>
-          <button class="btn btn-ghost" onclick="Modal.close('checkoutModal');openProfileModal()">ดูออเดอร์</button>
-        </div>
+// ═══════════════════════════ WEEKLY PLAN ═══════════════════════════
+function renderWeekPlan(){
+  const grid=document.getElementById('week-grid');
+  const today=new Date().getDay();// 0=sun,1=mon
+  const startOfWeek=new Date();startOfWeek.setDate(startOfWeek.getDate()-(today===0?6:today-1));
+  grid.innerHTML=WEEK_PLAN.map((d,i)=>{
+    const date=new Date(startOfWeek);date.setDate(date.getDate()+i);
+    const isToday=date.toDateString()===new Date().toDateString();
+    return`<div class="day-card ${isToday?'today':''}">
+      <div class="day-name">${d.day}</div>
+      <div class="day-date">${date.getDate()}/${date.getMonth()+1}</div>
+      ${d.sessions.map(s=>`<div class="session ${s.cls}">${s.label}<br><small>${s.h}</small></div>`).join('')}
+      <div class="day-hours">เป้า ${d.target}h</div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════ SUBJECTS/CHAPTERS ═══════════════════════════
+function renderSubjects(){
+  const grid=document.getElementById('subjects-grid');
+  grid.innerHTML=Object.entries(SUBJECTS_DATA).map(([k,s])=>{
+    const done=data.chapters[k].length;
+    const total=s.chapters.length;
+    const pct=Math.round(done/total*100);
+    return`<div class="card">
+      <div class="card-title" style="color:${s.color}">${s.name}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:12px;color:var(--text2)">${done}/${total} บท</span>
+        <span style="font-size:14px;font-weight:700;color:${s.color}">${pct}%</span>
       </div>
-    `;
-    document.getElementById('ckStep2').className = 'ck-step done';
-    document.getElementById('ckStep3').className = 'ck-step done';
+      <div class="prog-track" style="margin-bottom:14px"><div class="prog-fill" style="width:${pct}%;background:${s.color}"></div></div>
+      ${s.chapters.map((ch,i)=>{
+        const isDone=data.chapters[k].includes(i);
+        return`<div class="chapter-item" onclick="toggleChapter('${k}',${i})">
+          <div class="chapter-check ${isDone?'done':''}">${isDone?'<svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}</div>
+          <div class="chapter-title ${isDone?'done':''}">${ch}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+}
+function toggleChapter(subj,idx){
+  const arr=data.chapters[subj];
+  const pos=arr.indexOf(idx);
+  if(pos>=0)arr.splice(pos,1);else arr.push(idx);
+  save();renderSubjects();renderDashboard();
+}
+
+// ═══════════════════════════ ANALYSIS ═══════════════════════════
+function renderAnalysis(){
+  const subj=getHoursBySubj();
+  // Subject hours doughnut
+  const ctx1=document.getElementById('subjectHoursChart').getContext('2d');
+  if(subjectChart)subjectChart.destroy();
+  subjectChart=new Chart(ctx1,{type:'bar',data:{
+    labels:['TGAT','TPAT 3','Physics','Math 1'],
+    datasets:[{data:Object.values(subj),backgroundColor:['#f59e0b','#8b5cf6','#0d9488','#3b82f6'],borderRadius:8,borderSkipped:false}]
+  },options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#2a3348'},ticks:{color:'#5c6b88'}},y:{grid:{display:false},ticks:{color:'#94a3b8'}}}}});
+
+  // Daily last 30
+  const days30=[];const now=new Date();
+  for(let i=29;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i);days30.push(d.toISOString().split('T')[0]);}
+  const dailyVals=days30.map(d=>data.logs.filter(l=>l.date===d).reduce((a,b)=>a+b.hours,0));
+  const ctx2=document.getElementById('dailyChart').getContext('2d');
+  if(dailyChart)dailyChart.destroy();
+  dailyChart=new Chart(ctx2,{type:'line',data:{
+    labels:days30.map((_,i)=>i%5===0?days30[i].slice(5):''),
+    datasets:[{data:dailyVals,borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,0.1)',borderWidth:2,tension:.4,fill:true,pointRadius:2,pointBackgroundColor:'#f59e0b'}]
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#2a3348'},ticks:{color:'#5c6b88',maxRotation:0}},y:{grid:{color:'#2a3348'},ticks:{color:'#5c6b88'},beginAtZero:true}}}});
+
+  // Plan vs actual
+  const last7=getHoursLast7();
+  const planned=WEEK_PLAN.map(d=>d.target);
+  const day=new Date().getDay();
+  const reorderedPlanned=[];
+  for(let i=0;i<7;i++){const idx=(day===0?6:day-1+i)%7;reorderedPlanned.push(WEEK_PLAN[idx].target);}
+  const ctx3=document.getElementById('planVsActualChart').getContext('2d');
+  if(planVsChart)planVsChart.destroy();
+  planVsChart=new Chart(ctx3,{type:'bar',data:{
+    labels:last7.map(d=>{const dt=new Date(d.date);return['อา','จ','อ','พ','พฤ','ศ','ส'][dt.getDay()]}),
+    datasets:[
+      {label:'เป้า',data:WEEK_PLAN.map(d=>d.target),backgroundColor:'rgba(94,94,120,0.4)',borderRadius:4,borderSkipped:false},
+      {label:'จริง',data:last7.map(d=>d.hours),backgroundColor:'rgba(245,158,11,0.75)',borderRadius:4,borderSkipped:false}
+    ]
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{color:'#94a3b8',font:{size:11}}}},scales:{x:{grid:{display:false},ticks:{color:'#5c6b88'}},y:{grid:{color:'#2a3348'},ticks:{color:'#5c6b88'},beginAtZero:true}}}});
+
+  renderInsights(subj,dailyVals);
+}
+function renderInsights(subj,dailyVals){
+  const box=document.getElementById('insights-box');
+  const total=Object.values(subj).reduce((a,b)=>a+b,0)||1;
+  const insights=[];
+  const names={tgat:'TGAT',tpat:'TPAT 3',phys:'Physics',math:'Math 1'};
+  const targets={tgat:.25,tpat:.2,phys:.3,math:.25};
+  Object.keys(targets).forEach(k=>{
+    const actual=subj[k]/total;
+    if(actual<targets[k]-0.08)insights.push({icon:'⚠️',title:`${names[k]} ใช้เวลาน้อยกว่าเป้า`,desc:`คิดเป็น ${Math.round(actual*100)}% (เป้า ${Math.round(targets[k]*100)}%) — ควรเพิ่มอีก`});
+  });
+  const activeDay=dailyVals.filter(v=>v>0).length;
+  if(activeDay>0){
+    const avg=dailyVals.filter(v=>v>0).reduce((a,b)=>a+b,0)/activeDay;
+    insights.push({icon:'📈',title:'เฉลี่ยวันที่อ่าน',desc:`${avg.toFixed(1)}h ต่อวัน (เฉพาะวันที่มีบันทึก)`});
   }
+  const streak=data.streak;
+  if(streak>=3)insights.push({icon:'🔥',title:`Streak ${streak} วัน`,desc:'ต่อเนื่องดีมาก ระวังอย่าหยุด!'});
+  if(!insights.length)insights.push({icon:'📊',title:'ยังไม่มีข้อมูลพอ',desc:'เพิ่มการบันทึกอย่างน้อย 1 สัปดาห์เพื่อดู Insights'});
+  box.innerHTML=insights.map(ins=>`<div class="insight-card"><div class="insight-title">${ins.icon} ${ins.title}</div><div class="insight-desc">${ins.desc}</div></div>`).join('');
+}
 
-  function copyText(el) {
-    const text = el.textContent.replace('คลิกเพื่อคัดลอก','').trim();
-    navigator.clipboard?.writeText(text).then(() => Toast.show('✦','คัดลอกแล้ว',''));
-  }
+// ═══════════════════════════ GOALS & ACHIEVEMENTS ═══════════════════════════
+function renderGoals(){
+  document.getElementById('streak-num').textContent=data.streak;
+  document.getElementById('best-streak').textContent=data.bestStreak;
+  // 7-day dots
+  const dots=document.getElementById('streak-dots-7');
+  const days7=[];const now=new Date();
+  for(let i=6;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i);days7.push(d.toISOString().split('T')[0]);}
+  const studiedDates=new Set(data.logs.map(l=>l.date));
+  dots.innerHTML=days7.map((d,i)=>{
+    const isToday=i===6;const done=studiedDates.has(d);
+    const dt=new Date(d);const label=['อา','จ','อ','พ','พฤ','ศ','ส'][dt.getDay()];
+    return`<div class="streak-dot ${isToday?'today':done?'done':''}" title="${d}">${label}</div>`;
+  }).join('');
 
-  // ══════════════════════════════════════════════
-  //  TOPUP SECTION
-  // ══════════════════════════════════════════════
-  function topupSelectPay(el, method) {
-    el.closest('.pay-grid').querySelectorAll('.pay-tile').forEach(t => t.classList.remove('active'));
-    el.classList.add('active');
-    document.getElementById('topupSelectedPay').value = method;
-  }
-
-  function handleTopupPay() {
-    if (!Auth.isLoggedIn()) {
-      Toast.show('⚠','กรุณาเข้าสู่ระบบ','ต้องเข้าสู่ระบบก่อนเติมเงิน');
-      openAuthModal('login');
-      return;
-    }
-
-    const method = document.getElementById('topupSelectedPay').value;
-    let amount   = document.getElementById('topupSelectedAmt').value;
-    if (amount === 'custom') {
-      amount = document.getElementById('customAmtInput')?.value || '';
-    }
-    if (!amount || Number(amount) <= 0) {
-      Toast.show('⚠','เลือกจำนวนเงิน','กรุณาเลือกหรือกรอกจำนวนเงินที่ต้องการเติม');
-      return;
-    }
-
-    if (method === 'promptpay') {
-      PaymentSystem.openPromptPayModal(amount);
-    } else if (method === 'truemoney') {
-      PaymentSystem.openTrueMoneyModal();
-    } else if (method === 'bank') {
-      document.getElementById('bankAmount').value = amount;
-      Modal.open('bankModal');
-    } else if (method === 'crypto') {
-      Toast.show('⚠','Crypto','กรุณาติดต่อแอดมินผ่าน Discord เพื่อชำระด้วย Crypto');
-    }
-  }
-
-  function submitBankTransfer() {
-    const amount = document.getElementById('bankAmount')?.value || '';
-    const note   = document.getElementById('bankNote')?.value?.trim() || '';
-    if (!amount || Number(amount) <= 0) { Toast.show('⚠','ระบุจำนวนเงิน',''); return; }
-    const entry = PaymentSystem.addPendingPayment('bank', { amount: Number(amount), note });
-    Toast.show('✦','แจ้งโอนแล้ว', `รหัส: ${entry.id} · รอแอดมินยืนยัน`);
-    Modal.close('bankModal');
-  }
-
-  // ══════════════════════════════════════════════
-  //  PROFILE MODAL
-  // ══════════════════════════════════════════════
-  function openProfileModal() {
-    const user = Auth.getCurrentUser();
-    if (!user) { openAuthModal('login'); return; }
-
-    const orders = StoreSystem.getUserOrders(user.username).reverse().slice(0, 20);
-    document.getElementById('profileContent').innerHTML = `
-      <div class="profile-header">
-        <div class="profile-avatar">${user.isAdmin ? '👑' : '👤'}</div>
-        <div class="profile-info">
-          <div class="profile-name">${user.username.toUpperCase()}</div>
-          <div class="profile-role">${user.isAdmin ? '◆ ADMINISTRATOR' : '◆ MEMBER'} · สมัครเมื่อ ${new Date(user.createdAt).toLocaleDateString('th-TH')}</div>
-        </div>
+  // Milestones
+  const chapsDone=Object.values(data.chapters).reduce((a,b)=>a+b.length,0);
+  const totalChs=Object.values(SUBJECTS_DATA).reduce((a,b)=>a+b.chapters.length,0);
+  const totalHours=data.logs.reduce((a,b)=>a+b.hours,0);
+  const milestones=[
+    {name:'อ่านครบ 50 ชั่วโมง',target:50,current:Math.min(totalHours,50),unit:'h'},
+    {name:'อ่านครบ 200 ชั่วโมง',target:200,current:Math.min(totalHours,200),unit:'h'},
+    {name:'อ่านครบ 500 ชั่วโมง',target:500,current:Math.min(totalHours,500),unit:'h'},
+    {name:'อ่านครบทุกบทเรียน',target:totalChs,current:chapsDone,unit:'บท'},
+    {name:'Streak 7 วัน',target:7,current:Math.min(data.streak,7),unit:'วัน'},
+    {name:'Streak 30 วัน',target:30,current:Math.min(data.streak,30),unit:'วัน'},
+  ];
+  document.getElementById('milestones-list').innerHTML=milestones.map(m=>{
+    const pct=Math.round(m.current/m.target*100);
+    return`<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+        <span>${m.name}</span><span style="color:var(--text2)">${m.current}/${m.target} ${m.unit}</span>
       </div>
-      <div class="profile-credit-box">
-        <div>
-          <div class="profile-credit-label">เครดิตคงเหลือ</div>
-          <div class="profile-credit-val">฿${user.credits || 0}</div>
-        </div>
-        <button class="btn btn-ghost" style="padding:8px 16px;font-size:0.75rem;" onclick="Modal.close('profileModal');scrollToSection('topup')">+ เติมเครดิต</button>
-      </div>
-      <div style="font-family:var(--font-display);font-size:0.75rem;font-weight:600;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;">
-        ประวัติออเดอร์ (${orders.length} รายการ)
-      </div>
-      ${orders.length === 0 ? `<div style="text-align:center;padding:32px;color:var(--muted);font-size:0.82rem;">ยังไม่มีการสั่งซื้อ</div>` : orders.map(o => `
-        <div class="order-history-item">
-          <div class="order-item-head">
-            <span class="order-item-id">${o.id}</span>
-            <span class="order-item-price">฿${o.price}</span>
-          </div>
-          <div class="order-item-name">${o.productEmoji} ${o.productName}</div>
-          <div class="order-item-date">${new Date(o.createdAt).toLocaleString('th-TH')}</div>
-          <div class="order-delivery-box" onclick="copyText(this)">${o.delivery}</div>
-        </div>
-      `).join('')}
-    `;
-    Modal.open('profileModal');
-  }
+      <div class="prog-track"><div class="prog-fill" style="width:${pct}%;background:${pct>=100?'var(--green)':'var(--amber)'}"></div></div>
+    </div>`;
+  }).join('');
 
-  // ══════════════════════════════════════════════
-  //  AMOUNT TILE (override to save value)
-  // ══════════════════════════════════════════════
-  function selectAmountTile(el, val) {
-    document.querySelectorAll('.amount-tile').forEach(t => t.classList.remove('active'));
-    el.classList.add('active');
-    const customWrap = document.getElementById('customAmtWrap');
-    if (customWrap) customWrap.style.display = val === 'custom' ? 'block' : 'none';
-    const hiddenAmt = document.getElementById('topupSelectedAmt');
-    if (hiddenAmt) hiddenAmt.value = val;
-  }
+  // Achievements
+  const state={streak:data.streak,totalHours,chapsDone,totalLogs:data.logs.length,subjTouched:Object.keys(getHoursBySubj()).filter(k=>getHoursBySubj()[k]>0).length};
+  document.getElementById('achievements-grid').innerHTML=ACHIEVEMENTS_DEF.map(a=>{
+    const unlocked=a.cond(state);
+    return`<div class="achievement ${unlocked?'':'ach-locked'}">
+      <div class="ach-icon">${a.icon}</div>
+      <div><div class="ach-name">${a.name}</div><div class="ach-desc">${a.desc}</div></div>
+    </div>`;
+  }).join('');
+}
 
-// Init
+// ═══════════════════════════ POMODORO TIMER ═══════════════════════════
+let pomoState={running:false,mode:'focus',timeLeft:25*60,focusDuration:25*60,breakDuration:5*60,session:0,interval:null,todaySessions:[]};
 
-  document.addEventListener('DOMContentLoaded', () => {
-    Auth.ensureAdmin();
-    StoreSystem.initProducts();
-    updateNavUI();
-    renderProducts();
-    ScrollReveal.init();
-    ParticleSystem.init();
-    hideLoadingScreen();
-
-    // Animate hero counters with easing
-    const counterObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.querySelectorAll('[data-count]').forEach(el => {
-            const target = parseInt(el.dataset.count);
-            const duration = 1200;
-            const start = performance.now();
-            const tick = (now) => {
-              const elapsed = now - start;
-              const progress = Math.min(elapsed / duration, 1);
-              const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
-              const current = Math.round(eased * target);
-              el.textContent = current.toLocaleString() + (el.dataset.suffix || '');
-              if (progress < 1) requestAnimationFrame(tick);
-            };
-            requestAnimationFrame(tick);
-          });
-          counterObserver.unobserve(entry.target);
+function setPomoMode(v){
+  const [f,b]=v.split('-').map(Number);
+  pomoState.focusDuration=f*60;pomoState.breakDuration=b*60;
+  timerReset();
+}
+function updateTimerDisplay(){
+  const m=Math.floor(pomoState.timeLeft/60),s=pomoState.timeLeft%60;
+  document.getElementById('timer-display').textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  const total=pomoState.mode==='focus'?pomoState.focusDuration:pomoState.breakDuration;
+  const prog=1-pomoState.timeLeft/total;
+  const circ=2*Math.PI*80;
+  document.getElementById('pomo-progress').style.strokeDashoffset=circ*(1-prog);
+  document.getElementById('timer-phase-label').textContent=pomoState.mode==='focus'?'🍅 โฟกัส':'☕ พัก';
+  document.getElementById('pomo-progress').style.stroke=pomoState.mode==='focus'?'var(--amber)':'var(--teal2)';
+  document.getElementById('timer-start-btn').textContent=pomoState.running?'หยุด':'เริ่ม';
+  // dots
+  const dots=document.getElementById('pomo-dots');
+  dots.innerHTML=Array.from({length:4},(_,i)=>`<div class="pomo-dot ${i<pomoState.session?'done':''}"></div>`).join('');
+  // today sessions
+  const box=document.getElementById('today-sessions');
+  if(!pomoState.todaySessions.length){box.innerHTML='<div style="font-size:13px;color:var(--text3);padding:20px 0;text-align:center">ยังไม่มีเซสชัน<br>กดเริ่มเพื่อเริ่มจับเวลา</div>';return;}
+  const colors={tgat:'var(--amber)',tpat:'var(--purple2)',phys:'var(--teal2)',math:'var(--blue2)'};
+  box.innerHTML=pomoState.todaySessions.map(s=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+    <span style="width:8px;height:8px;border-radius:50%;background:${colors[s.subj]};flex-shrink:0"></span>
+    <span style="font-size:12px;flex:1">${s.subj.toUpperCase()}</span>
+    <span style="font-size:12px;font-family:'DM Mono';color:var(--amber)">${s.minutes}m</span>
+  </div>`).join('');
+  const totalMin=pomoState.todaySessions.reduce((a,b)=>a+b.minutes,0);
+  document.getElementById('today-total-timer').textContent=`${Math.floor(totalMin/60)}:${String(totalMin%60).padStart(2,'0')}`;
+}
+function timerToggle(){
+  if(pomoState.running){
+    clearInterval(pomoState.interval);pomoState.running=false;
+  }else{
+    pomoState.running=true;
+    pomoState.interval=setInterval(()=>{
+      pomoState.timeLeft--;
+      if(pomoState.timeLeft<=0){
+        clearInterval(pomoState.interval);pomoState.running=false;
+        if(pomoState.mode==='focus'){
+          // save session
+          const subj=document.getElementById('timer-subject').value;
+          const minutes=Math.round(pomoState.focusDuration/60);
+          pomoState.todaySessions.push({subj,minutes});
+          pomoState.session=(pomoState.session+1)%4;
+          data.logs.push({id:Date.now(),date:new Date().toISOString().split('T')[0],subj,hours:+(minutes/60).toFixed(2),note:'Pomodoro ⏱'});
+          updateStreak();save();renderDashboard();
+          showToast(`✅ เสร็จ! ${minutes}m ${subj.toUpperCase()}`);
+          pomoState.mode='break';pomoState.timeLeft=pomoState.breakDuration;
+        }else{
+          pomoState.mode='focus';pomoState.timeLeft=pomoState.focusDuration;showToast('☕ พักเสร็จ! เริ่มใหม่ได้เลย');
         }
-      });
-    }, { threshold: 0.3 });
+      }
+      updateTimerDisplay();
+    },1000);
+  }
+  updateTimerDisplay();
+}
+function timerReset(){clearInterval(pomoState.interval);pomoState.running=false;pomoState.mode='focus';pomoState.timeLeft=pomoState.focusDuration;updateTimerDisplay();}
 
-    const statsRow = document.querySelector('.hero-stats-row');
-    if (statsRow) counterObserver.observe(statsRow);
+// ═══════════════════════════ TOAST ═══════════════════════════
+function showToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ═══════════════════════════ INIT ═══════════════════════════
+function init(){
+  // Set today's date in log form
+  document.getElementById('log-date').value=new Date().toISOString().split('T')[0];
+  renderCountdowns();
+  renderDashboard();
+  renderWeekPlan();
+  renderLog();
+  renderSubjects();
+  renderGoals();
+  updateTimerDisplay();
+  // Determine current phase
+  const now=new Date();
+  let phase='ระยะปูพื้น';
+  if(now>new Date('2026-11-01'))phase='ระยะทำโจทย์';
+  if(now>new Date('2027-01-01'))phase='ระยะตะลุยข้อสอบ';
+  document.getElementById('current-phase-badge').textContent=phase;
+  // Refresh countdown every minute
+  setInterval(renderCountdowns,60000);
+}
+
+// Refresh goals when switching to that page
+document.querySelectorAll('.nav-tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    setTimeout(()=>{if(document.getElementById('page-goals').classList.contains('active'))renderGoals();},50);
+    setTimeout(()=>{if(document.getElementById('page-log').classList.contains('active'))renderLog();},50);
+    setTimeout(()=>{if(document.getElementById('page-subjects').classList.contains('active'))renderSubjects();},50);
   });
-  </script>
+});
+
+init();
+</script>
 </body>
 </html>
