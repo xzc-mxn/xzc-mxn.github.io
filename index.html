@@ -60,24 +60,6 @@ async function saveToCloud(d) {
   } catch(e) { console.error('Save error:', e); }
 }
 
-function subscribeUserData(uid) {
-  if (unsubSnapshot) unsubSnapshot();
-  unsubSnapshot = onSnapshot(doc(db, 'users', uid), snap => {
-    if (snap.exists()) {
-      const cloud = JSON.parse(snap.data().studypath || 'null');
-      if (cloud) {
-        window.data = cloud;
-        // ensure arrays exist
-        if (!window.data.chapters) window.data.chapters = {tgat:[],tpat:[],phys:[],math:[]};
-        renderDashboard();
-        renderLog();
-        renderSubjects();
-        renderGoals();
-      }
-    }
-    document.getElementById('loading-overlay').style.display = 'none';
-  });
-}
 
 // ─── AUTH STATE ───
 onAuthStateChanged(auth, user => {
@@ -86,21 +68,41 @@ onAuthStateChanged(auth, user => {
   if (user) {
     document.getElementById('loading-overlay').style.display = 'flex';
     subscribeUserData(user.uid);
-    showToast('ยินดีต้อนรับ ' + (user.displayName || user.email) + ' 👋');
+    // showToast after main script loaded
+    setTimeout(() => window.showToast && window.showToast('ยินดีต้อนรับ ' + (user.displayName || user.email) + ' 👋'), 500);
   } else {
     if (unsubSnapshot) { unsubSnapshot(); unsubSnapshot = null; }
     document.getElementById('loading-overlay').style.display = 'none';
-    // Load from localStorage as fallback when not logged in
     window.data = JSON.parse(localStorage.getItem('studypath')||'null') || {
       logs:[], chapters:{tgat:[],tpat:[],phys:[],math:[]}, streak:0, bestStreak:0, lastStudyDate:null, pomoDone:0
     };
-    renderDashboard(); renderLog(); renderSubjects(); renderGoals();
+    setTimeout(() => {
+      if (window.renderDashboard) { window.renderDashboard(); window.renderLog(); window.renderSubjects(); window.renderGoals(); }
+    }, 300);
   }
 });
 
 // ─── EXPOSE to global scope ───
 window.fbSave = saveToCloud;
 window.currentUserFn = () => currentUser;
+
+// ─── subscribeUserData calls render via window ───
+function subscribeUserData(uid) {
+  if (unsubSnapshot) unsubSnapshot();
+  unsubSnapshot = onSnapshot(doc(db, 'users', uid), snap => {
+    if (snap.exists()) {
+      const cloud = JSON.parse(snap.data().studypath || 'null');
+      if (cloud) {
+        window.data = cloud;
+        if (!window.data.chapters) window.data.chapters = {tgat:[],tpat:[],phys:[],math:[]};
+        setTimeout(() => {
+          if (window.renderDashboard) { window.renderDashboard(); window.renderLog(); window.renderSubjects(); window.renderGoals(); }
+        }, 100);
+      }
+    }
+    document.getElementById('loading-overlay').style.display = 'none';
+  });
+}
 </script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -1146,6 +1148,13 @@ document.querySelectorAll('.nav-tab').forEach(t=>{
     setTimeout(()=>{if(document.getElementById('page-subjects').classList.contains('active'))renderSubjects();},50);
   });
 });
+
+// ═══ EXPOSE to window for Firebase module ═══
+window.renderDashboard = renderDashboard;
+window.renderLog = renderLog;
+window.renderSubjects = renderSubjects;
+window.renderGoals = renderGoals;
+window.showToast = showToast;
 
 init();
 </script>
