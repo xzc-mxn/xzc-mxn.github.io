@@ -336,6 +336,21 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 </div>
 <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 
+<!-- ═══════════════════════════════ SUBJECT SELECTION ═══════════════════════════════ -->
+<div class="page" id="page-select" style="display:none">
+  <div style="text-align:center;margin-bottom:32px">
+    <div style="font-size:48px;margin-bottom:8px">📚</div>
+    <h2 style="font-size:24px">เลือกวิชาที่จะสอบ</h2>
+    <p class="page-sub" style="max-width:500px;margin:8px auto 0">เลือกวิชาที่ต้องการเตรียมสอบ ระบบจะคำนวณเวลาอ่านที่เหมาะสมให้อัตโนมัติ<br><span style="font-size:11px;color:var(--text3)">อ้างอิงเนื้อหาจาก mytcas.com/blueprint</span></p>
+  </div>
+  <div id="select-groups"></div>
+  <div style="text-align:center;margin-top:24px">
+    <div id="select-summary" style="font-size:13px;color:var(--text2);margin-bottom:12px"></div>
+    <button class="btn btn-primary" style="padding:12px 40px;font-size:15px" onclick="confirmSubjects()">✅ ยืนยันและเริ่มวางแผน</button>
+    <div style="font-size:11px;color:var(--text3);margin-top:8px">สามารถเปลี่ยนภายหลังได้</div>
+  </div>
+</div>
+
 <!-- ═══════════════════════════════ DASHBOARD ═══════════════════════════════ -->
 <div class="page active" id="page-dashboard">
   <h2>Dashboard</h2>
@@ -731,43 +746,52 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 <div class="toast" id="toast"></div>
 
 <script>
-// ═══════════════════════════ STATE ═══════════════════════════
-const EXAMS={
-  tgat:{name:'TGAT',date:'2027-01-30',color:'#f59e0b'},
-  tpat:{name:'TPAT 3',date:'2027-01-30',color:'#8b5cf6'},
-  phys:{name:'A-Level Physics',date:'2027-03-13',color:'#0d9488'},
-  math:{name:'A-Level Math 1',date:'2027-03-14',color:'#3b82f6'}
+// ═══════════════════════════ TCAS SUBJECTS DATABASE ═══════════════════════════
+const TCAS_SUBJECTS = {
+  tgat1:{id:'tgat1',group:'TGAT',name:'TGAT1 การสื่อสารภาษาอังกฤษ',code:'91',color:'#f59e0b',icon:'🌐',examDate:'2027-01-30',difficulty:3,
+    chapters:['Reading Comprehension','Vocabulary in Context','Grammar & Usage','Sentence Completion','Error Identification','Paragraph Organization']},
+  tgat2:{id:'tgat2',group:'TGAT',name:'TGAT2 การคิดอย่างมีเหตุผล',code:'92',color:'#f59e0b',icon:'🧠',examDate:'2027-01-30',difficulty:3,
+    chapters:['การคิดเชิงวิพากษ์','การคิดเชิงวิเคราะห์','การอ่านเชิงวิเคราะห์','การใช้เหตุผลเชิงตรรกะ','การแก้ปัญหาเชิงสร้างสรรค์','การตัดสินใจ']},
+  tgat3:{id:'tgat3',group:'TGAT',name:'TGAT3 สมรรถนะการทำงาน',code:'93',color:'#f59e0b',icon:'💼',examDate:'2027-01-30',difficulty:2,
+    chapters:['การสร้างคุณค่าและนวัตกรรม','การแก้ไขปัญหาที่ซับซ้อน','การบริหารจัดการอารมณ์','ภาวะผู้นำ','การทำงานร่วมกับผู้อื่น']},
+  tpat1:{id:'tpat1',group:'TPAT',name:'TPAT1 กสพท.',code:'10',color:'#ec4899',icon:'🏥',examDate:'2027-02-13',difficulty:5,
+    chapters:['จริยธรรมทางการแพทย์','ทักษะการคิดเชิงวิเคราะห์','ความเชื่อมโยง','เชาวน์ปัญญา','จิตวิทยาการแพทย์','สถานการณ์จำลอง']},
+  tpat2:{id:'tpat2',group:'TPAT',name:'TPAT2 ศิลปกรรมศาสตร์',code:'20',color:'#8b5cf6',icon:'🎨',examDate:'2027-01-30',difficulty:3,
+    chapters:['ทัศนศิลป์','ดนตรี','นาฏศิลป์','ศิลปะการแสดง','ประวัติศาสตร์ศิลปะ','ความคิดสร้างสรรค์']},
+  tpat3:{id:'tpat3',group:'TPAT',name:'TPAT3 วิศวกรรมศาสตร์',code:'30',color:'#8b5cf6',icon:'🔧',examDate:'2027-01-30',difficulty:4,
+    chapters:['มิติสัมพันธ์','การใช้เหตุผลเชิงกล','ฟิสิกส์พื้นฐาน','คณิตศาสตร์เชิงวิศวกรรม','การอ่านแบบเทคนิค','วิเคราะห์แผนภาพวงจร','โจทย์บูรณาการ STEM']},
+  tpat4:{id:'tpat4',group:'TPAT',name:'TPAT4 สถาปัตยกรรม',code:'40',color:'#8b5cf6',icon:'🏛️',examDate:'2027-01-30',difficulty:4,
+    chapters:['ออกแบบ 2 มิติ','ออกแบบ 3 มิติ','มิติสัมพันธ์ทางสถาปัตย์','ทฤษฎีสีและองค์ประกอบ','ประวัติศาสตร์สถาปัตยกรรม','การเขียนแบบ']},
+  tpat5:{id:'tpat5',group:'TPAT',name:'TPAT5 ครุศาสตร์',code:'50',color:'#8b5cf6',icon:'📚',examDate:'2027-01-30',difficulty:3,
+    chapters:['ความรู้ทั่วไปทางการศึกษา','จิตวิทยาพัฒนาการ','การจัดการเรียนรู้','คุณธรรมจริยธรรมวิชาชีพครู','การวัดและประเมินผล','ความถนัดทางวิชาชีพครู']},
+  alv_math1:{id:'alv_math1',group:'A-Level',name:'A-Level คณิตศาสตร์ 1',code:'61',color:'#3b82f6',icon:'📐',examDate:'2027-03-13',difficulty:5,
+    chapters:['เซต','ตรรกศาสตร์','จำนวนจริง','ฟังก์ชัน','เรขาคณิตวิเคราะห์','เมทริกซ์','เวกเตอร์','ลำดับและอนุกรม','แคลคูลัส','สถิติ','ความน่าจะเป็น','จำนวนเชิงซ้อน']},
+  alv_math2:{id:'alv_math2',group:'A-Level',name:'A-Level คณิตศาสตร์ 2',code:'62',color:'#3b82f6',icon:'🔢',examDate:'2027-03-13',difficulty:3,
+    chapters:['สถิติศาสตร์','การวิเคราะห์ข้อมูล','ความน่าจะเป็น','การแจกแจง','ดัชนี','คณิตศาสตร์การเงิน']},
+  alv_sci:{id:'alv_sci',group:'A-Level',name:'A-Level วิทยาศาสตร์ประยุกต์',code:'63',color:'#0d9488',icon:'🔬',examDate:'2027-03-13',difficulty:3,
+    chapters:['กระบวนการทางวิทยาศาสตร์','ชีวิตกับสิ่งแวดล้อม','สารในชีวิตประจำวัน','แรงและพลังงาน','โลกและอวกาศ','เทคโนโลยี']},
+  alv_phy:{id:'alv_phy',group:'A-Level',name:'A-Level ฟิสิกส์',code:'64',color:'#0d9488',icon:'⚡',examDate:'2027-03-13',difficulty:5,
+    chapters:['กลศาสตร์','แรงและกฎการเคลื่อนที่','งานและพลังงาน','โมเมนตัม','การเคลื่อนที่แบบหมุน','คลื่น','เสียง','แสงและทัศนอุปกรณ์','ไฟฟ้าสถิต','ไฟฟ้ากระแส','แม่เหล็กไฟฟ้า','ฟิสิกส์อะตอม','ฟิสิกส์นิวเคลียร์']},
+  alv_chem:{id:'alv_chem',group:'A-Level',name:'A-Level เคมี',code:'65',color:'#0d9488',icon:'🧪',examDate:'2027-03-13',difficulty:5,
+    chapters:['โครงสร้างอะตอม','พันธะเคมี','สมบัติของธาตุ','ปริมาณสัมพันธ์','ของแข็ง ของเหลว แก๊ส','อัตราการเกิดปฏิกิริยา','สมดุลเคมี','กรด-เบส','ไฟฟ้าเคมี','เคมีอินทรีย์','พอลิเมอร์']},
+  alv_bio:{id:'alv_bio',group:'A-Level',name:'A-Level ชีววิทยา',code:'66',color:'#0d9488',icon:'🧬',examDate:'2027-03-13',difficulty:4,
+    chapters:['เซลล์','โครงสร้างและหน้าที่ของพืช','โครงสร้างและหน้าที่ของสัตว์','พันธุศาสตร์','วิวัฒนาการ','นิเวศวิทยา','ความหลากหลายทางชีวภาพ','เทคโนโลยีชีวภาพ']},
+  alv_soc:{id:'alv_soc',group:'A-Level',name:'A-Level สังคมศึกษา',code:'70',color:'#f97316',icon:'🌍',examDate:'2027-03-13',difficulty:3,
+    chapters:['ศาสนา ศีลธรรม จริยธรรม','หน้าที่พลเมือง','เศรษฐศาสตร์','ประวัติศาสตร์ไทย','ประวัติศาสตร์สากล','ภูมิศาสตร์']},
+  alv_thai:{id:'alv_thai',group:'A-Level',name:'A-Level ภาษาไทย',code:'81',color:'#f97316',icon:'📝',examDate:'2027-03-13',difficulty:3,
+    chapters:['การอ่าน','การเขียน','หลักภาษา','วรรณคดีและวรรณกรรม','การฟัง การดู การพูด','คำศัพท์และสำนวน']},
+  alv_eng:{id:'alv_eng',group:'A-Level',name:'A-Level ภาษาอังกฤษ',code:'82',color:'#f97316',icon:'🔤',examDate:'2027-03-13',difficulty:4,
+    chapters:['Listening & Speaking','Reading Comprehension','Writing','Grammar & Structure','Vocabulary','Functional Language']}
 };
-
-const SUBJECTS_DATA={
-  tgat:{name:'TGAT',color:'#f59e0b',chapters:[
-    'ความถนัดทั่วไป — การอ่านและเขียน','ความถนัดทั่วไป — คณิตศาสตร์','การคิดอย่างมีวิจารณญาณ',
-    'การแก้ปัญหาเชิงคณิตศาสตร์','ภาษาไทยเพื่อการสื่อสาร','เหตุผลเชิงตรรกะ','วิทยาศาสตร์และสังคม'
-  ]},
-  tpat:{name:'TPAT 3',color:'#8b5cf6',chapters:[
-    'มิติสัมพันธ์ (Spatial Reasoning)','การใช้เหตุผลเชิงกล (Mechanical)','ฟิสิกส์พื้นฐาน',
-    'คณิตศาสตร์พื้นฐานเชิงวิศวกรรม','การอ่านแบบทางเทคนิค','การวิเคราะห์แผนภาพวงจร','โจทย์บูรณาการ'
-  ]},
-  phys:{name:'A-Level Physics',color:'#0d9488',chapters:[
-    'กลศาสตร์ (Mechanics)','แรงและการเคลื่อนที่','พลังงานและโมเมนตัม','คลื่นและเสียง',
-    'แสงและทัศนศาสตร์','ไฟฟ้าสถิต','ไฟฟ้ากระแส','แม่เหล็กไฟฟ้า','ฟิสิกส์อะตอม','ฟิสิกส์นิวเคลียร์'
-  ]},
-  math:{name:'A-Level Math 1',color:'#3b82f6',chapters:[
-    'แคลคูลัส — ลิมิต','แคลคูลัส — อนุพันธ์','แคลคูลัส — การหาปริพันธ์','เวกเตอร์',
-    'เมทริกซ์และระบบสมการ','ลำดับและอนุกรม','สถิติเบื้องต้น','ความน่าจะเป็น',
-    'เรขาคณิตวิเคราะห์','จำนวนเชิงซ้อน'
-  ]}
-};
-
-const WEEK_PLAN=[
-  {day:'จันทร์',sessions:[{label:'Math 1',cls:'math',h:'2h'},{label:'TGAT',cls:'tgat',h:'2h'},{label:'ทบทวน',cls:'review',h:'30m'}],target:4.5},
-  {day:'อังคาร',sessions:[{label:'Physics',cls:'phys',h:'2h'},{label:'TPAT 3',cls:'tpat',h:'2h'},{label:'โจทย์',cls:'review',h:'30m'}],target:4.5},
-  {day:'พุธ',sessions:[{label:'Math 1',cls:'math',h:'2.5h'},{label:'Physics',cls:'phys',h:'2h'}],target:4.5},
-  {day:'พฤหัส',sessions:[{label:'TGAT',cls:'tgat',h:'2h'},{label:'TPAT 3',cls:'tpat',h:'2h'},{label:'โจทย์',cls:'review',h:'30m'}],target:4.5},
-  {day:'ศุกร์',sessions:[{label:'Physics',cls:'phys',h:'1.5h'},{label:'Math 1',cls:'math',h:'1.5h'},{label:'ทบทวนสัปดาห์',cls:'review',h:'1h'}],target:4},
-  {day:'เสาร์',sessions:[{label:'Mock Test',cls:'mock',h:'3h'},{label:'เฉลย+วิเคราะห์',cls:'review',h:'2h'},{label:'TPAT 3',cls:'tpat',h:'1.5h'}],target:7},
-  {day:'อาทิตย์',sessions:[{label:'จุดอ่อน',cls:'review',h:'2h'},{label:'TGAT',cls:'tgat',h:'1.5h'},{label:'วางแผนสัปดาห์ถัดไป',cls:'review',h:'30m'}],target:4}
+const SUBJECT_GROUPS=[
+  {key:'TGAT',label:'TGAT (ความถนัดทั่วไป)',color:'#f59e0b',subjects:['tgat1','tgat2','tgat3']},
+  {key:'TPAT',label:'TPAT (ความถนัดเฉพาะ)',color:'#8b5cf6',subjects:['tpat1','tpat2','tpat3','tpat4','tpat5']},
+  {key:'A-Level',label:'A-Level',color:'#3b82f6',subjects:['alv_math1','alv_math2','alv_sci','alv_phy','alv_chem','alv_bio','alv_soc','alv_thai','alv_eng']}
 ];
+function getEstimatedHours(sid){const s=TCAS_SUBJECTS[sid];if(!s)return 0;const h={1:3,2:5,3:7,4:10,5:14};return s.chapters.length*(h[s.difficulty]||7);}
+function getSelectedSubjects(){return(data.selectedSubjects||[]).map(id=>TCAS_SUBJECTS[id]).filter(Boolean);}
+function getActiveExams(){const subs=getSelectedSubjects();const map={};subs.forEach(s=>{map[s.id]={name:s.name,date:s.examDate,color:s.color};});return map;}
+function getActiveSubjectsData(){const subs=getSelectedSubjects();const map={};subs.forEach(s=>{map[s.id]={name:s.name,color:s.color,chapters:s.chapters,icon:s.icon};});return map;}
 
 const ACHIEVEMENTS_DEF=[
   {id:'first',icon:'🌱',name:'เริ่มต้นแล้ว!',desc:'บันทึกวันแรก',cond:s=>s.totalLogs>0},
@@ -777,25 +801,18 @@ const ACHIEVEMENTS_DEF=[
   {id:'h200',icon:'🚀',name:'200 ชั่วโมง',desc:'อ่านรวม 200h',cond:s=>s.totalHours>=200},
   {id:'chapter10',icon:'📖',name:'นักอ่านตัวจริง',desc:'อ่านครบ 10 บท',cond:s=>s.chapsDone>=10},
   {id:'chapter30',icon:'🏆',name:'ครบทุกบท',desc:'อ่านครบ 30 บท',cond:s=>s.chapsDone>=30},
-  {id:'all4',icon:'⭐',name:'นักเรียนรอบด้าน',desc:'อ่านครบทุก 4 วิชา',cond:s=>s.subjTouched>=4},
+  {id:'all4',icon:'⭐',name:'นักเรียนรอบด้าน',desc:'เรียนครบทุกวิชาที่เลือก',cond:s=>s.subjTouched>=s.totalSubj},
 ];
 
 let data = window.data || {
-  logs:[], chapters:{tgat:[],tpat:[],phys:[],math:[]}, streak:0, bestStreak:0, lastStudyDate:null, pomoDone:0, dailyGoal:4
+  logs:[], chapters:{}, streak:0, bestStreak:0, lastStudyDate:null, pomoDone:0, dailyGoal:4,
+  selectedSubjects:[], onboarded:false
 };
-// Keep window.data in sync
-Object.defineProperty(window, 'data', {
-  get: () => data,
-  set: (v) => { data = v; },
-  configurable: true
-});
+Object.defineProperty(window, 'data', {get:()=>data,set:(v)=>{data=v;},configurable:true});
 
-function save() {
-  // Always backup to localStorage
-  localStorage.setItem('studypath', JSON.stringify(data));
-  // Save to Firebase if logged in
-  if (window.fbSave) window.fbSave(data);
-}
+function save(){localStorage.setItem('studypath',JSON.stringify(data));if(window.fbSave)window.fbSave(data);}
+function ensureChapters(){if(!data.chapters)data.chapters={};(data.selectedSubjects||[]).forEach(id=>{if(!data.chapters[id])data.chapters[id]=[];});}
+
 
 // ═══════════════════════════ NAV ═══════════════════════════
 function showPage(id){
@@ -814,11 +831,19 @@ function daysUntil(dateStr){
   return Math.max(0,Math.ceil((target-now)/(1000*60*60*24)));
 }
 function renderCountdowns(){
-  const fmt=d=>{const n=daysUntil(d);return n===0?'วันนี้!':n+' วัน'};
-  document.getElementById('cd-tgat').textContent=fmt('2027-01-30');
-  document.getElementById('cd-tpat').textContent=fmt('2027-01-30');
-  document.getElementById('cd-phys').textContent=fmt('2027-03-13');
-  document.getElementById('cd-math').textContent=fmt('2027-03-14');
+  const box=document.getElementById('countdown-dynamic');if(!box)return;
+  const subs=getSelectedSubjects();if(!subs.length){box.innerHTML='<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px">เลือกวิชาก่อนเพื่อดูนับถอยหลัง</div>';return;}
+  const dates={};subs.forEach(s=>{if(!dates[s.examDate])dates[s.examDate]={date:s.examDate,subjects:[]};dates[s.examDate].subjects.push(s);});
+  const sorted=Object.values(dates).sort((a,b)=>a.date.localeCompare(b.date));
+  box.innerHTML=sorted.map(g=>{
+    const d=daysUntil(g.date);const dt=new Date(g.date);
+    const thaiDate=dt.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});
+    return g.subjects.map(s=>`<div class="cd-card" style="border-top:2px solid ${s.color}">
+      <div class="cd-subj">${s.icon} ${s.name}</div>
+      <div class="cd-days" style="color:${s.color}">${d===0?'วันนี้!':d+' วัน'}</div>
+      <div class="cd-date">${thaiDate}</div>
+    </div>`).join('');
+  }).join('');
 }
 
 // ═══════════════════════════ STREAK ═══════════════════════════
@@ -854,11 +879,12 @@ function renderLog(){
   const tbody=document.getElementById('log-tbody');
   if(!data.logs.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px">ยังไม่มีรายการ</td></tr>';return;}
   tbody.innerHTML=data.logs.map(l=>{
-    const colors={tgat:'var(--amber)',tpat:'var(--purple2)',phys:'var(--teal2)',math:'var(--blue2)'};
-    const names={tgat:'TGAT',tpat:'TPAT 3',phys:'Physics',math:'Math 1'};
+    const s=TCAS_SUBJECTS[l.subj];
+    const color=s?s.color:'var(--text2)';
+    const name=s?s.name:l.subj;
     return`<tr>
       <td style="font-family:'DM Mono',monospace;font-size:12px">${l.date}</td>
-      <td><span class="badge" style="background:${colors[l.subj]}20;color:${colors[l.subj]}">${names[l.subj]}</span></td>
+      <td><span class="badge" style="background:${color}20;color:${color}">${name}</span></td>
       <td style="font-family:'DM Mono',monospace">${l.hours}h</td>
       <td style="color:var(--text2)">${l.note||'—'}</td>
       <td><button class="btn btn-sm btn-danger" onclick="deleteLog(${l.id})">ลบ</button></td>
@@ -867,7 +893,7 @@ function renderLog(){
   renderLogChart();
 }
 function getHoursBySubj(){
-  const h={tgat:0,tpat:0,phys:0,math:0};
+  const h={};(data.selectedSubjects||[]).forEach(id=>h[id]=0);
   data.logs.forEach(l=>h[l.subj]=(h[l.subj]||0)+l.hours);return h;
 }
 function getHoursLast7(){
@@ -878,30 +904,43 @@ function getHoursLast7(){
 let weekChart,logWeekChart,subjectChart,dailyChart,planVsChart;
 
 // ═══════════════════════════ QUICK ADD ═══════════════════════════
-let qaSelectedSubj='tgat';
+let qaSelectedSubj='';
+function renderQuickAddChips(){
+  const box=document.getElementById('qa-subjects');if(!box)return;
+  const subs=getSelectedSubjects();
+  if(!subs.length){box.innerHTML='<span style="font-size:12px;color:var(--text3)">เลือกวิชาก่อน</span>';return;}
+  qaSelectedSubj=subs[0].id;
+  box.innerHTML=subs.map((s,i)=>`<button class="qa-chip ${i===0?'active':''}" data-subj="${s.id}" onclick="qaSelectSubj(this)" style="--chip-color:${s.color}">${s.icon} ${s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')}</button>`).join('');
+}
 function qaSelectSubj(btn){
   document.querySelectorAll('.qa-chip').forEach(c=>c.classList.remove('active'));
   btn.classList.add('active');qaSelectedSubj=btn.dataset.subj;
 }
 function qaAddTime(hours){
   const today=new Date().toISOString().split('T')[0];
-  const names={tgat:'TGAT',tpat:'TPAT 3',phys:'Physics',math:'Math 1'};
+  const s=TCAS_SUBJECTS[qaSelectedSubj];if(!s)return;
   data.logs.push({id:Date.now(),date:today,subj:qaSelectedSubj,hours,note:'Quick Add ⚡',source:'quick'});
   data.logs.sort((a,b)=>b.date.localeCompare(a.date));
   updateStreak(today);save();renderDashboard();renderLog();
   const fb=document.getElementById('qa-feedback');
-  fb.textContent=`✅ บันทึกแล้ว! ${names[qaSelectedSubj]} +${hours}h`;
+  fb.textContent=`✅ บันทึกแล้ว! ${s.name} +${hours}h`;
   fb.style.opacity='1';setTimeout(()=>fb.style.opacity='0',2000);
-  showToast(`⚡ ${names[qaSelectedSubj]} +${hours}h`);
+  showToast(`⚡ ${s.name} +${hours}h`);
 }
 // ═══════════════════════════ FAB ═══════════════════════════
 function toggleFabMenu(){
   const btn=document.getElementById('fab-btn'),menu=document.getElementById('fab-menu');
   btn.classList.toggle('open');menu.classList.toggle('show');
 }
+function renderFabMenu(){
+  const box=document.getElementById('fab-menu');if(!box)return;
+  const subs=getSelectedSubjects().slice(0,4);
+  box.innerHTML=subs.map(s=>`<button class="fab-option" onclick="fabQuickAdd('${s.id}',1)" style="--c:${s.color}">${s.icon} ${s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')} +1h</button>`).join('')
+    +`<button class="fab-option" onclick="showPage('timer')" style="--c:var(--coral)">🍅 Timer</button>`;
+}
 function fabQuickAdd(subj,hours){
   const today=new Date().toISOString().split('T')[0];
-  const names={tgat:'TGAT',tpat:'TPAT 3',phys:'Physics',math:'Math 1'};
+  const s=TCAS_SUBJECTS[subj];if(!s)return;
   data.logs.push({id:Date.now(),date:today,subj,hours,note:'Quick Add 📱',source:'quick'});
   data.logs.sort((a,b)=>b.date.localeCompare(a.date));
   updateStreak(today);save();renderDashboard();renderLog();
