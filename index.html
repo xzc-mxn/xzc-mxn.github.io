@@ -70,7 +70,7 @@ onAuthStateChanged(auth, user => {
     if (unsubSnapshot) { unsubSnapshot(); unsubSnapshot = null; }
     document.getElementById('loading-overlay').style.display = 'none';
     window.data = JSON.parse(localStorage.getItem('studypath')||'null') || {
-      logs:[], chapters:{tgat:[],tpat:[],phys:[],math:[]}, streak:0, bestStreak:0, lastStudyDate:null, pomoDone:0
+      logs:[], chapters:{tgat:[],tpat:[],phys:[],math:[]}, streak:0, bestStreak:0, lastStudyDate:null, pomoDone:0, dailyGoal:4
     };
     setTimeout(() => {
       if (window.renderDashboard) { window.renderDashboard(); window.renderLog(); window.renderSubjects(); window.renderGoals(); }
@@ -270,10 +270,46 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 .c-tpat{color:var(--purple2)}
 .c-phys{color:var(--teal2)}
 .c-math{color:var(--blue2)}
-/* SCROLLBAR */
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+/* QUICK ADD */
+.qa-chip{font-family:'Sarabun',sans-serif;font-size:12px;font-weight:600;padding:8px 14px;border-radius:20px;border:1.5px solid var(--chip-color,var(--border2));background:transparent;color:var(--chip-color,var(--text2));cursor:pointer;transition:all .2s}
+.qa-chip:hover,.qa-chip.active{background:var(--chip-color);color:#000;transform:scale(1.05)}
+.qa-time-btn{font-family:'DM Mono',monospace;font-size:13px;font-weight:600;padding:10px 18px;border-radius:10px;border:1.5px solid var(--border2);background:var(--bg3);color:var(--text);cursor:pointer;transition:all .15s}
+.qa-time-btn:hover{background:var(--amber);color:#000;border-color:var(--amber);transform:translateY(-2px)}
+.qa-time-btn:active{transform:scale(.95)}
+/* FAB */
+.fab{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--amber2));color:#000;font-size:28px;font-weight:700;border:none;cursor:pointer;z-index:200;box-shadow:0 4px 20px rgba(245,158,11,.4);transition:all .25s;display:none}
+.fab:hover{transform:scale(1.1) rotate(90deg)}
+.fab.open{transform:rotate(45deg);background:var(--red)}
+.fab-menu{position:fixed;bottom:90px;right:24px;display:flex;flex-direction:column;gap:8px;z-index:199;opacity:0;pointer-events:none;transform:translateY(20px);transition:all .25s}
+.fab-menu.show{opacity:1;pointer-events:auto;transform:translateY(0)}
+.fab-option{font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;padding:10px 16px;border-radius:12px;border:1px solid var(--border2);background:var(--bg2);color:var(--text);cursor:pointer;white-space:nowrap;text-align:left;transition:all .15s;box-shadow:var(--shadow)}
+.fab-option:hover{border-color:var(--c);color:var(--c);transform:translateX(-4px)}
+@media(max-width:768px){.fab{display:flex;align-items:center;justify-content:center}.quick-add-card{display:none!important}}
+@media(min-width:769px){.fab,.fab-menu{display:none!important}}
+/* DAILY RING */
+.daily-ring-wrap{position:relative;width:130px;height:130px;flex-shrink:0}
+.daily-ring-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+/* HIGHLIGHT */
+.highlight-card{transition:transform .2s}.highlight-card:hover{transform:translateY(-2px)}
+/* STREAK FIRE */
+@keyframes fireGlow{0%,100%{text-shadow:0 0 8px rgba(245,158,11,.5)}50%{text-shadow:0 0 16px rgba(245,158,11,.8),0 0 32px rgba(245,158,11,.3)}}
+.streak-fire{animation:fireGlow 1.5s ease-in-out infinite}
+/* MOBILE FIRST TWEAKS */
+@media(max-width:500px){
+  .grid2{gap:10px}
+  .stat-card{padding:12px}
+  .stat-value{font-size:22px}
+  .cd-days{font-size:24px}
+  h2{font-size:18px}
+  .page{padding:66px 14px 90px}
+  nav{padding:0 10px;height:50px}
+  .nav-brand{font-size:14px;margin-right:6px}
+  .nav-tab{font-size:11px;padding:5px 8px}
+  .phase-badge{display:none}
+}
 </style>
 </head>
 <body>
@@ -305,81 +341,110 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   <h2>Dashboard</h2>
   <p class="page-sub">ภาพรวมการเตรียมสอบวิศวกรรม</p>
 
+  <!-- ★ QUICK ADD PANEL — 2 clicks max ★ -->
+  <div class="card quick-add-card" style="margin-bottom:16px;border-color:rgba(245,158,11,.3);background:linear-gradient(135deg,var(--bg2),rgba(245,158,11,.04))">
+    <div class="card-title" style="color:var(--amber)">⚡ Quick Add — บันทึกใน 2 คลิก</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="qa-subjects">
+      <button class="qa-chip active" data-subj="tgat" onclick="qaSelectSubj(this)" style="--chip-color:var(--amber)">📝 TGAT</button>
+      <button class="qa-chip" data-subj="tpat" onclick="qaSelectSubj(this)" style="--chip-color:var(--purple2)">🔧 TPAT 3</button>
+      <button class="qa-chip" data-subj="phys" onclick="qaSelectSubj(this)" style="--chip-color:var(--teal2)">⚡ Physics</button>
+      <button class="qa-chip" data-subj="math" onclick="qaSelectSubj(this)" style="--chip-color:var(--blue2)">📐 Math 1</button>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="qa-time-btn" onclick="qaAddTime(0.5)">+30m</button>
+      <button class="qa-time-btn" onclick="qaAddTime(1)">+1h</button>
+      <button class="qa-time-btn" onclick="qaAddTime(1.5)">+1.5h</button>
+      <button class="qa-time-btn" onclick="qaAddTime(2)">+2h</button>
+      <button class="qa-time-btn" onclick="qaAddTime(3)">+3h</button>
+    </div>
+    <div id="qa-feedback" style="margin-top:10px;font-size:12px;color:var(--green2);opacity:0;transition:opacity .3s"></div>
+  </div>
+
+  <!-- ★ DAILY PROGRESS RING + STATS ★ -->
+  <div class="grid2" style="margin-bottom:16px">
+    <div class="card" style="display:flex;align-items:center;gap:24px">
+      <div class="daily-ring-wrap">
+        <svg width="130" height="130" viewBox="0 0 130 130">
+          <circle cx="65" cy="65" r="56" fill="none" stroke="var(--bg4)" stroke-width="10"/>
+          <circle id="daily-ring-progress" cx="65" cy="65" r="56" fill="none" stroke="var(--amber)" stroke-width="10" stroke-linecap="round" stroke-dasharray="351.86" stroke-dashoffset="351.86" style="transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset .8s ease,stroke .3s"/>
+        </svg>
+        <div class="daily-ring-text">
+          <div id="daily-ring-pct" style="font-size:28px;font-weight:700;font-family:'DM Mono',monospace">0%</div>
+          <div style="font-size:10px;color:var(--text3)">วันนี้</div>
+        </div>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:13px;color:var(--text2);margin-bottom:4px">เป้าวันนี้</div>
+        <div style="font-size:24px;font-weight:700;color:var(--text)" id="daily-goal-display">0 / 4h</div>
+        <div style="margin-top:8px;display:flex;gap:6px;align-items:center">
+          <span style="font-size:11px;color:var(--text3)">ตั้งเป้า:</span>
+          <input type="range" id="daily-goal-slider" min="1" max="10" step="0.5" value="4" oninput="setDailyGoal(this.value)" style="flex:1;max-width:120px">
+          <span style="font-size:12px;color:var(--amber);font-family:'DM Mono'" id="daily-goal-val">4h</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats (2x2) -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="stat-card">
+        <div class="stat-label">🔥 Streak</div>
+        <div class="stat-value c-tgat" id="dash-streak" style="display:flex;align-items:center;gap:6px">0</div>
+        <div class="stat-sub">วันต่อเนื่อง</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">⏱ ชั่วโมงรวม</div>
+        <div class="stat-value" id="dash-total-hours">0</div>
+        <div class="stat-sub">ชั่วโมงทั้งหมด</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">📅 เฉลี่ย/วัน</div>
+        <div class="stat-value" id="dash-avg">0</div>
+        <div class="stat-sub">ชั่วโมง</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">📖 บทเรียน</div>
+        <div class="stat-value" id="dash-chapters">0</div>
+        <div class="stat-sub">บทที่อ่านแล้ว</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ★ HIGHLIGHTS — Best Day + Weakest Subject ★ -->
+  <div class="grid2" style="margin-bottom:16px">
+    <div class="card highlight-card" id="highlight-best" style="border-left:3px solid var(--green)">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:4px">🏆 วันที่ดีที่สุด</div>
+      <div style="font-size:18px;font-weight:700;color:var(--green2)" id="best-day-text">—</div>
+      <div style="font-size:12px;color:var(--text2)" id="best-day-sub"></div>
+    </div>
+    <div class="card highlight-card" id="highlight-weak" style="border-left:3px solid var(--red)">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:4px">⚠️ วิชาที่ต้องเพิ่ม</div>
+      <div style="font-size:18px;font-weight:700;color:var(--red2)" id="weak-subj-text">—</div>
+      <div style="font-size:12px;color:var(--text2)" id="weak-subj-sub"></div>
+    </div>
+  </div>
+
   <!-- Countdown -->
   <div class="card" style="margin-bottom:16px">
     <div class="card-title">⏳ นับถอยหลังถึงวันสอบ</div>
     <div class="countdown-grid">
-      <div class="cd-card tgat">
-        <div class="cd-subj">TGAT</div>
-        <div class="cd-days c-tgat" id="cd-tgat">—</div>
-        <div class="cd-date">30 มกราคม 2570</div>
-      </div>
-      <div class="cd-card tpat">
-        <div class="cd-subj">TPAT 3</div>
-        <div class="cd-days c-tpat" id="cd-tpat">—</div>
-        <div class="cd-date">30 มกราคม 2570</div>
-      </div>
-      <div class="cd-card phys">
-        <div class="cd-subj">A-Level Physics</div>
-        <div class="cd-days c-phys" id="cd-phys">—</div>
-        <div class="cd-date">13 มีนาคม 2570</div>
-      </div>
-      <div class="cd-card math">
-        <div class="cd-subj">A-Level Math 1</div>
-        <div class="cd-days c-math" id="cd-math">—</div>
-        <div class="cd-date">14 มีนาคม 2570</div>
-      </div>
+      <div class="cd-card tgat"><div class="cd-subj">TGAT</div><div class="cd-days c-tgat" id="cd-tgat">—</div><div class="cd-date">30 ม.ค. 2570</div></div>
+      <div class="cd-card tpat"><div class="cd-subj">TPAT 3</div><div class="cd-days c-tpat" id="cd-tpat">—</div><div class="cd-date">30 ม.ค. 2570</div></div>
+      <div class="cd-card phys"><div class="cd-subj">A-Level Physics</div><div class="cd-days c-phys" id="cd-phys">—</div><div class="cd-date">13 มี.ค. 2570</div></div>
+      <div class="cd-card math"><div class="cd-subj">A-Level Math 1</div><div class="cd-days c-math" id="cd-math">—</div><div class="cd-date">14 มี.ค. 2570</div></div>
     </div>
   </div>
 
-  <!-- Stats row -->
-  <div class="grid4" style="margin-bottom:16px">
-    <div class="stat-card">
-      <div class="stat-label">🔥 Streak</div>
-      <div class="stat-value c-tgat" id="dash-streak">0</div>
-      <div class="stat-sub">วันต่อเนื่อง</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">⏱ ชั่วโมงรวม</div>
-      <div class="stat-value" id="dash-total-hours">0</div>
-      <div class="stat-sub">ชั่วโมงทั้งหมด</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">📅 เฉลี่ย/วัน</div>
-      <div class="stat-value" id="dash-avg">0</div>
-      <div class="stat-sub">ชั่วโมง</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">📖 บทเรียน</div>
-      <div class="stat-value" id="dash-chapters">0</div>
-      <div class="stat-sub">บทที่อ่านแล้ว</div>
-    </div>
-  </div>
-
+  <!-- Progress + Recommendations -->
   <div class="grid2" style="margin-bottom:16px">
-    <!-- Progress per subject -->
     <div class="card">
       <div class="card-title">📊 Progress รายวิชา</div>
       <div id="subj-progress-list">
-        <div class="subj-progress">
-          <div class="subj-header"><span class="subj-name c-tgat">TGAT</span><span class="subj-pct" id="prog-tgat-pct">0%</span></div>
-          <div class="prog-track"><div class="prog-fill" id="prog-tgat" style="width:0%;background:var(--amber)"></div></div>
-        </div>
-        <div class="subj-progress">
-          <div class="subj-header"><span class="subj-name c-tpat">TPAT 3</span><span class="subj-pct" id="prog-tpat-pct">0%</span></div>
-          <div class="prog-track"><div class="prog-fill" id="prog-tpat" style="width:0%;background:var(--purple2)"></div></div>
-        </div>
-        <div class="subj-progress">
-          <div class="subj-header"><span class="subj-name c-phys">Physics</span><span class="subj-pct" id="prog-phys-pct">0%</span></div>
-          <div class="prog-track"><div class="prog-fill" id="prog-phys" style="width:0%;background:var(--teal2)"></div></div>
-        </div>
-        <div class="subj-progress">
-          <div class="subj-header"><span class="subj-name c-math">Math 1</span><span class="subj-pct" id="prog-math-pct">0%</span></div>
-          <div class="prog-track"><div class="prog-fill" id="prog-math" style="width:0%;background:var(--blue2)"></div></div>
-        </div>
+        <div class="subj-progress"><div class="subj-header"><span class="subj-name c-tgat">TGAT</span><span class="subj-pct" id="prog-tgat-pct">0%</span></div><div class="prog-track"><div class="prog-fill" id="prog-tgat" style="width:0%;background:var(--amber)"></div></div></div>
+        <div class="subj-progress"><div class="subj-header"><span class="subj-name c-tpat">TPAT 3</span><span class="subj-pct" id="prog-tpat-pct">0%</span></div><div class="prog-track"><div class="prog-fill" id="prog-tpat" style="width:0%;background:var(--purple2)"></div></div></div>
+        <div class="subj-progress"><div class="subj-header"><span class="subj-name c-phys">Physics</span><span class="subj-pct" id="prog-phys-pct">0%</span></div><div class="prog-track"><div class="prog-fill" id="prog-phys" style="width:0%;background:var(--teal2)"></div></div></div>
+        <div class="subj-progress"><div class="subj-header"><span class="subj-name c-math">Math 1</span><span class="subj-pct" id="prog-math-pct">0%</span></div><div class="prog-track"><div class="prog-fill" id="prog-math" style="width:0%;background:var(--blue2)"></div></div></div>
       </div>
     </div>
-    <!-- Recommendation box -->
     <div class="card">
       <div class="card-title">💡 แนะนำวันนี้</div>
       <div id="today-rec"></div>
@@ -392,10 +457,18 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   <!-- Weekly chart -->
   <div class="card">
     <div class="card-title">📈 ชั่วโมงอ่านรายสัปดาห์ (7 วันล่าสุด)</div>
-    <div class="chart-box">
-      <canvas id="weekChart" role="img" aria-label="Bar chart showing study hours for last 7 days"></canvas>
-    </div>
+    <div class="chart-box"><canvas id="weekChart" role="img" aria-label="Bar chart showing study hours for last 7 days"></canvas></div>
   </div>
+</div>
+
+<!-- ★ FLOATING ACTION BUTTON (Mobile) ★ -->
+<button class="fab" id="fab-btn" onclick="toggleFabMenu()">+</button>
+<div class="fab-menu" id="fab-menu">
+  <button class="fab-option" onclick="fabQuickAdd('tgat',1)" style="--c:var(--amber)">📝 TGAT +1h</button>
+  <button class="fab-option" onclick="fabQuickAdd('tpat',1)" style="--c:var(--purple2)">🔧 TPAT +1h</button>
+  <button class="fab-option" onclick="fabQuickAdd('phys',1)" style="--c:var(--teal2)">⚡ Physics +1h</button>
+  <button class="fab-option" onclick="fabQuickAdd('math',1)" style="--c:var(--blue2)">📐 Math +1h</button>
+  <button class="fab-option" onclick="showPage('timer')" style="--c:var(--coral)">🍅 Timer</button>
 </div>
 
 <!-- ═══════════════════════════════ PLAN ═══════════════════════════════ -->
@@ -708,7 +781,7 @@ const ACHIEVEMENTS_DEF=[
 ];
 
 let data = window.data || {
-  logs:[], chapters:{tgat:[],tpat:[],phys:[],math:[]}, streak:0, bestStreak:0, lastStudyDate:null, pomoDone:0
+  logs:[], chapters:{tgat:[],tpat:[],phys:[],math:[]}, streak:0, bestStreak:0, lastStudyDate:null, pomoDone:0, dailyGoal:4
 };
 // Keep window.data in sync
 Object.defineProperty(window, 'data', {
@@ -803,10 +876,102 @@ function getHoursLast7(){
   return days.map(d=>({date:d,hours:data.logs.filter(l=>l.date===d).reduce((a,b)=>a+b.hours,0)}));
 }
 let weekChart,logWeekChart,subjectChart,dailyChart,planVsChart;
+
+// ═══════════════════════════ QUICK ADD ═══════════════════════════
+let qaSelectedSubj='tgat';
+function qaSelectSubj(btn){
+  document.querySelectorAll('.qa-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');qaSelectedSubj=btn.dataset.subj;
+}
+function qaAddTime(hours){
+  const today=new Date().toISOString().split('T')[0];
+  const names={tgat:'TGAT',tpat:'TPAT 3',phys:'Physics',math:'Math 1'};
+  data.logs.push({id:Date.now(),date:today,subj:qaSelectedSubj,hours,note:'Quick Add ⚡',source:'quick'});
+  data.logs.sort((a,b)=>b.date.localeCompare(a.date));
+  updateStreak(today);save();renderDashboard();renderLog();
+  const fb=document.getElementById('qa-feedback');
+  fb.textContent=`✅ บันทึกแล้ว! ${names[qaSelectedSubj]} +${hours}h`;
+  fb.style.opacity='1';setTimeout(()=>fb.style.opacity='0',2000);
+  showToast(`⚡ ${names[qaSelectedSubj]} +${hours}h`);
+}
+// ═══════════════════════════ FAB ═══════════════════════════
+function toggleFabMenu(){
+  const btn=document.getElementById('fab-btn'),menu=document.getElementById('fab-menu');
+  btn.classList.toggle('open');menu.classList.toggle('show');
+}
+function fabQuickAdd(subj,hours){
+  const today=new Date().toISOString().split('T')[0];
+  const names={tgat:'TGAT',tpat:'TPAT 3',phys:'Physics',math:'Math 1'};
+  data.logs.push({id:Date.now(),date:today,subj,hours,note:'Quick Add 📱',source:'quick'});
+  data.logs.sort((a,b)=>b.date.localeCompare(a.date));
+  updateStreak(today);save();renderDashboard();renderLog();
+  toggleFabMenu();showToast(`⚡ ${names[subj]} +${hours}h`);
+}
+// ═══════════════════════════ DAILY GOAL ═══════════════════════════
+function setDailyGoal(val){
+  data.dailyGoal=parseFloat(val);
+  document.getElementById('daily-goal-val').textContent=val+'h';
+  save();renderDailyRing();
+}
+function getTodayHours(){
+  const today=new Date().toISOString().split('T')[0];
+  return data.logs.filter(l=>l.date===today).reduce((a,b)=>a+b.hours,0);
+}
+function renderDailyRing(){
+  const goal=data.dailyGoal||4;
+  const done=getTodayHours();
+  const pct=Math.min(done/goal,1);
+  const circ=2*Math.PI*56;
+  const ring=document.getElementById('daily-ring-progress');
+  ring.style.strokeDashoffset=circ*(1-pct);
+  // Color: red(<30%) → amber(30-70%) → green(>70%)
+  ring.style.stroke=pct>=.7?'var(--green)':pct>=.3?'var(--amber)':'var(--red)';
+  document.getElementById('daily-ring-pct').textContent=Math.round(pct*100)+'%';
+  document.getElementById('daily-ring-pct').style.color=pct>=.7?'var(--green2)':pct>=.3?'var(--amber)':'var(--red2)';
+  document.getElementById('daily-goal-display').textContent=`${done.toFixed(1)} / ${goal}h`;
+  const slider=document.getElementById('daily-goal-slider');
+  if(slider)slider.value=goal;
+  const valEl=document.getElementById('daily-goal-val');
+  if(valEl)valEl.textContent=goal+'h';
+}
+// ═══════════════════════════ HIGHLIGHTS ═══════════════════════════
+function renderHighlights(){
+  const names={tgat:'TGAT',tpat:'TPAT 3',phys:'Physics',math:'Math 1'};
+  // Best day
+  const dayMap={};
+  data.logs.forEach(l=>{dayMap[l.date]=(dayMap[l.date]||0)+l.hours;});
+  const days=Object.entries(dayMap);
+  if(days.length){
+    days.sort((a,b)=>b[1]-a[1]);
+    const best=days[0];
+    const dt=new Date(best[0]);
+    const dayNames=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+    document.getElementById('best-day-text').textContent=dayNames[dt.getDay()]+' '+dt.getDate()+'/'+(dt.getMonth()+1);
+    document.getElementById('best-day-sub').textContent=best[1].toFixed(1)+' ชั่วโมง';
+  }
+  // Weakest subject
+  const subj=getHoursBySubj();const total=Object.values(subj).reduce((a,b)=>a+b,0)||1;
+  const targets={tgat:.25,tpat:.2,phys:.3,math:.25};
+  let weakest=null,maxDiff=0;
+  Object.keys(targets).forEach(k=>{
+    const diff=targets[k]-subj[k]/total;
+    if(diff>maxDiff){maxDiff=diff;weakest=k;}
+  });
+  if(weakest&&maxDiff>0.05){
+    document.getElementById('weak-subj-text').textContent=names[weakest];
+    document.getElementById('weak-subj-sub').textContent=`เป้า ${Math.round(targets[weakest]*100)}% — ทำได้ ${Math.round(subj[weakest]/total*100)}%`;
+  }else{
+    document.getElementById('weak-subj-text').textContent='สมดุลดี ✅';
+    document.getElementById('weak-subj-sub').textContent='ทุกวิชาอยู่ในเกณฑ์';
+  }
+}
+
 function renderDashboard(){
   renderCountdowns();
   const total=data.logs.reduce((a,b)=>a+b.hours,0);
-  document.getElementById('dash-streak').textContent=data.streak;
+  // Streak with fire animation
+  const streakEl=document.getElementById('dash-streak');
+  streakEl.innerHTML=data.streak+(data.streak>=3?' <span class="streak-fire" style="font-size:20px">🔥</span>':'');
   document.getElementById('dash-total-hours').textContent=total.toFixed(1);
   const days=new Set(data.logs.map(l=>l.date)).size;
   document.getElementById('dash-avg').textContent=days?+(total/days).toFixed(1):0;
@@ -822,13 +987,19 @@ function renderDashboard(){
     document.getElementById('prog-'+k+'-pct').textContent=pct+'%';
   });
 
+  // Daily ring + highlights
+  renderDailyRing();
+  renderHighlights();
+
   // week chart
   const last7=getHoursLast7();
   const labels=last7.map(d=>{const dt=new Date(d.date);return['อา','จ','อ','พ','พฤ','ศ','ส'][dt.getDay()]});
   const vals=last7.map(d=>d.hours);
+  const maxVal=Math.max(...vals,1);
+  const barColors=vals.map(v=>v>=4?'rgba(34,197,94,0.7)':v>=2?'rgba(245,158,11,0.7)':'rgba(239,68,68,0.5)');
   const ctx=document.getElementById('weekChart').getContext('2d');
   if(weekChart)weekChart.destroy();
-  weekChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'ชั่วโมง',data:vals,backgroundColor:'rgba(245,158,11,0.7)',borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#5c6b88'}},y:{grid:{color:'#2a3348'},ticks:{color:'#5c6b88'},beginAtZero:true}}}});
+  weekChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'ชั่วโมง',data:vals,backgroundColor:barColors,borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#5c6b88'}},y:{grid:{color:'#2a3348'},ticks:{color:'#5c6b88'},beginAtZero:true}}}});
 
   renderRecommendation();renderPrediction();
 }
@@ -839,56 +1010,71 @@ function renderLogChart(){
   logWeekChart=new Chart(ctx2,{type:'doughnut',data:{labels:['TGAT','TPAT 3','Physics','Math 1'],datasets:[{data:Object.values(subj),backgroundColor:['#f59e0b99','#8b5cf699','#0d948899','#3b82f699'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',font:{size:11}}}}}});
 }
 
-// ═══════════════════════════ RECOMMENDATION ═══════════════════════════
+// ═══════════════════════════ SMART RECOMMENDATION ═══════════════════════════
 function renderRecommendation(){
   const box=document.getElementById('today-rec');
   const subj=getHoursBySubj();
   const total=Object.values(subj).reduce((a,b)=>a+b,0)||1;
-  // find least studied
   const target={tgat:.25,tpat:.2,phys:.3,math:.25};
-  let recs=[];
-  Object.keys(target).forEach(k=>{const actual=subj[k]/total;if(actual<target[k]-0.05)recs.push(k);});
-  if(!recs.length)recs=['math','phys'];
-
-  const day=new Date().getDay();// 0=sun
-  const dayPlan=WEEK_PLAN[day===0?6:day-1];
   const colors={tgat:'#f59e0b',tpat:'#8b5cf6',phys:'#0d9488',math:'#3b82f6'};
   const names={tgat:'TGAT',tpat:'TPAT 3',phys:'A-Level Physics',math:'A-Level Math 1'};
   const icons={tgat:'📝',tpat:'🔧',phys:'⚡',math:'📐'};
+  // Priority score = (gap from target) * (1/days until exam) — higher = more urgent
+  const scores=Object.keys(target).map(k=>{
+    const gap=target[k]-subj[k]/total;
+    const examDays=daysUntil(EXAMS[k].date)||1;
+    const urgency=gap*(300/examDays);
+    return{key:k,gap,urgency,examDays};
+  }).sort((a,b)=>b.urgency-a.urgency);
 
-  box.innerHTML=`
-    <div class="rec-item">
-      <div class="rec-icon" style="background:${colors[recs[0]]}20">${icons[recs[0]]}</div>
+  const day=new Date().getDay();
+  const dayPlan=WEEK_PLAN[day===0?6:day-1];
+  const priorityLabels=['🔴 สำคัญมาก','🟡 สำคัญ','🟢 ปกติ'];
+
+  box.innerHTML=scores.slice(0,3).map((s,i)=>{
+    const gapPct=Math.abs(Math.round(s.gap*100));
+    const desc=s.gap>0.05?`ขาดอีก ${gapPct}% จากเป้า · สอบอีก ${s.examDays} วัน`
+      :`อยู่ในเป้า ✅ · สอบอีก ${s.examDays} วัน`;
+    return`<div class="rec-item">
+      <div class="rec-icon" style="background:${colors[s.key]}20">${icons[s.key]}</div>
       <div>
-        <div class="rec-title">${names[recs[0]]}</div>
-        <div class="rec-desc">วิชานี้ใช้เวลาน้อยกว่าเป้า — เพิ่มอีก 1-2h วันนี้</div>
+        <div class="rec-title">${names[s.key]} <span style="font-size:10px;color:var(--text3)">${priorityLabels[Math.min(i,2)]}</span></div>
+        <div class="rec-desc">${desc}</div>
       </div>
-    </div>
-    ${recs[1]?`<div class="rec-item">
-      <div class="rec-icon" style="background:${colors[recs[1]]}20">${icons[recs[1]]}</div>
-      <div>
-        <div class="rec-title">${names[recs[1]]}</div>
-        <div class="rec-desc">ตามแผนวันนี้: ${dayPlan?dayPlan.sessions.map(s=>s.label).join(', '):'—'}</div>
-      </div>
-    </div>`:''}
-  `;
+    </div>`;
+  }).join('')+`<div style="font-size:11px;color:var(--text3);margin-top:8px">📅 แผนวันนี้: ${dayPlan?dayPlan.sessions.map(s=>s.label+' '+s.h).join(' · '):'—'}</div>`;
 }
 function renderPrediction(){
   const box=document.getElementById('prediction-box');
-  const days=new Set(data.logs.map(l=>l.date)).size;
+  const studyDays=new Set(data.logs.map(l=>l.date)).size;
   const total=data.logs.reduce((a,b)=>a+b.hours,0);
-  const avgPerDay=days?total/days:0;
+  const avgPerDay=studyDays?total/studyDays:0;
+  const targetTotal=500;
+  // Per-subject prediction
+  const names={tgat:'TGAT',tpat:'TPAT 3',phys:'Physics',math:'Math 1'};
+  const subjTargets={tgat:100,tpat:80,phys:170,math:150};
+  const subj=getHoursBySubj();
+  let perSubjHTML='';
+  Object.keys(subjTargets).forEach(k=>{
+    const done=subj[k]||0;const need=subjTargets[k];
+    const examDays=daysUntil(EXAMS[k].date)||1;
+    const remaining=Math.max(0,need-done);
+    const reqDaily=remaining/examDays;
+    const ok=remaining<=0||reqDaily<=avgPerDay*0.4;
+    perSubjHTML+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px">
+      <span style="color:${EXAMS[k].color}">${names[k]}</span>
+      <span style="color:${ok?'var(--green2)':'var(--red2)'}">${done.toFixed(0)}/${need}h ${ok?'✅':'⚠️ +'+reqDaily.toFixed(1)+'h/d'}</span>
+    </div>`;
+  });
   const daysLeft=daysUntil('2027-01-30');
   const projectedTotal=total+avgPerDay*daysLeft;
-  const targetTotal=500;// hrs
   const onTrack=projectedTotal>=targetTotal;
   box.innerHTML=`
-    <div style="font-size:12px;margin-bottom:8px">เฉลี่ยปัจจุบัน: <strong style="color:var(--amber)">${avgPerDay.toFixed(1)}h/วัน</strong></div>
-    <div style="font-size:12px;margin-bottom:8px">คาดการณ์รวม: <strong style="color:var(--amber)">${Math.round(projectedTotal)}h</strong> (เป้า ${targetTotal}h)</div>
-    <div style="font-size:12px;padding:8px 10px;border-radius:8px;background:${onTrack?'rgba(34,197,94,.1)':'rgba(239,68,68,.1)'};color:${onTrack?'var(--green2)':'var(--red2)'}">
-      ${onTrack?'✅ อยู่ในเกณฑ์ดี ต่อให้เท่าเดิมได้':'⚠️ ต้องเพิ่ม '+Math.ceil((targetTotal-projectedTotal)/daysLeft*10)/10+'h/วัน'}
-    </div>
-  `;
+    <div style="font-size:12px;margin-bottom:6px">เฉลี่ย: <strong style="color:var(--amber)">${avgPerDay.toFixed(1)}h/วัน</strong> · คาดการณ์: <strong style="color:var(--amber)">${Math.round(projectedTotal)}h</strong>/${targetTotal}h</div>
+    ${perSubjHTML}
+    <div style="font-size:12px;padding:8px 10px;border-radius:8px;margin-top:8px;background:${onTrack?'rgba(34,197,94,.1)':'rgba(239,68,68,.1)'};color:${onTrack?'var(--green2)':'var(--red2)'}">
+      ${onTrack?'✅ อยู่ในเกณฑ์ดี':'⚠️ ต้องเพิ่ม '+Math.ceil((targetTotal-projectedTotal)/Math.max(daysLeft,1)*10)/10+'h/วัน ไม่งั้นอ่านไม่ทัน'}
+    </div>`;
 }
 
 // ═══════════════════════════ WEEKLY PLAN ═══════════════════════════
@@ -985,18 +1171,40 @@ function renderInsights(subj,dailyVals){
   const insights=[];
   const names={tgat:'TGAT',tpat:'TPAT 3',phys:'Physics',math:'Math 1'};
   const targets={tgat:.25,tpat:.2,phys:.3,math:.25};
+  // 1. Weak subject alerts
   Object.keys(targets).forEach(k=>{
     const actual=subj[k]/total;
-    if(actual<targets[k]-0.08)insights.push({icon:'⚠️',title:`${names[k]} ใช้เวลาน้อยกว่าเป้า`,desc:`คิดเป็น ${Math.round(actual*100)}% (เป้า ${Math.round(targets[k]*100)}%) — ควรเพิ่มอีก`});
+    if(actual<targets[k]-0.08){
+      const diff=Math.round((targets[k]-actual)*100);
+      insights.push({icon:'⚠️',title:`${names[k]} น้อยกว่าแผน ${diff}%`,desc:`ทำได้ ${Math.round(actual*100)}% (เป้า ${Math.round(targets[k]*100)}%)`});
+    }
   });
-  const activeDay=dailyVals.filter(v=>v>0).length;
-  if(activeDay>0){
-    const avg=dailyVals.filter(v=>v>0).reduce((a,b)=>a+b,0)/activeDay;
-    insights.push({icon:'📈',title:'เฉลี่ยวันที่อ่าน',desc:`${avg.toFixed(1)}h ต่อวัน (เฉพาะวันที่มีบันทึก)`});
+  // 2. Productive day analysis
+  const dayHours=[0,0,0,0,0,0,0],dayCounts=[0,0,0,0,0,0,0];
+  data.logs.forEach(l=>{const d=new Date(l.date).getDay();dayHours[d]+=l.hours;dayCounts[d]++;});
+  const dayAvg=dayHours.map((h,i)=>dayCounts[i]?h/dayCounts[i]:0);
+  const bestDayIdx=dayAvg.indexOf(Math.max(...dayAvg));
+  const dayLabels=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+  if(Math.max(...dayAvg)>0) insights.push({icon:'📅',title:`วัน${dayLabels[bestDayIdx]} productive ที่สุด`,desc:`เฉลี่ย ${dayAvg[bestDayIdx].toFixed(1)}h`});
+  // 3. Plan vs actual
+  const last7=getHoursLast7();
+  const weekActual=last7.reduce((a,b)=>a+b.hours,0);
+  const weekTarget=WEEK_PLAN.reduce((a,b)=>a+b.target,0);
+  if(weekTarget>0){
+    const completion=Math.round(weekActual/weekTarget*100);
+    insights.push({icon:completion>=80?'✅':'📊',title:`สัปดาห์นี้ ${completion}% ของแผน`,desc:`${weekActual.toFixed(1)}h / ${weekTarget}h`});
   }
-  const streak=data.streak;
-  if(streak>=3)insights.push({icon:'🔥',title:`Streak ${streak} วัน`,desc:'ต่อเนื่องดีมาก ระวังอย่าหยุด!'});
-  if(!insights.length)insights.push({icon:'📊',title:'ยังไม่มีข้อมูลพอ',desc:'เพิ่มการบันทึกอย่างน้อย 1 สัปดาห์เพื่อดู Insights'});
+  // 4. Trend (this vs last week)
+  if(dailyVals.length>=14){
+    const tw=dailyVals.slice(-7).reduce((a,b)=>a+b,0);
+    const lw=dailyVals.slice(-14,-7).reduce((a,b)=>a+b,0);
+    if(lw>0){const ch=Math.round((tw-lw)/lw*100);if(Math.abs(ch)>=10)insights.push({icon:ch>0?'📈':'📉',title:`ชั่วโมง${ch>0?'เพิ่ม':'ลด'} ${Math.abs(ch)}%`,desc:`${tw.toFixed(1)}h vs ${lw.toFixed(1)}h สัปดาห์ก่อน`});}
+  }
+  // 5. Active days
+  const activeDay=dailyVals.filter(v=>v>0).length;
+  if(activeDay>0){const avg=dailyVals.filter(v=>v>0).reduce((a,b)=>a+b,0)/activeDay;insights.push({icon:'📈',title:`อ่าน ${activeDay}/30 วัน · เฉลี่ย ${avg.toFixed(1)}h`,desc:'เฉพาะวันที่มีบันทึก'});}
+  if(data.streak>=3)insights.push({icon:'🔥',title:`Streak ${data.streak} วัน!`,desc:'ต่อเนื่องดีมาก!'});
+  if(!insights.length)insights.push({icon:'📊',title:'ยังไม่มีข้อมูลพอ',desc:'บันทึก 1 สัปดาห์เพื่อดู Insights'});
   box.innerHTML=insights.map(ins=>`<div class="insight-card"><div class="insight-title">${ins.icon} ${ins.title}</div><div class="insight-desc">${ins.desc}</div></div>`).join('');
 }
 
@@ -1160,6 +1368,11 @@ window.toggleChapter = toggleChapter;
 window.timerToggle = timerToggle;
 window.timerReset = timerReset;
 window.setPomoMode = setPomoMode;
+window.qaSelectSubj = qaSelectSubj;
+window.qaAddTime = qaAddTime;
+window.toggleFabMenu = toggleFabMenu;
+window.fabQuickAdd = fabQuickAdd;
+window.setDailyGoal = setDailyGoal;
 
 init();
 </script>
