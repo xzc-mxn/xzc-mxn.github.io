@@ -73,7 +73,7 @@ onAuthStateChanged(auth, user => {
       logs:[], chapters:{tgat:[],tpat:[],phys:[],math:[]}, streak:0, bestStreak:0, lastStudyDate:null, pomoDone:0, dailyGoal:4
     };
     setTimeout(() => {
-      if (window.renderDashboard) { window.renderDashboard(); window.renderLog(); window.renderSubjects(); window.renderGoals(); }
+      if (window.renderDashboard) { window.renderDashboard(); window.renderLog(); window.renderSubjects(); window.renderGoals(); window.renderSubjectSelects && window.renderSubjectSelects(); }
     }, 300);
   }
 });
@@ -94,7 +94,7 @@ function subscribeUserData(uid) {
         window.data = cloud;
         if (!window.data.chapters) window.data.chapters = {tgat:[],tpat:[],phys:[],math:[]};
         setTimeout(() => {
-          if (window.renderDashboard) { window.renderDashboard(); window.renderLog(); window.renderSubjects(); window.renderGoals(); }
+          if (window.renderDashboard) { window.renderDashboard(); window.renderLog(); window.renderSubjects(); window.renderGoals(); window.renderSubjectSelects && window.renderSubjectSelects(); }
         }, 100);
       }
     }
@@ -324,6 +324,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <button class="nav-tab" onclick="showPage('subjects')">เนื้อหา</button>
     <button class="nav-tab" onclick="showPage('analysis')">วิเคราะห์</button>
     <button class="nav-tab" onclick="showPage('goals')">เป้าหมาย</button>
+    <button class="nav-tab" onclick="showPage('select')" style="color:var(--amber)">⚙️ วิชา</button>
   </div>
   <div class="phase-badge" id="current-phase-badge">ระยะปูพื้น</div>
   <div id="auth-bar" style="display:flex;align-items:center;gap:6px;margin-left:8px;flex-shrink:0"></div>
@@ -337,7 +338,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 
 <!-- ═══════════════════════════════ SUBJECT SELECTION ═══════════════════════════════ -->
-<div class="page" id="page-select" style="display:none">
+<div class="page" id="page-select">
   <div style="text-align:center;margin-bottom:32px">
     <div style="font-size:48px;margin-bottom:8px">📚</div>
     <h2 style="font-size:24px">เลือกวิชาที่จะสอบ</h2>
@@ -453,12 +454,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   <div class="grid2" style="margin-bottom:16px">
     <div class="card">
       <div class="card-title">📊 Progress รายวิชา</div>
-      <div id="subj-progress-list">
-        <div class="subj-progress"><div class="subj-header"><span class="subj-name c-tgat">TGAT</span><span class="subj-pct" id="prog-tgat-pct">0%</span></div><div class="prog-track"><div class="prog-fill" id="prog-tgat" style="width:0%;background:var(--amber)"></div></div></div>
-        <div class="subj-progress"><div class="subj-header"><span class="subj-name c-tpat">TPAT 3</span><span class="subj-pct" id="prog-tpat-pct">0%</span></div><div class="prog-track"><div class="prog-fill" id="prog-tpat" style="width:0%;background:var(--purple2)"></div></div></div>
-        <div class="subj-progress"><div class="subj-header"><span class="subj-name c-phys">Physics</span><span class="subj-pct" id="prog-phys-pct">0%</span></div><div class="prog-track"><div class="prog-fill" id="prog-phys" style="width:0%;background:var(--teal2)"></div></div></div>
-        <div class="subj-progress"><div class="subj-header"><span class="subj-name c-math">Math 1</span><span class="subj-pct" id="prog-math-pct">0%</span></div><div class="prog-track"><div class="prog-fill" id="prog-math" style="width:0%;background:var(--blue2)"></div></div></div>
-      </div>
+      <div id="dash-progress-container"><p style="color:var(--text3);font-size:12px">กำลังโหลด...</p></div>
     </div>
     <div class="card">
       <div class="card-title">💡 แนะนำวันนี้</div>
@@ -584,10 +580,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
       <div class="form-group">
         <label>วิชาที่กำลังอ่าน</label>
         <select id="timer-subject">
-          <option value="tgat">TGAT</option>
-          <option value="tpat">TPAT 3</option>
-          <option value="phys">A-Level Physics</option>
-          <option value="math">A-Level Math 1</option>
+          <option value="">-- เลือกวิชา --</option>
         </select>
       </div>
       <div class="form-group">
@@ -630,10 +623,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
       <div class="form-group">
         <label>วิชา</label>
         <select id="log-subject">
-          <option value="tgat">TGAT</option>
-          <option value="tpat">TPAT 3</option>
-          <option value="phys">A-Level Physics</option>
-          <option value="math">A-Level Math 1</option>
+          <option value="">-- เลือกวิชา --</option>
         </select>
       </div>
       <div class="form-group">
@@ -804,6 +794,17 @@ const ACHIEVEMENTS_DEF=[
   {id:'all4',icon:'⭐',name:'นักเรียนรอบด้าน',desc:'เรียนครบทุกวิชาที่เลือก',cond:s=>s.subjTouched>=s.totalSubj},
 ];
 
+// Weekly plan template (จ-อา) — sessions ใช้ cls ของกลุ่มวิชา dynamic
+const WEEK_PLAN=[
+  {day:'จันทร์', target:4, sessions:[{cls:'tgat',label:'TGAT',h:'2h'},{cls:'tpat',label:'TPAT',h:'2h'}]},
+  {day:'อังคาร', target:5, sessions:[{cls:'tgat',label:'A-Level วิทย์/คณิต',h:'3h'},{cls:'tpat',label:'TGAT',h:'2h'}]},
+  {day:'พุธ',   target:4, sessions:[{cls:'tpat',label:'TPAT',h:'2h'},{cls:'tgat',label:'A-Level',h:'2h'}]},
+  {day:'พฤหัส', target:5, sessions:[{cls:'tgat',label:'A-Level วิทย์/คณิต',h:'3h'},{cls:'tpat',label:'ทบทวน',h:'2h'}]},
+  {day:'ศุกร์', target:3, sessions:[{cls:'review',label:'ทบทวนรวม',h:'3h'}]},
+  {day:'เสาร์', target:6, sessions:[{cls:'mock',label:'ทำข้อสอบเก่า',h:'4h'},{cls:'tgat',label:'เสริมจุดอ่อน',h:'2h'}]},
+  {day:'อาทิตย์',target:3, sessions:[{cls:'review',label:'พักผ่อน/ทบทวนเบาๆ',h:'2h'},{cls:'tgat',label:'วางแผนสัปดาห์',h:'1h'}]},
+];
+
 let data = window.data || {
   logs:[], chapters:{}, streak:0, bestStreak:0, lastStudyDate:null, pomoDone:0, dailyGoal:4,
   selectedSubjects:[], onboarded:false
@@ -818,10 +819,14 @@ function ensureChapters(){if(!data.chapters)data.chapters={};(data.selectedSubje
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('page-'+id).classList.add('active');
-  document.querySelectorAll('.nav-tab').forEach(t=>{if(t.textContent.trim()===({dashboard:'Dashboard',plan:'แผนอ่าน',timer:'จับเวลา',log:'บันทึก',subjects:'เนื้อหา',analysis:'วิเคราะห์',goals:'เป้าหมาย'}[id]))t.classList.add('active')});
+  const pageEl=document.getElementById('page-'+id);
+  if(pageEl)pageEl.classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t=>{
+    if(t.getAttribute('onclick')===`showPage('${id}')`)t.classList.add('active');
+  });
   if(id==='analysis')renderAnalysis();
   if(id==='dashboard')renderDashboard();
+  if(id==='select')renderSelectPage();
 }
 
 // ═══════════════════════════ COUNTDOWN ═══════════════════════════
@@ -864,7 +869,7 @@ function addLog(){
   const subj=document.getElementById('log-subject').value;
   const hours=parseFloat(document.getElementById('log-hours').value)||0;
   const note=document.getElementById('log-note').value;
-  if(!date||hours<=0){showToast('กรุณากรอกข้อมูลให้ครบ');return;}
+  if(!date||hours<=0||!subj){showToast('กรุณากรอกข้อมูลให้ครบ');return;}
   data.logs.push({id:Date.now(),date,subj,hours,note});
   data.logs.sort((a,b)=>b.date.localeCompare(a.date));
   updateStreak(date);
@@ -944,7 +949,7 @@ function fabQuickAdd(subj,hours){
   data.logs.push({id:Date.now(),date:today,subj,hours,note:'Quick Add 📱',source:'quick'});
   data.logs.sort((a,b)=>b.date.localeCompare(a.date));
   updateStreak(today);save();renderDashboard();renderLog();
-  toggleFabMenu();showToast(`⚡ ${names[subj]} +${hours}h`);
+  toggleFabMenu();showToast(`⚡ ${s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')} +${hours}h`);
 }
 // ═══════════════════════════ DAILY GOAL ═══════════════════════════
 function setDailyGoal(val){
@@ -975,8 +980,8 @@ function renderDailyRing(){
 }
 // ═══════════════════════════ HIGHLIGHTS ═══════════════════════════
 function renderHighlights(){
-  const subs = getSelectedSubjects();
-  if(!subs.length) return;
+  const activeSubs=getActiveSubjectsData();
+  const nameMap={};Object.entries(activeSubs).forEach(([k,s])=>nameMap[k]=s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,''));
   // Best day
   const dayMap={};
   data.logs.forEach(l=>{dayMap[l.date]=(dayMap[l.date]||0)+l.hours;});
@@ -991,28 +996,19 @@ function renderHighlights(){
   }
   // Weakest subject
   const subj=getHoursBySubj();const total=Object.values(subj).reduce((a,b)=>a+b,0)||1;
-  let totalEst = 0;
-  const targets = {};
-  subs.forEach(s => { const est = getEstimatedHours(s.id); targets[s.id] = est; totalEst += est; });
+  const activeKeys=Object.keys(activeSubs);
+  const equalShare=activeKeys.length?1/activeKeys.length:0.25;
+  const targets={};activeKeys.forEach(k=>targets[k]=equalShare);
   let weakest=null,maxDiff=0;
-  subs.forEach(s => {
-    const targetPct = targets[s.id] / (totalEst||1);
-    const actualPct = (subj[s.id]||0) / total;
-    const diff = targetPct - actualPct;
-    if(diff > maxDiff) { maxDiff = diff; weakest = s; }
+  activeKeys.forEach(k=>{
+    const diff=(targets[k]||0)-(subj[k]||0)/total;
+    if(diff>maxDiff){maxDiff=diff;weakest=k;}
   });
-
-  if(weakest && maxDiff > 0.05){
-    const targetPct = Math.round((targets[weakest.id]/(totalEst||1))*100);
-    const actualPct = Math.round(((subj[weakest.id]||0)/total)*100);
-    document.getElementById('weak-subj-text').textContent = weakest.icon + ' ' + weakest.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'');
-    document.getElementById('weak-subj-text').style.color = weakest.color;
-    document.getElementById('highlight-weak').style.borderLeftColor = weakest.color;
-    document.getElementById('weak-subj-sub').textContent=`เป้า ${targetPct}% — ทำได้ ${actualPct}%`;
+  if(weakest&&maxDiff>0.05){
+    document.getElementById('weak-subj-text').textContent=nameMap[weakest]||weakest;
+    document.getElementById('weak-subj-sub').textContent=`เป้า ${Math.round((targets[weakest]||0)*100)}% — ทำได้ ${Math.round((subj[weakest]||0)/total*100)}%`;
   }else{
     document.getElementById('weak-subj-text').textContent='สมดุลดี ✅';
-    document.getElementById('weak-subj-text').style.color='var(--green2)';
-    document.getElementById('highlight-weak').style.borderLeftColor='var(--green)';
     document.getElementById('weak-subj-sub').textContent='ทุกวิชาอยู่ในเกณฑ์';
   }
 }
@@ -1026,23 +1022,25 @@ function renderDashboard(){
   document.getElementById('dash-total-hours').textContent=total.toFixed(1);
   const days=new Set(data.logs.map(l=>l.date)).size;
   document.getElementById('dash-avg').textContent=days?+(total/days).toFixed(1):0;
-  const subs = getSelectedSubjects();
-  let chapsDone=0;
-  subs.forEach(s => { chapsDone += (data.chapters[s.id]||[]).length; });
+  const chapsDone=Object.values(data.chapters).reduce((a,b)=>a+b.length,0);
   document.getElementById('dash-chapters').textContent=chapsDone;
 
-  // progress per subject
-  const progList = document.getElementById('subj-progress-list');
-  if (progList) {
-    if(!subs.length) { progList.innerHTML = '<div style="font-size:12px;color:var(--text3)">ยังไม่ได้เลือกวิชา</div>'; }
-    else {
-      progList.innerHTML = subs.map(s => {
-        const total_ch = s.chapters.length;
-        const done = (data.chapters[s.id] || []).length;
-        const pct = total_ch ? Math.round(done/total_ch*100) : 0;
-        return `<div class="subj-progress"><div class="subj-header"><span class="subj-name" style="color:${s.color}">${s.icon} ${s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')}</span><span class="subj-pct">${pct}%</span></div><div class="prog-track"><div class="prog-fill" style="width:${pct}%;background:${s.color}"></div></div></div>`;
-      }).join('');
-    }
+  // progress per subject (dynamic)
+  const SUBJECTS_DATA_DASH=getActiveSubjectsData();
+  const progContainer=document.getElementById('dash-progress-container');
+  if(progContainer){
+    progContainer.innerHTML=Object.entries(SUBJECTS_DATA_DASH).map(([k,s])=>{
+      const done=(data.chapters[k]||[]).length;
+      const total=s.chapters.length;
+      const pct=total?Math.round(done/total*100):0;
+      return`<div class="subj-progress">
+        <div class="subj-header">
+          <span class="subj-name" style="color:${s.color}">${s.icon} ${s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')}</span>
+          <span class="subj-pct" style="color:${s.color}">${pct}%</span>
+        </div>
+        <div class="prog-track"><div class="prog-fill" style="width:${pct}%;background:${s.color}"></div></div>
+      </div>`;
+    }).join('')||'<p style="color:var(--text3);font-size:12px">ยังไม่ได้เลือกวิชา</p>';
   }
 
   // Daily ring + highlights
@@ -1062,82 +1060,74 @@ function renderDashboard(){
   renderRecommendation();renderPrediction();
 }
 function renderLogChart(){
+  const activeSubs=getActiveSubjectsData();
   const subj=getHoursBySubj();
-  const subs=getSelectedSubjects();
-  if(!subs.length) return;
-  const labels = subs.map(s => s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,''));
-  const vals = subs.map(s => subj[s.id] || 0);
-  const colors = subs.map(s => s.color + '99');
-  
+  const activeKeys=Object.keys(activeSubs);
+  if(!activeKeys.length)return;
+  const labels=activeKeys.map(k=>activeSubs[k].name.replace(/^(TGAT|TPAT|A-Level)\s*/,''));
+  const dataVals=activeKeys.map(k=>subj[k]||0);
+  const bgColors=activeKeys.map(k=>(activeSubs[k].color||'#888')+'99');
   const ctx2=document.getElementById('logWeekChart').getContext('2d');
   if(logWeekChart)logWeekChart.destroy();
-  logWeekChart=new Chart(ctx2,{type:'doughnut',data:{labels,datasets:[{data:vals,backgroundColor:colors,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',font:{size:11}}}}}});
+  logWeekChart=new Chart(ctx2,{type:'doughnut',data:{labels,datasets:[{data:dataVals,backgroundColor:bgColors,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',font:{size:11}}}}}});
 }
 
 // ═══════════════════════════ SMART RECOMMENDATION ═══════════════════════════
 function renderRecommendation(){
   const box=document.getElementById('today-rec');
+  const activeSubs=getActiveSubjectsData();
+  if(!Object.keys(activeSubs).length){box.innerHTML='<p style="color:var(--text3);font-size:12px">เลือกวิชาก่อนเพื่อดูคำแนะนำ</p>';return;}
   const subj=getHoursBySubj();
   const total=Object.values(subj).reduce((a,b)=>a+b,0)||1;
-  const subs = getSelectedSubjects();
-  if(!subs.length) { box.innerHTML = '<div style="font-size:12px;color:var(--text3)">เลือกวิชาก่อน</div>'; return; }
-  
-  let totalEst = 0;
-  subs.forEach(s => totalEst += getEstimatedHours(s.id));
-  
-  const scores = subs.map(s => {
-    const target = getEstimatedHours(s.id) / (totalEst||1);
-    const gap = target - ((subj[s.id]||0)/total);
-    const examDays = daysUntil(s.examDate) || 1;
-    const urgency = gap * (300/examDays);
-    return { s, gap, urgency, examDays };
-  }).sort((a,b)=>b.urgency-a.urgency);
-
-  const plan = generateWeekPlan();
-  const day=new Date().getDay();
-  const dayPlan=plan[day===0?6:day-1];
+  const activeKeys=Object.keys(activeSubs);
+  const equalShare=1/activeKeys.length;
   const priorityLabels=['🔴 สำคัญมาก','🟡 สำคัญ','🟢 ปกติ'];
-
+  const scores=activeKeys.map(k=>{
+    const s=TCAS_SUBJECTS[k];
+    const gap=equalShare-(subj[k]||0)/total;
+    const examDays=s?daysUntil(s.examDate)||1:100;
+    return{key:k,gap,urgency:gap*(300/examDays),examDays,s:activeSubs[k]};
+  }).sort((a,b)=>b.urgency-a.urgency);
+  const day=new Date().getDay();
+  const dayPlan=WEEK_PLAN[day===0?6:day-1];
   box.innerHTML=scores.slice(0,3).map((item,i)=>{
     const gapPct=Math.abs(Math.round(item.gap*100));
-    const desc=item.gap>0.05?`ขาดอีก ${gapPct}% จากเป้า · สอบอีก ${item.examDays} วัน`
-      :`อยู่ในเป้า ✅ · สอบอีก ${item.examDays} วัน`;
+    const desc=item.gap>0.05?`ขาดอีก ${gapPct}% จากเป้า · สอบอีก ${item.examDays} วัน`:`อยู่ในเป้า ✅ · สอบอีก ${item.examDays} วัน`;
     return`<div class="rec-item">
       <div class="rec-icon" style="background:${item.s.color}20">${item.s.icon}</div>
       <div>
-        <div class="rec-title">${item.s.name} <span style="font-size:10px;color:var(--text3)">${priorityLabels[Math.min(i,2)]}</span></div>
+        <div class="rec-title">${item.s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')} <span style="font-size:10px;color:var(--text3)">${priorityLabels[Math.min(i,2)]}</span></div>
         <div class="rec-desc">${desc}</div>
       </div>
     </div>`;
-  }).join('')+`<div style="font-size:11px;color:var(--text3);margin-top:8px">📅 แผนวันนี้: ${dayPlan?dayPlan.sessions.map(s=>s.label+' '+s.h).join(' · '):'—'}</div>`;
+  }).join('')+(dayPlan?`<div style="font-size:11px;color:var(--text3);margin-top:8px">📅 แผนวันนี้: ${dayPlan.sessions.map(s=>s.label+' '+s.h).join(' · ')}</div>`:'');
 }
 function renderPrediction(){
   const box=document.getElementById('prediction-box');
-  const subs = getSelectedSubjects();
-  if(!subs.length) return;
   const studyDays=new Set(data.logs.map(l=>l.date)).size;
   const total=data.logs.reduce((a,b)=>a+b.hours,0);
   const avgPerDay=studyDays?total/studyDays:0;
-  
-  let targetTotal = 0;
-  subs.forEach(s => targetTotal += getEstimatedHours(s.id));
-  
+  const targetTotal=500;
+  const activeSubs=getActiveSubjectsData();
   const subj=getHoursBySubj();
+  const activeKeys=Object.keys(activeSubs);
   let perSubjHTML='';
-  subs.forEach(s => {
-    const done=subj[s.id]||0;
-    const need=getEstimatedHours(s.id);
-    const examDays=daysUntil(s.examDate)||1;
-    const remaining=Math.max(0,need-done);
-    const reqDaily=remaining/examDays;
-    const ok=remaining<=0||reqDaily<=avgPerDay*(need/targetTotal*1.5);
-    perSubjHTML+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px">
-      <span style="color:${s.color}">${s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')}</span>
-      <span style="color:${ok?'var(--green2)':'var(--red2)'}">${done.toFixed(0)}/${need}h ${ok?'✅':'⚠️ +'+reqDaily.toFixed(1)+'h/d'}</span>
-    </div>`;
-  });
-  
-  const daysLeft = Math.min(...subs.map(s => daysUntil(s.examDate) || 1));
+  if(activeKeys.length){
+    const hoursPerSubj=Math.round(targetTotal/activeKeys.length);
+    activeKeys.forEach(k=>{
+      const s=activeSubs[k];const tcas=TCAS_SUBJECTS[k];
+      const done=subj[k]||0;const need=hoursPerSubj;
+      const examDays=tcas?daysUntil(tcas.examDate)||1:100;
+      const remaining=Math.max(0,need-done);
+      const reqDaily=remaining/examDays;
+      const ok=remaining<=0||reqDaily<=avgPerDay*0.4;
+      perSubjHTML+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px">
+        <span style="color:${s.color}">${s.icon} ${s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')}</span>
+        <span style="color:${ok?'var(--green2)':'var(--red2)'}">${done.toFixed(0)}/${need}h ${ok?'✅':'⚠️ +'+reqDaily.toFixed(1)+'h/d'}</span>
+      </div>`;
+    });
+  }
+  const daysLeft=daysUntil('2027-01-30');
   const projectedTotal=total+avgPerDay*daysLeft;
   const onTrack=projectedTotal>=targetTotal;
   box.innerHTML=`
@@ -1149,51 +1139,17 @@ function renderPrediction(){
 }
 
 // ═══════════════════════════ WEEKLY PLAN ═══════════════════════════
-function generateWeekPlan() {
-  const subs = getSelectedSubjects();
-  if(!subs.length) return [];
-  // Sort subjects by urgency (difficulty / days until exam)
-  const sortedSubs = [...subs].sort((a,b) => {
-    const aUrgency = a.difficulty / (daysUntil(a.examDate) || 1);
-    const bUrgency = b.difficulty / (daysUntil(b.examDate) || 1);
-    return bUrgency - aUrgency;
-  });
-  
-  const weekDays = ['จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์','อาทิตย์'];
-  const plan = [];
-  
-  for(let i=0; i<7; i++) {
-    const isWeekend = (i === 5 || i === 6);
-    const target = isWeekend ? 6 : 4;
-    const sessions = [];
-    
-    // Pick 2 subjects for weekdays, 3 for weekends
-    const numSubs = isWeekend ? 3 : 2;
-    for(let j=0; j<numSubs; j++) {
-       const s = sortedSubs[(i + j) % sortedSubs.length];
-       if(s) sessions.push({ label: s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,''), color: s.color, h: isWeekend ? '2h' : '1.5h' });
-    }
-    sessions.push({ label: isWeekend ? 'Mock Test' : 'ทบทวน', color: 'var(--green2)', h: isWeekend ? '2h' : '1h' });
-    
-    plan.push({ day: weekDays[i], sessions, target });
-  }
-  return plan;
-}
-
 function renderWeekPlan(){
   const grid=document.getElementById('week-grid');
-  const plan = generateWeekPlan();
-  if(!plan.length) { grid.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:20px;grid-column:1/-1;text-align:center">เลือกวิชาก่อน</div>'; return; }
-  
   const today=new Date().getDay();// 0=sun,1=mon
   const startOfWeek=new Date();startOfWeek.setDate(startOfWeek.getDate()-(today===0?6:today-1));
-  grid.innerHTML=plan.map((d,i)=>{
+  grid.innerHTML=WEEK_PLAN.map((d,i)=>{
     const date=new Date(startOfWeek);date.setDate(date.getDate()+i);
     const isToday=date.toDateString()===new Date().toDateString();
     return`<div class="day-card ${isToday?'today':''}">
       <div class="day-name">${d.day}</div>
       <div class="day-date">${date.getDate()}/${date.getMonth()+1}</div>
-      ${d.sessions.map(s=>`<div class="session" style="background:${s.color}15;color:${s.color};border:1px solid ${s.color}30">${s.label}<br><small>${s.h}</small></div>`).join('')}
+      ${d.sessions.map(s=>`<div class="session ${s.cls}">${s.label}<br><small>${s.h}</small></div>`).join('')}
       <div class="day-hours">เป้า ${d.target}h</div>
     </div>`;
   }).join('');
@@ -1201,25 +1157,28 @@ function renderWeekPlan(){
 
 // ═══════════════════════════ SUBJECTS/CHAPTERS ═══════════════════════════
 function renderSubjects(){
+  ensureChapters();
   const grid=document.getElementById('subjects-grid');
-  const subs = getSelectedSubjects();
-  if(!subs.length) { grid.innerHTML = '<div style="font-size:13px;color:var(--text3);grid-column:1/-1;text-align:center;padding:40px">กรุณาเลือกวิชาที่หน้า Dashboard</div>'; return; }
-  
-  grid.innerHTML=subs.map(s => {
-    const done=(data.chapters[s.id]||[]).length;
+  const SUBJECTS_DATA=getActiveSubjectsData();
+  if(!Object.keys(SUBJECTS_DATA).length){
+    grid.innerHTML='<div class="card" style="grid-column:1/-1;text-align:center;padding:40px"><p style="color:var(--text3)">ยังไม่ได้เลือกวิชา — กรุณาเลือกวิชาที่ต้องการเรียนก่อน</p></div>';
+    return;
+  }
+  grid.innerHTML=Object.entries(SUBJECTS_DATA).map(([k,s])=>{
+    const done=(data.chapters[k]||[]).length;
     const total=s.chapters.length;
-    const pct=Math.round(done/total*100) || 0;
+    const pct=total?Math.round(done/total*100):0;
     return`<div class="card">
-      <div class="card-title" style="color:${s.color}">${s.icon} ${s.name}</div>
+      <div class="card-title" style="color:${s.color}">${s.name}</div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <span style="font-size:12px;color:var(--text2)">${done}/${total} บท</span>
         <span style="font-size:14px;font-weight:700;color:${s.color}">${pct}%</span>
       </div>
       <div class="prog-track" style="margin-bottom:14px"><div class="prog-fill" style="width:${pct}%;background:${s.color}"></div></div>
       ${s.chapters.map((ch,i)=>{
-        const isDone=(data.chapters[s.id]||[]).includes(i);
-        return`<div class="chapter-item" onclick="toggleChapter('${s.id}',${i})">
-          <div class="chapter-check ${isDone?'done':''}" style="border-color:${isDone?s.color:'var(--border2)'};background:${isDone?s.color:'transparent'}">${isDone?'<svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}</div>
+        const isDone=(data.chapters[k]||[]).includes(i);
+        return`<div class="chapter-item" onclick="toggleChapter('${k}',${i})">
+          <div class="chapter-check ${isDone?'done':''}">${isDone?'<svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}</div>
           <div class="chapter-title ${isDone?'done':''}">${ch}</div>
         </div>`;
       }).join('')}
@@ -1227,6 +1186,8 @@ function renderSubjects(){
   }).join('');
 }
 function toggleChapter(subj,idx){
+  ensureChapters();
+  if(!data.chapters[subj])data.chapters[subj]=[];
   const arr=data.chapters[subj];
   const pos=arr.indexOf(idx);
   if(pos>=0)arr.splice(pos,1);else arr.push(idx);
@@ -1236,20 +1197,15 @@ function toggleChapter(subj,idx){
 // ═══════════════════════════ ANALYSIS ═══════════════════════════
 function renderAnalysis(){
   const subj=getHoursBySubj();
-  const subs=getSelectedSubjects();
-  
+  const activeSubs=getActiveSubjectsData();
+  const activeKeys=Object.keys(activeSubs);
+  // Subject hours bar chart (dynamic)
   const ctx1=document.getElementById('subjectHoursChart').getContext('2d');
   if(subjectChart)subjectChart.destroy();
-  if(subs.length > 0) {
-    const labels = subs.map(s => s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,''));
-    const vals = subs.map(s => subj[s.id]||0);
-    const colors = subs.map(s => s.color);
-    
-    subjectChart=new Chart(ctx1,{type:'bar',data:{
-      labels,
-      datasets:[{data:vals,backgroundColor:colors,borderRadius:8,borderSkipped:false}]
-    },options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#2a3348'},ticks:{color:'#5c6b88'}},y:{grid:{display:false},ticks:{color:'#94a3b8'}}}}});
-  }
+  subjectChart=new Chart(ctx1,{type:'bar',data:{
+    labels:activeKeys.map(k=>activeSubs[k].name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')),
+    datasets:[{data:activeKeys.map(k=>subj[k]||0),backgroundColor:activeKeys.map(k=>activeSubs[k].color||'#888'),borderRadius:8,borderSkipped:false}]
+  },options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#2a3348'},ticks:{color:'#5c6b88'}},y:{grid:{display:false},ticks:{color:'#94a3b8'}}}}});
 
   // Daily last 30
   const days30=[];const now=new Date();
@@ -1264,41 +1220,35 @@ function renderAnalysis(){
 
   // Plan vs actual
   const last7=getHoursLast7();
-  const plan = generateWeekPlan();
+  const planned=WEEK_PLAN.map(d=>d.target);
   const day=new Date().getDay();
   const reorderedPlanned=[];
-  for(let i=0;i<7;i++){const idx=(day===0?6:day-1+i)%7;reorderedPlanned.push(plan.length ? plan[idx].target : 4);}
+  for(let i=0;i<7;i++){const idx=(day===0?6:day-1+i)%7;reorderedPlanned.push(WEEK_PLAN[idx].target);}
   const ctx3=document.getElementById('planVsActualChart').getContext('2d');
   if(planVsChart)planVsChart.destroy();
   planVsChart=new Chart(ctx3,{type:'bar',data:{
     labels:last7.map(d=>{const dt=new Date(d.date);return['อา','จ','อ','พ','พฤ','ศ','ส'][dt.getDay()]}),
     datasets:[
-      {label:'เป้า',data:reorderedPlanned,backgroundColor:'rgba(94,94,120,0.4)',borderRadius:4,borderSkipped:false},
+      {label:'เป้า',data:WEEK_PLAN.map(d=>d.target),backgroundColor:'rgba(94,94,120,0.4)',borderRadius:4,borderSkipped:false},
       {label:'จริง',data:last7.map(d=>d.hours),backgroundColor:'rgba(245,158,11,0.75)',borderRadius:4,borderSkipped:false}
     ]
   },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{color:'#94a3b8',font:{size:11}}}},scales:{x:{grid:{display:false},ticks:{color:'#5c6b88'}},y:{grid:{color:'#2a3348'},ticks:{color:'#5c6b88'},beginAtZero:true}}}});
 
-  renderInsights(subj,dailyVals,plan);
+  renderInsights(subj,dailyVals);
 }
-
-function renderInsights(subj,dailyVals,plan){
+function renderInsights(subj,dailyVals){
   const box=document.getElementById('insights-box');
-  const subs = getSelectedSubjects();
   const total=Object.values(subj).reduce((a,b)=>a+b,0)||1;
   const insights=[];
-  
-  if(!subs.length) { box.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:10px">เลือกวิชาก่อน</div>'; return; }
-
-  let totalEst = 0;
-  subs.forEach(s => totalEst += getEstimatedHours(s.id));
-  
+  const activeSubs=getActiveSubjectsData();
+  const activeKeys=Object.keys(activeSubs);
+  const equalShare=activeKeys.length?1/activeKeys.length:0.25;
   // 1. Weak subject alerts
-  subs.forEach(s=>{
-    const target = getEstimatedHours(s.id) / (totalEst||1);
-    const actual = (subj[s.id]||0) / total;
-    if(actual < target - 0.08){
-      const diff=Math.round((target-actual)*100);
-      insights.push({icon:'⚠️',title:`${s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')} น้อยกว่าแผน ${diff}%`,desc:`ทำได้ ${Math.round(actual*100)}% (เป้า ${Math.round(target*100)}%)`});
+  activeKeys.forEach(k=>{
+    const actual=(subj[k]||0)/total;
+    if(actual<equalShare-0.08){
+      const diff=Math.round((equalShare-actual)*100);
+      insights.push({icon:'⚠️',title:`${activeSubs[k].name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')} น้อยกว่าแผน ${diff}%`,desc:`ทำได้ ${Math.round(actual*100)}% (เป้า ${Math.round(equalShare*100)}%)`});
     }
   });
   // 2. Productive day analysis
@@ -1311,12 +1261,12 @@ function renderInsights(subj,dailyVals,plan){
   // 3. Plan vs actual
   const last7=getHoursLast7();
   const weekActual=last7.reduce((a,b)=>a+b.hours,0);
-  const weekTarget=plan.reduce((a,b)=>a+b.target,0) || 28;
+  const weekTarget=WEEK_PLAN.reduce((a,b)=>a+b.target,0);
   if(weekTarget>0){
     const completion=Math.round(weekActual/weekTarget*100);
     insights.push({icon:completion>=80?'✅':'📊',title:`สัปดาห์นี้ ${completion}% ของแผน`,desc:`${weekActual.toFixed(1)}h / ${weekTarget}h`});
   }
-  // 4. Trend
+  // 4. Trend (this vs last week)
   if(dailyVals.length>=14){
     const tw=dailyVals.slice(-7).reduce((a,b)=>a+b,0);
     const lw=dailyVals.slice(-14,-7).reduce((a,b)=>a+b,0);
@@ -1346,20 +1296,13 @@ function renderGoals(){
   }).join('');
 
   // Milestones
-  const subs = getSelectedSubjects();
-  let chapsDone = 0;
-  let totalChs = 0;
-  let totalEst = 0;
-  subs.forEach(s => {
-    chapsDone += (data.chapters[s.id]||[]).length;
-    totalChs += s.chapters.length;
-    totalEst += getEstimatedHours(s.id);
-  });
+  const chapsDone=Object.values(data.chapters).reduce((a,b)=>a+b.length,0);
+  const totalChs=Object.values(getActiveSubjectsData()).reduce((a,b)=>a+b.chapters.length,0);
   const totalHours=data.logs.reduce((a,b)=>a+b.hours,0);
   const milestones=[
     {name:'อ่านครบ 50 ชั่วโมง',target:50,current:Math.min(totalHours,50),unit:'h'},
-    {name:'อ่านครบครึ่งทาง',target:Math.ceil(totalEst/2),current:Math.min(totalHours,Math.ceil(totalEst/2)),unit:'h'},
-    {name:'บรรลุเป้าหมายอ่านครบ',target:totalEst,current:Math.min(totalHours,totalEst),unit:'h'},
+    {name:'อ่านครบ 200 ชั่วโมง',target:200,current:Math.min(totalHours,200),unit:'h'},
+    {name:'อ่านครบ 500 ชั่วโมง',target:500,current:Math.min(totalHours,500),unit:'h'},
     {name:'อ่านครบทุกบทเรียน',target:totalChs,current:chapsDone,unit:'บท'},
     {name:'Streak 7 วัน',target:7,current:Math.min(data.streak,7),unit:'วัน'},
     {name:'Streak 30 วัน',target:30,current:Math.min(data.streak,30),unit:'วัน'},
@@ -1375,7 +1318,7 @@ function renderGoals(){
   }).join('');
 
   // Achievements
-  const state={streak:data.streak,totalHours,chapsDone,totalLogs:data.logs.length,subjTouched:Object.keys(getHoursBySubj()).filter(k=>getHoursBySubj()[k]>0).length,totalSubj:subs.length};
+  const state={streak:data.streak,totalHours,chapsDone,totalLogs:data.logs.length,subjTouched:Object.keys(getHoursBySubj()).filter(k=>getHoursBySubj()[k]>0).length};
   document.getElementById('achievements-grid').innerHTML=ACHIEVEMENTS_DEF.map(a=>{
     const unlocked=a.cond(state);
     return`<div class="achievement ${unlocked?'':'ach-locked'}">
@@ -1409,15 +1352,12 @@ function updateTimerDisplay(){
   // today sessions
   const box=document.getElementById('today-sessions');
   if(!pomoState.todaySessions.length){box.innerHTML='<div style="font-size:13px;color:var(--text3);padding:20px 0;text-align:center">ยังไม่มีเซสชัน<br>กดเริ่มเพื่อเริ่มจับเวลา</div>';return;}
-  box.innerHTML=pomoState.todaySessions.map(s=>{
-    const subjData = TCAS_SUBJECTS[s.subj];
-    const color = subjData ? subjData.color : 'var(--amber)';
-    const name = subjData ? subjData.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'') : s.subj.toUpperCase();
-    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
-    <span style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0"></span>
-    <span style="font-size:12px;flex:1">${name}</span>
+  const colors={tgat:'var(--amber)',tpat:'var(--purple2)',phys:'var(--teal2)',math:'var(--blue2)'};
+  box.innerHTML=pomoState.todaySessions.map(s=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+    <span style="width:8px;height:8px;border-radius:50%;background:${colors[s.subj]};flex-shrink:0"></span>
+    <span style="font-size:12px;flex:1">${s.subj.toUpperCase()}</span>
     <span style="font-size:12px;font-family:'DM Mono';color:var(--amber)">${s.minutes}m</span>
-  </div>`}).join('');
+  </div>`).join('');
   const totalMin=pomoState.todaySessions.reduce((a,b)=>a+b.minutes,0);
   document.getElementById('today-total-timer').textContent=`${Math.floor(totalMin/60)}:${String(totalMin%60).padStart(2,'0')}`;
 }
@@ -1451,104 +1391,91 @@ function timerToggle(){
 }
 function timerReset(){clearInterval(pomoState.interval);pomoState.running=false;pomoState.mode='focus';pomoState.timeLeft=pomoState.focusDuration;updateTimerDisplay();}
 
+// ═══════════════════════════ SUBJECT SELECTION PAGE ═══════════════════════════
+function renderSelectPage(){
+  const container=document.getElementById('select-groups');
+  if(!container)return;
+  const sel=data.selectedSubjects||[];
+  container.innerHTML=Object.values(SUBJECT_GROUPS).map(g=>`
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title" style="color:${g.color}">${g.label}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        ${g.subjects.map(id=>{
+          const s=TCAS_SUBJECTS[id];if(!s)return'';
+          const active=sel.includes(id);
+          return`<button onclick="toggleSelectSubj('${id}')" style="
+            font-family:'Sarabun',sans-serif;font-size:12px;font-weight:600;
+            padding:8px 14px;border-radius:20px;cursor:pointer;transition:all .2s;
+            border:1.5px solid ${active?s.color:' var(--border2)'};
+            background:${active?s.color+'22':'transparent'};
+            color:${active?s.color:'var(--text2)'}
+          ">${s.icon} ${s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')}</button>`;
+        }).join('')}
+      </div>
+    </div>`).join('');
+  updateSelectSummary();
+}
+function toggleSelectSubj(id){
+  if(!data.selectedSubjects)data.selectedSubjects=[];
+  const idx=data.selectedSubjects.indexOf(id);
+  if(idx>=0)data.selectedSubjects.splice(idx,1);
+  else data.selectedSubjects.push(id);
+  renderSelectPage();
+}
+function updateSelectSummary(){
+  const el=document.getElementById('select-summary');
+  if(!el)return;
+  const sel=data.selectedSubjects||[];
+  if(!sel.length){el.textContent='ยังไม่ได้เลือกวิชา';return;}
+  const total=sel.reduce((a,id)=>a+getEstimatedHours(id),0);
+  el.textContent=`เลือก ${sel.length} วิชา · ประมาณ ${total} ชั่วโมง`;
+}
+function confirmSubjects(){
+  if(!(data.selectedSubjects||[]).length){showToast('กรุณาเลือกอย่างน้อย 1 วิชา');return;}
+  ensureChapters();
+  data.onboarded=true;
+  save();
+  renderSubjectSelects();
+  renderQuickAddChips();
+  renderFabMenu();
+  showToast('✅ บันทึกวิชาที่เลือกแล้ว');
+  showPage('dashboard');
+}
+
+// ═══════════════════════════ SUBJECT SELECTS ═══════════════════════════
+function renderSubjectSelects(){
+  const subs=getSelectedSubjects();
+  const opts=subs.length
+    ? subs.map(s=>`<option value="${s.id}">${s.icon} ${s.name}</option>`).join('')
+    : '<option value="">-- ยังไม่ได้เลือกวิชา --</option>';
+  ['log-subject','timer-subject'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.innerHTML=opts;}
+  });
+}
+
 // ═══════════════════════════ TOAST ═══════════════════════════
 function showToast(msg){
   const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2500);
 }
 
-// ═══════════════════════════ SUBJECT SELECTION UI ═══════════════════════════
-function renderSubjectSelection() {
-  const box = document.getElementById('select-groups');
-  if(!box) return;
-  box.innerHTML = SUBJECT_GROUPS.map(g => `
-    <div style="margin-bottom:24px;text-align:left">
-      <div style="font-size:14px;font-weight:700;color:${g.color};margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border2)">${g.label}</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px">
-        ${g.subjects.map(sid => {
-          const s = TCAS_SUBJECTS[sid];
-          const isSelected = data.selectedSubjects.includes(sid);
-          return `<div class="card-sm subject-select-card ${isSelected?'selected':''}" style="cursor:pointer;border-color:${isSelected?s.color:'var(--border)'};background:${isSelected?s.color+'15':'var(--bg3)'};transition:all .2s;display:flex;align-items:center;gap:12px;padding:12px" onclick="toggleSelectSubject('${sid}', this)">
-            <div style="font-size:24px">${s.icon}</div>
-            <div style="flex:1">
-              <div style="font-size:13px;font-weight:600;color:${isSelected?s.color:'var(--text)'}">${s.name}</div>
-              <div style="font-size:11px;color:var(--text3)">${s.chapters.length} บทเรียน</div>
-            </div>
-            <div class="check-icon" style="width:20px;height:20px;border-radius:50%;border:2px solid ${isSelected?s.color:'var(--border2)'};display:flex;align-items:center;justify-content:center;background:${isSelected?s.color:'transparent'}">
-              ${isSelected?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>':''}
-            </div>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>
-  `).join('');
-  updateSelectSummary();
-}
-
-function toggleSelectSubject(sid, el) {
-  const idx = data.selectedSubjects.indexOf(sid);
-  if (idx > -1) data.selectedSubjects.splice(idx, 1);
-  else data.selectedSubjects.push(sid);
-  renderSubjectSelection();
-}
-
-function updateSelectSummary() {
-  const sum = document.getElementById('select-summary');
-  if(!sum) return;
-  const count = data.selectedSubjects.length;
-  if(count === 0) {
-    sum.innerHTML = 'ยังไม่ได้เลือกวิชา';
-  } else {
-    const totalHours = data.selectedSubjects.reduce((acc, sid) => acc + getEstimatedHours(sid), 0);
-    sum.innerHTML = `เลือกแล้ว <strong style="color:var(--amber)">${count} วิชา</strong> · เวลาอ่านโดยประมาณ <strong style="color:var(--amber)">${totalHours} ชั่วโมง</strong>`;
-  }
-}
-
-function confirmSubjects() {
-  if(data.selectedSubjects.length === 0) {
-    showToast('กรุณาเลือกอย่างน้อย 1 วิชา');
-    return;
-  }
-  data.onboarded = true;
-  ensureChapters();
-  save();
-  updateDynamicSelects();
-  renderQuickAddChips();
-  renderFabMenu();
-  showPage('dashboard');
-  showToast('บันทึกวิชาเรียบร้อย เริ่มวางแผนได้เลย! 🎉');
-}
-
-function updateDynamicSelects() {
-  const subs = getSelectedSubjects();
-  const opts = subs.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-  const logSubj = document.getElementById('log-subject');
-  const timerSubj = document.getElementById('timer-subject');
-  if(logSubj) logSubj.innerHTML = opts;
-  if(timerSubj) timerSubj.innerHTML = opts;
-}
-
 // ═══════════════════════════ INIT ═══════════════════════════
 function init(){
   // Set today's date in log form
   document.getElementById('log-date').value=new Date().toISOString().split('T')[0];
-  
-  if(!data.onboarded) {
-    renderSubjectSelection();
+  renderCountdowns();
+  renderSubjectSelects();
+  renderDashboard();
+  renderWeekPlan();
+  renderLog();
+  renderSubjects();
+  renderGoals();
+  updateTimerDisplay();
+  // If no subjects selected yet, redirect to subject selection
+  if(!(data.selectedSubjects||[]).length){
     showPage('select');
-  } else {
-    updateDynamicSelects();
-    renderQuickAddChips();
-    renderFabMenu();
-    renderCountdowns();
-    renderDashboard();
-    renderWeekPlan();
-    renderLog();
-    renderSubjects();
-    renderGoals();
-    updateTimerDisplay();
   }
-  
   // Determine current phase
   const now=new Date();
   let phase='ระยะปูพื้น';
@@ -1586,8 +1513,9 @@ window.qaAddTime = qaAddTime;
 window.toggleFabMenu = toggleFabMenu;
 window.fabQuickAdd = fabQuickAdd;
 window.setDailyGoal = setDailyGoal;
-window.toggleSelectSubject = toggleSelectSubject;
 window.confirmSubjects = confirmSubjects;
+window.toggleSelectSubj = toggleSelectSubj;
+window.renderSubjectSelects = renderSubjectSelects;
 
 init();
 </script>
