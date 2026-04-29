@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>StudyPath — วางแผนสอบ Dek70</title>
+<title>StudyPath — วางแผนสอบวิศวกรรม</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -333,18 +333,171 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 /* STREAK FIRE */
 @keyframes fireGlow{0%,100%{text-shadow:0 0 8px rgba(245,158,11,.5)}50%{text-shadow:0 0 16px rgba(245,158,11,.8),0 0 32px rgba(245,158,11,.3)}}
 .streak-fire{animation:fireGlow 1.5s ease-in-out infinite}
-/* MOBILE FIRST TWEAKS */
-@media(max-width:500px){
-  .grid2{gap:10px}
-  .stat-card{padding:12px}
-  .stat-value{font-size:22px}
-  .cd-days{font-size:24px}
-  h2{font-size:18px}
-  .page{padding:66px 14px 90px}
-  nav{padding:0 10px;height:50px}
-  .nav-brand{font-size:14px;margin-right:6px}
-  .nav-tab{font-size:11px;padding:5px 8px}
-  .phase-badge{display:none}
+/* ═══════════════ BOTTOM NAV ═══════════════ */
+#bottom-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;z-index:150;
+  background:rgba(14,17,23,.97);
+  backdrop-filter:blur(16px);
+  border-top:1px solid var(--border2);
+  height:62px;
+  padding:0 4px;
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  align-items:center;
+  justify-content:space-around;
+}
+.bn-tab{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;flex:1;height:54px;background:none;border:none;cursor:pointer;
+  color:var(--text3);font-family:'Sarabun',sans-serif;font-size:10px;font-weight:600;
+  letter-spacing:.2px;transition:color .15s;padding:0;border-radius:10px;
+  -webkit-tap-highlight-color:transparent;
+}
+.bn-tab svg{transition:transform .15s;}
+.bn-tab.active{color:var(--amber);}
+.bn-tab.active svg{transform:scale(1.12);}
+.bn-center-wrap{flex:1;display:flex;justify-content:center;align-items:center;}
+.bn-center{
+  width:52px;height:52px;border-radius:16px;
+  background:linear-gradient(135deg,var(--amber),var(--amber2));
+  color:#000;font-size:26px;font-weight:700;
+  border:none;cursor:pointer;
+  box-shadow:0 4px 18px rgba(245,158,11,.45);
+  transition:all .18s;display:flex;align-items:center;justify-content:center;
+  -webkit-tap-highlight-color:transparent;
+}
+.bn-center:active{transform:scale(.9);}
+
+/* ═══════════════ BOTTOM SHEETS ═══════════════ */
+.sheet-overlay{
+  position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.55);
+  backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .25s;
+}
+.sheet-overlay.show{opacity:1;pointer-events:auto;}
+.bottom-sheet{
+  position:fixed;bottom:0;left:0;right:0;z-index:301;
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:20px 20px 0 0;
+  padding:12px 20px 24px;
+  padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));
+  transform:translateY(105%);transition:transform .3s cubic-bezier(.32,0,.67,0);
+  max-height:80vh;overflow-y:auto;
+}
+.bottom-sheet.show{transform:translateY(0);transition-timing-function:cubic-bezier(.34,1.56,.64,1);}
+.sheet-handle{
+  width:36px;height:4px;border-radius:2px;background:var(--border2);
+  margin:0 auto 16px;
+}
+.sheet-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:14px;}
+/* More menu grid */
+.more-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:4px;}
+.more-btn{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:14px 8px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:14px;cursor:pointer;font-family:'Sarabun',sans-serif;
+  font-size:12px;font-weight:600;color:var(--text2);
+  transition:all .15s;-webkit-tap-highlight-color:transparent;
+}
+.more-btn:active{transform:scale(.95);background:var(--bg4);}
+.more-btn span{font-size:22px;}
+
+/* ═══════════════ MOBILE OVERRIDES ═══════════════ */
+@media(max-width:768px){
+  /* Hide top nav tabs, keep brand + auth */
+  .nav-tabs{display:none!important}
+  .phase-badge{display:none!important}
+  nav{padding:0 14px;justify-content:space-between;}
+  .nav-brand{margin-right:0;}
+
+  /* Show bottom nav */
+  #bottom-nav{display:flex;}
+
+  /* Page padding: top nav + bottom nav */
+  .page{padding:66px 14px calc(72px + env(safe-area-inset-bottom,0px))!important;}
+
+  /* Quick Add visible on mobile (no longer hidden) */
+  .quick-add-card{display:block!important;}
+
+  /* Hide desktop FAB (replaced by bottom nav + sheet) */
+  .fab,.fab-menu{display:none!important;}
+
+  /* Grid: full width on mobile */
+  .grid2,.grid3,.grid4{grid-template-columns:1fr!important;gap:12px!important;}
+
+  /* Dashboard: daily ring row — horizontal layout */
+  #page-dashboard .card:has(#daily-ring-progress){padding:16px;}
+  .daily-ring-wrap{width:110px;height:110px;}
+  .daily-ring-wrap svg{width:110px;height:110px;}
+  #daily-ring-pct{font-size:22px!important;}
+
+  /* Stat grid — 2 col always on mobile */
+  #page-dashboard .grid2 > div:last-child{
+    display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important;
+  }
+  .stat-card{padding:12px 14px;}
+  .stat-value{font-size:22px;}
+  .cd-days{font-size:26px;}
+
+  /* Cards */
+  .card{padding:16px;}
+  .card-sm{padding:14px;}
+  h2{font-size:19px;}
+  .page-sub{font-size:12px;margin-bottom:16px;}
+
+  /* Buttons — bigger tap targets */
+  .btn{padding:11px 20px;font-size:14px;}
+  .btn-sm{padding:8px 14px;font-size:12px;}
+  .qa-time-btn{padding:12px 16px;font-size:14px;min-width:64px;}
+  .qa-chip{padding:10px 16px;font-size:13px;}
+
+  /* Inputs */
+  select,input[type=number],input[type=text],input[type=date],textarea{
+    font-size:16px!important; /* prevent iOS zoom */
+    padding:12px 14px;
+  }
+  label{font-size:14px;margin-bottom:6px;}
+  .form-group{margin-bottom:16px;}
+
+  /* Timer — bigger on mobile */
+  .timer-circle{width:210px;height:210px;}
+  .timer-time{font-size:46px!important;}
+  .timer-display{padding:24px 0 16px;}
+  .timer-btns .btn{padding:13px 28px;font-size:15px;}
+
+  /* Log — card layout instead of table */
+  .log-table thead{display:none;}
+  .log-table tbody tr{
+    display:flex;flex-wrap:wrap;gap:6px;align-items:center;
+    padding:12px 0;border-bottom:1px solid var(--border);
+  }
+  .log-table tbody tr td{border:none;padding:0;}
+  .log-table tbody tr td:nth-child(1){font-size:11px;color:var(--text3);width:100%;order:3;}
+  .log-table tbody tr td:nth-child(2){order:1;flex:1;}
+  .log-table tbody tr td:nth-child(3){font-weight:700;color:var(--amber);font-family:'DM Mono',monospace;order:2;}
+  .log-table tbody tr td:nth-child(4){font-size:12px;color:var(--text2);order:4;width:calc(100% - 60px);}
+  .log-table tbody tr td:nth-child(5){order:5;margin-left:auto;}
+
+  /* Week plan horizontal scroll */
+  .week-wrap{-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;}
+  .week-grid{grid-template-columns:repeat(7,200px)!important;}
+  .day-card{scroll-snap-align:start;}
+
+  /* Countdown 2 col always */
+  .countdown-grid{grid-template-columns:repeat(2,1fr)!important;}
+
+  /* Subject progress */
+  .subj-progress{margin-bottom:10px;}
+
+  /* Achievements 1 col */
+  #achievements-grid{grid-template-columns:1fr!important;}
+
+  /* Plan tips — single col */
+  #page-plan .card div[style*="grid-template-columns:1fr 1fr"]{
+    grid-template-columns:1fr!important;
+  }
+
+  /* Footer — hide on mobile */
+  #site-footer{display:none!important;}
 }
 </style>
 </head>
@@ -366,7 +519,77 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   <div id="auth-bar" style="display:flex;align-items:center;gap:6px;margin-left:8px;flex-shrink:0"></div>
 </nav>
 
-<!-- Loading overlay -->
+<!-- ═══ BOTTOM NAV (Mobile) ═══ -->
+<div id="bottom-nav">
+  <button class="bn-tab active" data-page="dashboard" onclick="showPage('dashboard')">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+    </svg>
+    <span>หน้าหลัก</span>
+  </button>
+  <button class="bn-tab" data-page="timer" onclick="showPage('timer')">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M9 3h6"/><path d="M12 3v2"/>
+    </svg>
+    <span>จับเวลา</span>
+  </button>
+  <div class="bn-center-wrap">
+    <button class="bn-center" onclick="openQuickAddSheet()" title="Quick Add">+</button>
+  </div>
+  <button class="bn-tab" data-page="log" onclick="showPage('log')">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/>
+    </svg>
+    <span>บันทึก</span>
+  </button>
+  <button class="bn-tab" data-page="more" onclick="openMoreSheet()">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="19" r="1" fill="currentColor"/>
+    </svg>
+    <span>เพิ่มเติม</span>
+  </button>
+</div>
+
+<!-- Sheet overlay -->
+<div class="sheet-overlay" id="sheet-overlay" onclick="closeAllSheets()"></div>
+
+<!-- ═══ QUICK ADD SHEET ═══ -->
+<div class="bottom-sheet" id="qa-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">⚡ Quick Add — บันทึกใน 2 คลิก</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px" id="qa-sheet-subjects">
+    <span style="font-size:12px;color:var(--text3)">กำลังโหลด...</span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px">
+    <button class="qa-time-btn" style="font-size:13px;padding:14px 4px" onclick="qaSheetAdd(0.5)">+30m</button>
+    <button class="qa-time-btn" style="font-size:13px;padding:14px 4px" onclick="qaSheetAdd(1)">+1h</button>
+    <button class="qa-time-btn" style="font-size:13px;padding:14px 4px" onclick="qaSheetAdd(1.5)">+1.5h</button>
+    <button class="qa-time-btn" style="font-size:13px;padding:14px 4px" onclick="qaSheetAdd(2)">+2h</button>
+    <button class="qa-time-btn" style="font-size:13px;padding:14px 4px" onclick="qaSheetAdd(3)">+3h</button>
+  </div>
+  <div id="qa-sheet-feedback" style="font-size:13px;color:var(--green2);opacity:0;transition:opacity .3s;text-align:center;min-height:20px"></div>
+</div>
+
+<!-- ═══ MORE MENU SHEET ═══ -->
+<div class="bottom-sheet" id="more-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">เมนูเพิ่มเติม</div>
+  <div class="more-grid">
+    <button class="more-btn" onclick="showPage('plan');closeAllSheets()"><span>📅</span>แผนอ่าน</button>
+    <button class="more-btn" onclick="showPage('subjects');closeAllSheets()"><span>📚</span>เนื้อหา</button>
+    <button class="more-btn" onclick="showPage('analysis');closeAllSheets()"><span>📊</span>วิเคราะห์</button>
+    <button class="more-btn" onclick="showPage('goals');closeAllSheets()"><span>🏆</span>เป้าหมาย</button>
+    <button class="more-btn" onclick="showPage('select');closeAllSheets()"><span>⚙️</span>วิชา</button>
+    <button class="more-btn" id="more-auth-btn" onclick="closeAllSheets()"><span>👤</span>บัญชี</button>
+  </div>
+  <div style="margin-top:20px;padding-top:14px;border-top:1px solid var(--border);text-align:center;font-size:11px;color:var(--text3);line-height:1.8">
+    📚 <span style="color:var(--amber);font-weight:600">StudyPath</span><br>
+    developed by <span style="color:var(--amber);font-weight:600">_xzc_mxn</span> with <span style="color:#cc785c;font-weight:600">Claude</span><br>
+    <span style="font-size:10px">© 2570 · Good luck Dek70 🎯</span>
+  </div>
+</div><!-- /more-sheet -->
 <div id="loading-overlay" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(14,17,23,.85);align-items:center;justify-content:center;flex-direction:column;gap:12px">
   <div style="width:40px;height:40px;border:3px solid var(--border2);border-top-color:var(--amber);border-radius:50%;animation:spin 0.8s linear infinite"></div>
   <div style="font-size:13px;color:var(--text2)">กำลังโหลดข้อมูลจาก Cloud...</div>
@@ -411,9 +634,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 
   <!-- ★ DAILY PROGRESS RING + STATS ★ -->
   <div class="grid2" style="margin-bottom:16px">
-    <div class="card" style="display:flex;align-items:center;gap:24px">
+    <div class="card" style="display:flex;align-items:center;gap:20px">
       <div class="daily-ring-wrap">
-        <svg width="130" height="130" viewBox="0 0 130 130">
+        <svg width="130" height="130" viewBox="0 0 130 130" style="width:100%;height:100%">
           <circle cx="65" cy="65" r="56" fill="none" stroke="var(--bg4)" stroke-width="10"/>
           <circle id="daily-ring-progress" cx="65" cy="65" r="56" fill="none" stroke="var(--amber)" stroke-width="10" stroke-linecap="round" stroke-dasharray="351.86" stroke-dashoffset="351.86" style="transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset .8s ease,stroke .3s"/>
         </svg>
@@ -422,18 +645,18 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
           <div style="font-size:10px;color:var(--text3)">วันนี้</div>
         </div>
       </div>
-      <div style="flex:1">
+      <div style="flex:1;min-width:0">
         <div style="font-size:13px;color:var(--text2);margin-bottom:4px">เป้าวันนี้</div>
-        <div style="font-size:24px;font-weight:700;color:var(--text)" id="daily-goal-display">0 / 4h</div>
+        <div style="font-size:22px;font-weight:700;color:var(--text)" id="daily-goal-display">0 / 4h</div>
         <div style="margin-top:8px;display:flex;gap:6px;align-items:center">
-          <span style="font-size:11px;color:var(--text3)">ตั้งเป้า:</span>
-          <input type="range" id="daily-goal-slider" min="1" max="10" step="0.5" value="4" oninput="setDailyGoal(this.value)" style="flex:1;max-width:120px">
+          <span style="font-size:11px;color:var(--text3)">เป้า:</span>
+          <input type="range" id="daily-goal-slider" min="1" max="10" step="0.5" value="4" oninput="setDailyGoal(this.value)" style="flex:1;max-width:100px">
           <span style="font-size:12px;color:var(--amber);font-family:'DM Mono'" id="daily-goal-val">4h</span>
         </div>
       </div>
     </div>
 
-    <!-- Stats (2x2) -->
+    <!-- Stats 2x2 -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div class="stat-card">
         <div class="stat-label">🔥 Streak</div>
@@ -588,7 +811,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <div class="card">
       <div class="timer-display">
         <div class="timer-circle">
-          <svg width="180" height="180" viewBox="0 0 180 180">
+          <svg viewBox="0 0 180 180" style="position:absolute;top:0;left:0;width:100%;height:100%;transform:rotate(-90deg)">
             <circle id="pomo-ring" cx="90" cy="90" r="80" stroke-dasharray="502" stroke-dashoffset="0"/>
             <circle id="pomo-progress" cx="90" cy="90" r="80" stroke-dasharray="502" stroke-dashoffset="502"/>
           </svg>
@@ -894,6 +1117,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   margin-left:auto;
   margin-right:auto;
 }
+@media(max-width:768px){#site-footer{display:none!important;}}
 .footer-inner{
   border-top:1px solid var(--border);
   padding-top:24px;
@@ -1041,9 +1265,21 @@ function showPage(id){
   document.querySelectorAll('.nav-tab').forEach(t=>{
     if(t.getAttribute('onclick')===`showPage('${id}')`)t.classList.add('active');
   });
+  // Sync bottom nav
+  document.querySelectorAll('.bn-tab[data-page]').forEach(t=>t.classList.remove('active'));
+  const mainPages=['dashboard','timer','log'];
+  if(mainPages.includes(id)){
+    const bnTab=document.querySelector(`.bn-tab[data-page="${id}"]`);
+    if(bnTab)bnTab.classList.add('active');
+  }else{
+    // pages reached via "more" sheet → highlight more tab
+    const moreTab=document.querySelector('.bn-tab[data-page="more"]');
+    if(moreTab)moreTab.classList.add('active');
+  }
   if(id==='analysis')renderAnalysis();
   if(id==='dashboard')renderDashboard();
   if(id==='select')renderSelectPage();
+  window.scrollTo(0,0);
 }
 
 // ═══════════════════════════ COUNTDOWN ═══════════════════════════
@@ -1741,7 +1977,52 @@ function renderSubjectSelects(){
   });
 }
 
-// ═══════════════════════════ TOAST ═══════════════════════════
+// ═══════════════════════════ BOTTOM SHEETS ═══════════════════════════
+let qaSheetSelectedSubj='';
+function openQuickAddSheet(){
+  renderQaSheetSubjects();
+  document.getElementById('qa-sheet').classList.add('show');
+  document.getElementById('sheet-overlay').classList.add('show');
+}
+function openMoreSheet(){
+  // show/hide auth button based on login state
+  const authBtn=document.getElementById('more-auth-btn');
+  if(authBtn){
+    const user=window.currentUserFn&&window.currentUserFn();
+    authBtn.querySelector('span').textContent=user?'🔓':'👤';
+    authBtn.querySelector('span').nextSibling&&(authBtn.childNodes[1].textContent=user?'ออกจากระบบ':'เข้าสู่ระบบ');
+    authBtn.onclick=user?()=>{closeAllSheets();setTimeout(()=>window.showSignOutModal&&window.showSignOutModal(),200);}:()=>{closeAllSheets();setTimeout(()=>window._fbSignIn&&window._fbSignIn(),200);};
+  }
+  document.getElementById('more-sheet').classList.add('show');
+  document.getElementById('sheet-overlay').classList.add('show');
+}
+function closeAllSheets(){
+  document.querySelectorAll('.bottom-sheet').forEach(s=>s.classList.remove('show'));
+  document.getElementById('sheet-overlay').classList.remove('show');
+}
+function renderQaSheetSubjects(){
+  const box=document.getElementById('qa-sheet-subjects');if(!box)return;
+  const subs=getSelectedSubjects();
+  if(!subs.length){box.innerHTML='<span style="font-size:13px;color:var(--text3)">กรุณาเลือกวิชาก่อน</span>';return;}
+  if(!qaSheetSelectedSubj||!subs.find(s=>s.id===qaSheetSelectedSubj))qaSheetSelectedSubj=subs[0].id;
+  box.innerHTML=subs.map(s=>`<button class="qa-chip ${s.id===qaSheetSelectedSubj?'active':''}" data-subj="${s.id}" onclick="qaSheetSelectSubj(this)" style="--chip-color:${s.color}">${s.icon} ${s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')}</button>`).join('');
+}
+function qaSheetSelectSubj(btn){
+  document.querySelectorAll('#qa-sheet .qa-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');qaSheetSelectedSubj=btn.dataset.subj;
+}
+function qaSheetAdd(hours){
+  const subj=qaSheetSelectedSubj||qaSelectedSubj;
+  const today=new Date().toISOString().split('T')[0];
+  const s=TCAS_SUBJECTS[subj];if(!s){showToast('กรุณาเลือกวิชาก่อน');return;}
+  data.logs.push({id:Date.now(),date:today,subj,hours,note:'Quick Add ⚡',source:'quick'});
+  data.logs.sort((a,b)=>b.date.localeCompare(a.date));
+  updateStreak(today);save();renderDashboard();renderLog();
+  const fb=document.getElementById('qa-sheet-feedback');
+  fb.textContent=`✅ บันทึกแล้ว! ${s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')} +${hours}h`;
+  fb.style.opacity='1';
+  setTimeout(()=>{fb.style.opacity='0';closeAllSheets();},1400);
+}
 function showToast(msg){
   const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2500);
@@ -1809,6 +2090,11 @@ window.setDailyGoal = setDailyGoal;
 window.confirmSubjects = confirmSubjects;
 window.toggleSelectSubj = toggleSelectSubj;
 window.renderSubjectSelects = renderSubjectSelects;
+window.openQuickAddSheet = openQuickAddSheet;
+window.openMoreSheet = openMoreSheet;
+window.closeAllSheets = closeAllSheets;
+window.qaSheetSelectSubj = qaSheetSelectSubj;
+window.qaSheetAdd = qaSheetAdd;
 
 init();
 </script>
