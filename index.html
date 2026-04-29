@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>StudyPath — วางแผนสอบวิศวกรรม</title>
+<title>StudyPath — วางแผนสอบ Dek70</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -424,16 +424,22 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   /* Grid: full width on mobile */
   .grid2,.grid3,.grid4{grid-template-columns:1fr!important;gap:12px!important;}
 
-  /* Dashboard: daily ring row — horizontal layout */
+  /* Dashboard: daily ring card — compact */
   #page-dashboard .card:has(#daily-ring-progress){padding:16px;}
   .daily-ring-wrap{width:110px;height:110px;}
   .daily-ring-wrap svg{width:110px;height:110px;}
   #daily-ring-pct{font-size:22px!important;}
 
-  /* Stat grid — 2 col always on mobile */
-  #page-dashboard .grid2 > div:last-child{
+  /* Stat grid stays 2-col even when parent stacks */
+  #page-dashboard .grid2 > div[style*="grid-template-columns"]{
     display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important;
   }
+
+  /* rec-item fix — prevent text overflow */
+  .rec-item{flex-wrap:nowrap;align-items:flex-start;}
+  .rec-item > div:last-child{flex:1;min-width:0;word-break:break-word;}
+  .rec-title{font-size:13px;line-height:1.4;}
+  .rec-desc{font-size:11px;line-height:1.5;}
   .stat-card{padding:12px 14px;}
   .stat-value{font-size:22px;}
   .cd-days{font-size:26px;}
