@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>StudyPath — วางแผนสอบวิศวกรรม</title>
+<title>StudyPath — วางแผนสอบ Dek70</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -103,6 +103,9 @@ onAuthStateChanged(auth, user => {
     };
     setTimeout(() => {
       if (window.renderDashboard) { window.renderDashboard(); window.renderLog(); window.renderSubjects(); window.renderGoals(); window.renderSubjectSelects && window.renderSubjectSelects(); }
+      // ถ้าเคยเลือกวิชาแล้ว ไม่ต้องแสดงหน้าเลือกวิชา
+      const hasSubjects = (window.data.selectedSubjects||[]).length > 0;
+      if (hasSubjects && window.data.onboarded && window.showPage) { window.showPage('dashboard'); }
     }, 300);
   }
 });
@@ -124,6 +127,9 @@ function subscribeUserData(uid) {
         if (!window.data.chapters) window.data.chapters = {tgat:[],tpat:[],phys:[],math:[]};
         setTimeout(() => {
           if (window.renderDashboard) { window.renderDashboard(); window.renderLog(); window.renderSubjects(); window.renderGoals(); window.renderSubjectSelects && window.renderSubjectSelects(); }
+          // ถ้าเคยเลือกวิชาแล้ว ไม่ต้องแสดงหน้าเลือกวิชา
+          const hasSubjects = (window.data.selectedSubjects||[]).length > 0;
+          if (hasSubjects && window.data.onboarded && window.showPage) { window.showPage('dashboard'); }
         }, 100);
       }
     }
@@ -1758,7 +1764,9 @@ function init(){
   updateTimerDisplay();
   // ถ้าเคย onboard แล้ว (เลือกวิชาและกด confirm) ให้ไปหน้า dashboard เลย
   const hasSubjects=(data.selectedSubjects||[]).length>0;
-  if(!hasSubjects||!data.onboarded){
+  if(hasSubjects&&data.onboarded){
+    showPage('dashboard');
+  }else{
     showPage('select');
   }
   // Determine current phase
