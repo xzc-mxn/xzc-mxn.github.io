@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>StudyPath — วางแผนสอบ Dek70</title>
+<title>StudyPath — วางแผนสอบวิศวกรรม</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -102,7 +102,7 @@ onAuthStateChanged(auth, user => {
       logs:[], chapters:{tgat:[],tpat:[],phys:[],math:[]}, streak:0, bestStreak:0, lastStudyDate:null, pomoDone:0, dailyGoal:4
     };
     setTimeout(() => {
-      if (window.renderDashboard) { window.renderDashboard(); window.renderLog(); window.renderSubjects(); window.renderGoals(); window.renderSubjectSelects && window.renderSubjectSelects(); }
+      if (window.renderDashboard) { window.renderDashboard(); window.renderLog(); window.renderSubjects(); window.renderGoals(); window.renderSubjectSelects && window.renderSubjectSelects(); window.renderQuickAddChips && window.renderQuickAddChips(); }
       // ถ้าเคยเลือกวิชาแล้ว ไม่ต้องแสดงหน้าเลือกวิชา
       const hasSubjects = (window.data.selectedSubjects||[]).length > 0;
       if (hasSubjects && window.data.onboarded && window.showPage) { window.showPage('dashboard'); }
@@ -126,7 +126,7 @@ function subscribeUserData(uid) {
         window.data = cloud;
         if (!window.data.chapters) window.data.chapters = {tgat:[],tpat:[],phys:[],math:[]};
         setTimeout(() => {
-          if (window.renderDashboard) { window.renderDashboard(); window.renderLog(); window.renderSubjects(); window.renderGoals(); window.renderSubjectSelects && window.renderSubjectSelects(); }
+          if (window.renderDashboard) { window.renderDashboard(); window.renderLog(); window.renderSubjects(); window.renderGoals(); window.renderSubjectSelects && window.renderSubjectSelects(); window.renderQuickAddChips && window.renderQuickAddChips(); }
           // ถ้าเคยเลือกวิชาแล้ว ไม่ต้องแสดงหน้าเลือกวิชา
           const hasSubjects = (window.data.selectedSubjects||[]).length > 0;
           if (hasSubjects && window.data.onboarded && window.showPage) { window.showPage('dashboard'); }
@@ -504,6 +504,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 
   /* Footer — hide on mobile */
   #site-footer{display:none!important;}
+
+  /* Quick Add card — PC only, mobile uses bottom sheet */
+  .quick-add-card{display:none!important;}
 }
 </style>
 </head>
@@ -1393,7 +1396,7 @@ function renderQuickAddChips(){
   box.innerHTML=subs.map((s,i)=>`<button class="qa-chip ${i===0?'active':''}" data-subj="${s.id}" onclick="qaSelectSubj(this)" style="--chip-color:${s.color}">${s.icon} ${s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')}</button>`).join('');
 }
 function qaSelectSubj(btn){
-  document.querySelectorAll('.qa-chip').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('#qa-subjects .qa-chip').forEach(c=>c.classList.remove('active'));
   btn.classList.add('active');qaSelectedSubj=btn.dataset.subj;
 }
 function qaAddTime(hours){
@@ -1533,6 +1536,7 @@ function renderDashboard(){
   weekChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'ชั่วโมง',data:vals,backgroundColor:barColors,borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#5c6b88'}},y:{grid:{color:'#2a3348'},ticks:{color:'#5c6b88'},beginAtZero:true}}}});
 
   renderRecommendation();renderPrediction();
+  renderQuickAddChips();
 }
 function renderLogChart(){
   const activeSubs=getActiveSubjectsData();
@@ -2096,6 +2100,7 @@ window.setDailyGoal = setDailyGoal;
 window.confirmSubjects = confirmSubjects;
 window.toggleSelectSubj = toggleSelectSubj;
 window.renderSubjectSelects = renderSubjectSelects;
+window.renderQuickAddChips = renderQuickAddChips;
 window.openQuickAddSheet = openQuickAddSheet;
 window.openMoreSheet = openMoreSheet;
 window.closeAllSheets = closeAllSheets;
