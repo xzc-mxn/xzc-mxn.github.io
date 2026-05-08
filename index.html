@@ -323,8 +323,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 .fab-menu.show{opacity:1;pointer-events:auto;transform:translateY(0)}
 .fab-option{font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;padding:10px 16px;border-radius:12px;border:1px solid var(--border2);background:var(--bg2);color:var(--text);cursor:pointer;white-space:nowrap;text-align:left;transition:all .15s;box-shadow:var(--shadow)}
 .fab-option:hover{border-color:var(--c);color:var(--c);transform:translateX(-4px)}
-@media(max-width:768px){.fab{display:flex;align-items:center;justify-content:center}.quick-add-card{display:none!important}}
-@media(min-width:769px){.fab,.fab-menu{display:none!important}}
+@media(max-width:768px){body .fab{display:flex;align-items:center;justify-content:center}body .quick-add-card{display:none}}
+@media(min-width:769px){body .fab,body .fab-menu{display:none}}
 /* DAILY RING */
 .daily-ring-wrap{position:relative;width:130px;height:130px;flex-shrink:0}
 .daily-ring-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
@@ -382,6 +382,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));
   transform:translateY(105%);transition:transform .3s cubic-bezier(.32,0,.67,0);
   max-height:80vh;overflow-y:auto;
+  will-change:transform; /* GPU-accelerated animations */
 }
 .bottom-sheet.show{transform:translateY(0);transition-timing-function:cubic-bezier(.34,1.56,.64,1);}
 .sheet-handle{
@@ -402,111 +403,109 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 .more-btn span{font-size:22px;}
 
 /* ═══════════════ MOBILE OVERRIDES ═══════════════ */
+/* Uses `body` prefix for specificity instead of !important */
 @media(max-width:768px){
   /* Hide top nav tabs, keep brand + auth */
-  .nav-tabs{display:none!important}
-  .phase-badge{display:none!important}
-  nav{padding:0 14px;justify-content:space-between;}
-  .nav-brand{margin-right:0;}
+  body .nav-tabs{display:none}
+  body .phase-badge{display:none}
+  body nav{padding:0 14px;justify-content:space-between;}
+  body .nav-brand{margin-right:0;}
 
   /* Show bottom nav */
-  #bottom-nav{display:flex;}
+  body #bottom-nav{display:flex;}
 
   /* Page padding: top nav + bottom nav */
-  .page{padding:66px 14px calc(72px + env(safe-area-inset-bottom,0px))!important;}
-
-  /* Quick Add visible on mobile (no longer hidden) */
-  .quick-add-card{display:block!important;}
+  body .page{padding:66px 14px calc(72px + env(safe-area-inset-bottom,0px));}
 
   /* Hide desktop FAB (replaced by bottom nav + sheet) */
-  .fab,.fab-menu{display:none!important;}
+  body .fab,body .fab-menu{display:none;}
 
   /* Grid: full width on mobile */
-  .grid2,.grid3,.grid4{grid-template-columns:1fr!important;gap:12px!important;}
+  body .grid2,body .grid3,body .grid4{grid-template-columns:1fr;gap:12px;}
 
   /* Dashboard: daily ring card — compact */
-  #page-dashboard .card:has(#daily-ring-progress){padding:16px;}
-  .daily-ring-wrap{width:110px;height:110px;}
-  .daily-ring-wrap svg{width:110px;height:110px;}
-  #daily-ring-pct{font-size:22px!important;}
+  body #page-dashboard .card:has(#daily-ring-progress){padding:16px;}
+  body .daily-ring-wrap{width:110px;height:110px;}
+  body .daily-ring-wrap svg{width:110px;height:110px;}
+  body #daily-ring-pct{font-size:22px;}
 
   /* Stat grid stays 2-col even when parent stacks */
-  #page-dashboard .grid2 > div[style*="grid-template-columns"]{
-    display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important;
+  body #page-dashboard .grid2 > div[style*="grid-template-columns"]{
+    display:grid;grid-template-columns:1fr 1fr;gap:10px;
   }
 
   /* rec-item fix — prevent text overflow */
-  .rec-item{flex-wrap:nowrap;align-items:flex-start;}
-  .rec-item > div:last-child{flex:1;min-width:0;word-break:break-word;}
-  .rec-title{font-size:13px;line-height:1.4;}
-  .rec-desc{font-size:11px;line-height:1.5;}
-  .stat-card{padding:12px 14px;}
-  .stat-value{font-size:22px;}
-  .cd-days{font-size:26px;}
+  body .rec-item{flex-wrap:nowrap;align-items:flex-start;}
+  body .rec-item > div:last-child{flex:1;min-width:0;word-break:break-word;}
+  body .rec-title{font-size:13px;line-height:1.4;}
+  body .rec-desc{font-size:11px;line-height:1.5;}
+  body .stat-card{padding:12px 14px;}
+  body .stat-value{font-size:22px;}
+  body .cd-days{font-size:26px;}
 
   /* Cards */
-  .card{padding:16px;}
-  .card-sm{padding:14px;}
-  h2{font-size:19px;}
-  .page-sub{font-size:12px;margin-bottom:16px;}
+  body .card{padding:16px;}
+  body .card-sm{padding:14px;}
+  body h2{font-size:19px;}
+  body .page-sub{font-size:12px;margin-bottom:16px;}
 
   /* Buttons — bigger tap targets */
-  .btn{padding:11px 20px;font-size:14px;}
-  .btn-sm{padding:8px 14px;font-size:12px;}
-  .qa-time-btn{padding:12px 16px;font-size:14px;min-width:64px;}
-  .qa-chip{padding:10px 16px;font-size:13px;}
+  body .btn{padding:11px 20px;font-size:14px;}
+  body .btn-sm{padding:8px 14px;font-size:12px;}
+  body .qa-time-btn{padding:12px 16px;font-size:14px;min-width:64px;}
+  body .qa-chip{padding:10px 16px;font-size:13px;}
 
   /* Inputs */
-  select,input[type=number],input[type=text],input[type=date],textarea{
-    font-size:16px!important; /* prevent iOS zoom */
+  body select,body input[type=number],body input[type=text],body input[type=date],body textarea{
+    font-size:16px!important; /* prevent iOS zoom — this one genuinely needs !important */
     padding:12px 14px;
   }
-  label{font-size:14px;margin-bottom:6px;}
-  .form-group{margin-bottom:16px;}
+  body label{font-size:14px;margin-bottom:6px;}
+  body .form-group{margin-bottom:16px;}
 
   /* Timer — bigger on mobile */
-  .timer-circle{width:210px;height:210px;}
-  .timer-time{font-size:46px!important;}
-  .timer-display{padding:24px 0 16px;}
-  .timer-btns .btn{padding:13px 28px;font-size:15px;}
+  body .timer-circle{width:210px;height:210px;}
+  body .timer-time{font-size:46px;}
+  body .timer-display{padding:24px 0 16px;}
+  body .timer-btns .btn{padding:13px 28px;font-size:15px;}
 
   /* Log — card layout instead of table */
-  .log-table thead{display:none;}
-  .log-table tbody tr{
+  body .log-table thead{display:none;}
+  body .log-table tbody tr{
     display:flex;flex-wrap:wrap;gap:6px;align-items:center;
     padding:12px 0;border-bottom:1px solid var(--border);
   }
-  .log-table tbody tr td{border:none;padding:0;}
-  .log-table tbody tr td:nth-child(1){font-size:11px;color:var(--text3);width:100%;order:3;}
-  .log-table tbody tr td:nth-child(2){order:1;flex:1;}
-  .log-table tbody tr td:nth-child(3){font-weight:700;color:var(--amber);font-family:'DM Mono',monospace;order:2;}
-  .log-table tbody tr td:nth-child(4){font-size:12px;color:var(--text2);order:4;width:calc(100% - 60px);}
-  .log-table tbody tr td:nth-child(5){order:5;margin-left:auto;}
+  body .log-table tbody tr td{border:none;padding:0;}
+  body .log-table tbody tr td:nth-child(1){font-size:11px;color:var(--text3);width:100%;order:3;}
+  body .log-table tbody tr td:nth-child(2){order:1;flex:1;}
+  body .log-table tbody tr td:nth-child(3){font-weight:700;color:var(--amber);font-family:'DM Mono',monospace;order:2;}
+  body .log-table tbody tr td:nth-child(4){font-size:12px;color:var(--text2);order:4;width:calc(100% - 60px);}
+  body .log-table tbody tr td:nth-child(5){order:5;margin-left:auto;}
 
   /* Week plan horizontal scroll */
-  .week-wrap{-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;}
-  .week-grid{grid-template-columns:repeat(7,200px)!important;}
-  .day-card{scroll-snap-align:start;}
+  body .week-wrap{-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;}
+  body .week-grid{grid-template-columns:repeat(7,200px);}
+  body .day-card{scroll-snap-align:start;}
 
   /* Countdown 2 col always */
-  .countdown-grid{grid-template-columns:repeat(2,1fr)!important;}
+  body .countdown-grid{grid-template-columns:repeat(2,1fr);}
 
   /* Subject progress */
-  .subj-progress{margin-bottom:10px;}
+  body .subj-progress{margin-bottom:10px;}
 
   /* Achievements 1 col */
-  #achievements-grid{grid-template-columns:1fr!important;}
+  body #achievements-grid{grid-template-columns:1fr;}
 
   /* Plan tips — single col */
-  #page-plan .card div[style*="grid-template-columns:1fr 1fr"]{
-    grid-template-columns:1fr!important;
+  body #page-plan .card div[style*="grid-template-columns:1fr 1fr"]{
+    grid-template-columns:1fr;
   }
 
   /* Footer — hide on mobile */
-  #site-footer{display:none!important;}
+  body #site-footer{display:none;}
 
   /* Quick Add card — PC only, mobile uses bottom sheet */
-  .quick-add-card{display:none!important;}
+  body .quick-add-card{display:none;}
 }
 </style>
 </head>
@@ -565,7 +564,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 <div class="sheet-overlay" id="sheet-overlay" onclick="closeAllSheets()"></div>
 
 <!-- ═══ QUICK ADD SHEET ═══ -->
-<div class="bottom-sheet" id="qa-sheet">
+<div class="bottom-sheet" id="qa-sheet" role="dialog" aria-modal="true" aria-label="Quick Add">
   <div class="sheet-handle"></div>
   <div class="sheet-title">⚡ Quick Add — บันทึกใน 2 คลิก</div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px" id="qa-sheet-subjects">
@@ -582,7 +581,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 </div>
 
 <!-- ═══ MORE MENU SHEET ═══ -->
-<div class="bottom-sheet" id="more-sheet">
+<div class="bottom-sheet" id="more-sheet" role="dialog" aria-modal="true" aria-label="เมนูเพิ่มเติม">
   <div class="sheet-handle"></div>
   <div class="sheet-title">เมนูเพิ่มเติม</div>
   <div class="more-grid">
@@ -994,7 +993,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 </div>
 
 <!-- ═══════════════════════════════ SIGN OUT MODAL ═══════════════════════════════ -->
-<div id="signout-modal" style="display:none" onclick="if(event.target===this)hideSignOutModal()">
+<div id="signout-modal" style="display:none" role="dialog" aria-modal="true" aria-label="Sign out" onclick="if(event.target===this)hideSignOutModal()">
   <div class="so-card">
     <div class="so-glow"></div>
     <div class="so-avatar-wrap">
@@ -1126,7 +1125,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   margin-left:auto;
   margin-right:auto;
 }
-@media(max-width:768px){#site-footer{display:none!important;}}
+@media(max-width:768px){body #site-footer{display:none;}}
 .footer-inner{
   border-top:1px solid var(--border);
   padding-top:24px;
@@ -1185,7 +1184,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 
 <script>
 // ═══════════════════════════ TCAS SUBJECTS DATABASE ═══════════════════════════
-const TCAS_SUBJECTS = {
+// All data constants are frozen for immutability — edit the source, not at runtime.
+const TCAS_SUBJECTS = Object.freeze({
   tgat1:{id:'tgat1',group:'TGAT',name:'TGAT1 การสื่อสารภาษาอังกฤษ',code:'91',color:'#f59e0b',icon:'🌐',examDate:'2027-01-30',difficulty:3,
     chapters:['Reading Comprehension','Vocabulary in Context','Grammar & Usage','Sentence Completion','Error Identification','Paragraph Organization']},
   tgat2:{id:'tgat2',group:'TGAT',name:'TGAT2 การคิดอย่างมีเหตุผล',code:'92',color:'#f59e0b',icon:'🧠',examDate:'2027-01-30',difficulty:3,
@@ -1220,18 +1220,18 @@ const TCAS_SUBJECTS = {
     chapters:['การอ่าน','การเขียน','หลักภาษา','วรรณคดีและวรรณกรรม','การฟัง การดู การพูด','คำศัพท์และสำนวน']},
   alv_eng:{id:'alv_eng',group:'A-Level',name:'A-Level ภาษาอังกฤษ',code:'82',color:'#f97316',icon:'🔤',examDate:'2027-03-13',difficulty:4,
     chapters:['Listening & Speaking','Reading Comprehension','Writing','Grammar & Structure','Vocabulary','Functional Language']}
-};
-const SUBJECT_GROUPS=[
+});
+const SUBJECT_GROUPS=Object.freeze([
   {key:'TGAT',label:'TGAT (ความถนัดทั่วไป)',color:'#f59e0b',subjects:['tgat1','tgat2','tgat3']},
   {key:'TPAT',label:'TPAT (ความถนัดเฉพาะ)',color:'#8b5cf6',subjects:['tpat1','tpat2','tpat3','tpat4','tpat5']},
   {key:'A-Level',label:'A-Level',color:'#3b82f6',subjects:['alv_math1','alv_math2','alv_sci','alv_phy','alv_chem','alv_bio','alv_soc','alv_thai','alv_eng']}
-];
+]);
 function getEstimatedHours(sid){const s=TCAS_SUBJECTS[sid];if(!s)return 0;const h={1:3,2:5,3:7,4:10,5:14};return s.chapters.length*(h[s.difficulty]||7);}
 function getSelectedSubjects(){return(data.selectedSubjects||[]).map(id=>TCAS_SUBJECTS[id]).filter(Boolean);}
 function getActiveExams(){const subs=getSelectedSubjects();const map={};subs.forEach(s=>{map[s.id]={name:s.name,date:s.examDate,color:s.color};});return map;}
 function getActiveSubjectsData(){const subs=getSelectedSubjects();const map={};subs.forEach(s=>{map[s.id]={name:s.name,color:s.color,chapters:s.chapters,icon:s.icon};});return map;}
 
-const ACHIEVEMENTS_DEF=[
+const ACHIEVEMENTS_DEF=Object.freeze([
   {id:'first',icon:'🌱',name:'เริ่มต้นแล้ว!',desc:'บันทึกวันแรก',cond:s=>s.totalLogs>0},
   {id:'week1',icon:'🔥',name:'ติดต่อ 7 วัน',desc:'Streak 7 วัน',cond:s=>s.streak>=7},
   {id:'week4',icon:'💎',name:'มืออาชีพ',desc:'Streak 30 วัน',cond:s=>s.streak>=30},
@@ -1240,10 +1240,10 @@ const ACHIEVEMENTS_DEF=[
   {id:'chapter10',icon:'📖',name:'นักอ่านตัวจริง',desc:'อ่านครบ 10 บท',cond:s=>s.chapsDone>=10},
   {id:'chapter30',icon:'🏆',name:'ครบทุกบท',desc:'อ่านครบ 30 บท',cond:s=>s.chapsDone>=30},
   {id:'all4',icon:'⭐',name:'นักเรียนรอบด้าน',desc:'เรียนครบทุกวิชาที่เลือก',cond:s=>s.subjTouched>=s.totalSubj},
-];
+]);
 
 // Weekly plan template (จ-อา) — sessions ใช้ cls ของกลุ่มวิชา dynamic
-const WEEK_PLAN=[
+const WEEK_PLAN=Object.freeze([
   {day:'จันทร์', target:4, sessions:[{cls:'tgat',label:'TGAT',h:'2h'},{cls:'tpat',label:'TPAT',h:'2h'}]},
   {day:'อังคาร', target:5, sessions:[{cls:'tgat',label:'A-Level วิทย์/คณิต',h:'3h'},{cls:'tpat',label:'TGAT',h:'2h'}]},
   {day:'พุธ',   target:4, sessions:[{cls:'tpat',label:'TPAT',h:'2h'},{cls:'tgat',label:'A-Level',h:'2h'}]},
@@ -1251,7 +1251,7 @@ const WEEK_PLAN=[
   {day:'ศุกร์', target:3, sessions:[{cls:'review',label:'ทบทวนรวม',h:'3h'}]},
   {day:'เสาร์', target:6, sessions:[{cls:'mock',label:'ทำข้อสอบเก่า',h:'4h'},{cls:'tgat',label:'เสริมจุดอ่อน',h:'2h'}]},
   {day:'อาทิตย์',target:3, sessions:[{cls:'review',label:'พักผ่อน/ทบทวนเบาๆ',h:'2h'},{cls:'tgat',label:'วางแผนสัปดาห์',h:'1h'}]},
-];
+]);
 
 let data = window.data || {
   logs:[], chapters:{}, streak:0, bestStreak:0, lastStudyDate:null, pomoDone:0, dailyGoal:4,
@@ -1259,7 +1259,40 @@ let data = window.data || {
 };
 Object.defineProperty(window, 'data', {get:()=>data,set:(v)=>{data=v;},configurable:true});
 
-function save(){localStorage.setItem('studypath',JSON.stringify(data));if(window.fbSave)window.fbSave(data);}
+// ═══════════════════════════ STATE MANAGER ═══════════════════════════
+// Debounced save: prevents spamming localStorage/Firebase on rapid changes
+let _saveTimer = null;
+function save() {
+  if (_saveTimer) clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(() => {
+    localStorage.setItem('studypath', JSON.stringify(data));
+    if (window.fbSave) window.fbSave(data);
+    _saveTimer = null;
+  }, 300);
+}
+// Force immediate save (for critical moments like page unload)
+function saveNow() {
+  if (_saveTimer) { clearTimeout(_saveTimer); _saveTimer = null; }
+  localStorage.setItem('studypath', JSON.stringify(data));
+  if (window.fbSave) window.fbSave(data);
+}
+window.addEventListener('beforeunload', saveNow);
+
+// Simple render scheduler — batches multiple render calls into one rAF
+const _pendingRenders = new Set();
+let _renderScheduled = false;
+function scheduleRender(...fns) {
+  fns.forEach(fn => _pendingRenders.add(fn));
+  if (!_renderScheduled) {
+    _renderScheduled = true;
+    requestAnimationFrame(() => {
+      _pendingRenders.forEach(fn => fn());
+      _pendingRenders.clear();
+      _renderScheduled = false;
+    });
+  }
+}
+
 function ensureChapters(){if(!data.chapters)data.chapters={};(data.selectedSubjects||[]).forEach(id=>{if(!data.chapters[id])data.chapters[id]=[];});}
 // Migrate old data: if user had subjects selected before onboarded flag existed
 function migrateData(){if(!data.onboarded&&(data.selectedSubjects||[]).length>0){data.onboarded=true;save();}}
@@ -1351,12 +1384,12 @@ function addLog(){
   data.logs.push({id:Date.now(),date,subj,hours,note});
   data.logs.sort((a,b)=>b.date.localeCompare(a.date));
   updateStreak(date);
-  save();renderLog();renderDashboard();showToast('บันทึกแล้ว ✅');
+  save(); scheduleRender(renderLog, renderDashboard); showToast('บันทึกแล้ว ✅');
   document.getElementById('log-hours').value='';
   document.getElementById('log-note').value='';
 }
 function deleteLog(id){
-  data.logs=data.logs.filter(l=>l.id!==id);save();renderLog();renderDashboard();showToast('ลบแล้ว');
+  data.logs=data.logs.filter(l=>l.id!==id); save(); scheduleRender(renderLog, renderDashboard); showToast('ลบแล้ว');
 }
 function renderLog(){
   const tbody=document.getElementById('log-tbody');
@@ -1404,7 +1437,7 @@ function qaAddTime(hours){
   const s=TCAS_SUBJECTS[qaSelectedSubj];if(!s)return;
   data.logs.push({id:Date.now(),date:today,subj:qaSelectedSubj,hours,note:'Quick Add ⚡',source:'quick'});
   data.logs.sort((a,b)=>b.date.localeCompare(a.date));
-  updateStreak(today);save();renderDashboard();renderLog();
+  updateStreak(today);save(); scheduleRender(renderDashboard, renderLog);
   const fb=document.getElementById('qa-feedback');
   fb.textContent=`✅ บันทึกแล้ว! ${s.name} +${hours}h`;
   fb.style.opacity='1';setTimeout(()=>fb.style.opacity='0',2000);
@@ -1426,7 +1459,7 @@ function fabQuickAdd(subj,hours){
   const s=TCAS_SUBJECTS[subj];if(!s)return;
   data.logs.push({id:Date.now(),date:today,subj,hours,note:'Quick Add 📱',source:'quick'});
   data.logs.sort((a,b)=>b.date.localeCompare(a.date));
-  updateStreak(today);save();renderDashboard();renderLog();
+  updateStreak(today);save(); scheduleRender(renderDashboard, renderLog);
   toggleFabMenu();showToast(`⚡ ${s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')} +${hours}h`);
 }
 // ═══════════════════════════ DAILY GOAL ═══════════════════════════
@@ -1713,7 +1746,7 @@ function toggleChapter(subj,idx){
   const arr=data.chapters[subj];
   const pos=arr.indexOf(idx);
   if(pos>=0)arr.splice(pos,1);else arr.push(idx);
-  save();renderSubjects();renderDashboard();
+  save(); scheduleRender(renderSubjects, renderDashboard);
 }
 
 // ═══════════════════════════ ANALYSIS ═══════════════════════════
@@ -1852,74 +1885,138 @@ function renderGoals(){
   }).join('');
 }
 
-// ═══════════════════════════ POMODORO TIMER ═══════════════════════════
-let pomoState={running:false,mode:'focus',timeLeft:25*60,focusDuration:25*60,breakDuration:5*60,session:0,interval:null,todaySessions:[]};
+// ═══════════════════════════ POMODORO TIMER (Timestamp-based) ═══════════════════════════
+// FIX: Old timer used setInterval + timeLeft-- which drifts when Chrome throttles
+// background tabs (intervals drop to ~1/min). New approach stores an absolute
+// endTime (Date.now() + remaining) and recomputes on every tick + on visibility change.
+let pomoState = {
+  running: false,
+  mode: 'focus',            // 'focus' | 'break'
+  remainingMs: 25 * 60000,  // ms remaining when paused
+  endTime: 0,               // absolute timestamp when timer should fire (only valid when running)
+  focusDuration: 25 * 60000,
+  breakDuration: 5 * 60000,
+  session: 0,
+  interval: null,
+  todaySessions: []
+};
 
-function setPomoMode(v){
-  const [f,b]=v.split('-').map(Number);
-  pomoState.focusDuration=f*60;pomoState.breakDuration=b*60;
+function setPomoMode(v) {
+  const [f, b] = v.split('-').map(Number);
+  pomoState.focusDuration = f * 60000;
+  pomoState.breakDuration = b * 60000;
   timerReset();
 }
-function updateTimerDisplay(){
-  const m=Math.floor(pomoState.timeLeft/60),s=pomoState.timeLeft%60;
-  document.getElementById('timer-display').textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-  const total=pomoState.mode==='focus'?pomoState.focusDuration:pomoState.breakDuration;
-  const prog=1-pomoState.timeLeft/total;
-  const circ=2*Math.PI*80;
-  document.getElementById('pomo-progress').style.strokeDashoffset=circ*(1-prog);
-  document.getElementById('timer-phase-label').textContent=pomoState.mode==='focus'?'🍅 โฟกัส':'☕ พัก';
-  document.getElementById('pomo-progress').style.stroke=pomoState.mode==='focus'?'var(--amber)':'var(--teal2)';
-  document.getElementById('timer-start-btn').textContent=pomoState.running?'หยุด':'เริ่ม';
-  // dots
-  const dots=document.getElementById('pomo-dots');
-  dots.innerHTML=Array.from({length:4},(_,i)=>`<div class="pomo-dot ${i<pomoState.session?'done':''}"></div>`).join('');
-  // today sessions
-  const box=document.getElementById('today-sessions');
-  if(!pomoState.todaySessions.length){box.innerHTML='<div style="font-size:13px;color:var(--text3);padding:20px 0;text-align:center">ยังไม่มีเซสชัน<br>กดเริ่มเพื่อเริ่มจับเวลา</div>';return;}
-  const colors={tgat:'var(--amber)',tpat:'var(--purple2)',phys:'var(--teal2)',math:'var(--blue2)'};
-  box.innerHTML=pomoState.todaySessions.map(s=>{
-    const subjData=TCAS_SUBJECTS[s.subj];
-    const color=subjData?subjData.color:(colors[s.subj]||'var(--text2)');
-    const name=subjData?subjData.name.replace(/^(TGAT|TPAT|A-Level)\s*/,''):s.subj.toUpperCase();
-    return`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
-    <span style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0"></span>
-    <span style="font-size:12px;flex:1">${name}</span>
-    <span style="font-size:12px;font-family:'DM Mono';color:var(--amber)">${s.minutes}m</span>
-  </div>`;
-  }).join('');
-  const totalMin=pomoState.todaySessions.reduce((a,b)=>a+b.minutes,0);
-  document.getElementById('today-total-timer').textContent=`${Math.floor(totalMin/60)}:${String(totalMin%60).padStart(2,'0')}`;
-}
-function timerToggle(){
-  if(pomoState.running){
-    clearInterval(pomoState.interval);pomoState.running=false;
-  }else{
-    pomoState.running=true;
-    pomoState.interval=setInterval(()=>{
-      pomoState.timeLeft--;
-      if(pomoState.timeLeft<=0){
-        clearInterval(pomoState.interval);pomoState.running=false;
-        if(pomoState.mode==='focus'){
-          // save session
-          const subj=document.getElementById('timer-subject').value;
-          const minutes=Math.round(pomoState.focusDuration/60);
-          pomoState.todaySessions.push({subj,minutes});
-          pomoState.session=(pomoState.session+1);
-          if(pomoState.session>=4){pomoState.session=0;}  // reset after full set of 4
-          data.logs.push({id:Date.now(),date:new Date().toISOString().split('T')[0],subj,hours:+(minutes/60).toFixed(2),note:'Pomodoro ⏱'});
-          updateStreak();save();renderDashboard();
-          showToast(`✅ เสร็จ! ${minutes}m ${subj.toUpperCase()}`);
-          pomoState.mode='break';pomoState.timeLeft=pomoState.breakDuration;
-        }else{
-          pomoState.mode='focus';pomoState.timeLeft=pomoState.focusDuration;showToast('☕ พักเสร็จ! เริ่มใหม่ได้เลย');
-        }
-      }
-      updateTimerDisplay();
-    },1000);
+
+/** Core tick — computes remaining from absolute endTime */
+function _pomoTick() {
+  if (!pomoState.running) return;
+  const now = Date.now();
+  const remaining = pomoState.endTime - now;
+
+  if (remaining <= 0) {
+    // Phase completed
+    clearInterval(pomoState.interval);
+    pomoState.running = false;
+    pomoState.remainingMs = 0;
+
+    if (pomoState.mode === 'focus') {
+      const subj = document.getElementById('timer-subject').value;
+      const minutes = Math.round(pomoState.focusDuration / 60000);
+      pomoState.todaySessions.push({ subj, minutes });
+      pomoState.session = (pomoState.session + 1);
+      if (pomoState.session >= 4) pomoState.session = 0;
+      data.logs.push({
+        id: Date.now(), date: new Date().toISOString().split('T')[0],
+        subj, hours: +(minutes / 60).toFixed(2), note: 'Pomodoro ⏱'
+      });
+      updateStreak(); save(); renderDashboard();
+      showToast(`✅ เสร็จ! ${minutes}m ${subj.toUpperCase()}`);
+      // Switch to break
+      pomoState.mode = 'break';
+      pomoState.remainingMs = pomoState.breakDuration;
+    } else {
+      pomoState.mode = 'focus';
+      pomoState.remainingMs = pomoState.focusDuration;
+      showToast('☕ พักเสร็จ! เริ่มใหม่ได้เลย');
+    }
+  } else {
+    pomoState.remainingMs = remaining;
   }
   updateTimerDisplay();
 }
-function timerReset(){clearInterval(pomoState.interval);pomoState.running=false;pomoState.mode='focus';pomoState.timeLeft=pomoState.focusDuration;updateTimerDisplay();}
+
+/** Recalculate immediately when user returns to tab */
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && pomoState.running) _pomoTick();
+});
+
+function updateTimerDisplay() {
+  const totalSec = Math.max(0, Math.ceil(pomoState.remainingMs / 1000));
+  const m = Math.floor(totalSec / 60), s = totalSec % 60;
+  document.getElementById('timer-display').textContent =
+    `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+
+  const phaseDuration = pomoState.mode === 'focus' ? pomoState.focusDuration : pomoState.breakDuration;
+  const prog = 1 - pomoState.remainingMs / phaseDuration;
+  const circ = 2 * Math.PI * 80;
+  document.getElementById('pomo-progress').style.strokeDashoffset = circ * (1 - prog);
+  document.getElementById('timer-phase-label').textContent =
+    pomoState.mode === 'focus' ? '🍅 โฟกัส' : '☕ พัก';
+  document.getElementById('pomo-progress').style.stroke =
+    pomoState.mode === 'focus' ? 'var(--amber)' : 'var(--teal2)';
+  document.getElementById('timer-start-btn').textContent =
+    pomoState.running ? 'หยุด' : 'เริ่ม';
+
+  // dots
+  const dots = document.getElementById('pomo-dots');
+  dots.innerHTML = Array.from({ length: 4 }, (_, i) =>
+    `<div class="pomo-dot ${i < pomoState.session ? 'done' : ''}"></div>`
+  ).join('');
+
+  // today sessions list
+  const box = document.getElementById('today-sessions');
+  if (!pomoState.todaySessions.length) {
+    box.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:20px 0;text-align:center">ยังไม่มีเซสชัน<br>กดเริ่มเพื่อเริ่มจับเวลา</div>';
+    return;
+  }
+  box.innerHTML = pomoState.todaySessions.map(s => {
+    const subjData = TCAS_SUBJECTS[s.subj];
+    const color = subjData ? subjData.color : 'var(--text2)';
+    const name = subjData ? subjData.name.replace(/^(TGAT|TPAT|A-Level)\s*/, '') : s.subj.toUpperCase();
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0"></span>
+      <span style="font-size:12px;flex:1">${name}</span>
+      <span style="font-size:12px;font-family:'DM Mono';color:var(--amber)">${s.minutes}m</span>
+    </div>`;
+  }).join('');
+  const totalMin = pomoState.todaySessions.reduce((a, b) => a + b.minutes, 0);
+  document.getElementById('today-total-timer').textContent =
+    `${Math.floor(totalMin / 60)}:${String(totalMin % 60).padStart(2, '0')}`;
+}
+
+function timerToggle() {
+  if (pomoState.running) {
+    // Pause — freeze remaining time
+    clearInterval(pomoState.interval);
+    pomoState.remainingMs = Math.max(0, pomoState.endTime - Date.now());
+    pomoState.running = false;
+  } else {
+    // Start — set absolute end timestamp
+    pomoState.endTime = Date.now() + pomoState.remainingMs;
+    pomoState.running = true;
+    pomoState.interval = setInterval(_pomoTick, 250); // 250ms for smooth display even in bg
+  }
+  updateTimerDisplay();
+}
+
+function timerReset() {
+  clearInterval(pomoState.interval);
+  pomoState.running = false;
+  pomoState.mode = 'focus';
+  pomoState.remainingMs = pomoState.focusDuration;
+  updateTimerDisplay();
+}
 
 // ═══════════════════════════ SUBJECT SELECTION PAGE ═══════════════════════════
 function renderSelectPage(){
@@ -2010,6 +2107,17 @@ function closeAllSheets(){
   document.querySelectorAll('.bottom-sheet').forEach(s=>s.classList.remove('show'));
   document.getElementById('sheet-overlay').classList.remove('show');
 }
+// Keyboard accessibility: Escape key closes any open sheet or modal
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    // Close bottom sheets first
+    const openSheet = document.querySelector('.bottom-sheet.show');
+    if (openSheet) { closeAllSheets(); return; }
+    // Close signout modal
+    const modal = document.getElementById('signout-modal');
+    if (modal && modal.classList.contains('show')) { window.hideSignOutModal(); }
+  }
+});
 function renderQaSheetSubjects(){
   const box=document.getElementById('qa-sheet-subjects');if(!box)return;
   const subs=getSelectedSubjects();
