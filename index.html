@@ -3,2219 +3,541 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>StudyPath — วางแผนสอบวิศวกรรม</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<script type="module">
-// ═══════════════════════════ FIREBASE ═══════════════════════════
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBRmQhtjspXxYzn4k2DnOngKIfngVY7WnY",
-  authDomain: "study-project-a.firebaseapp.com",
-  projectId: "study-project-a",
-  storageBucket: "study-project-a.firebasestorage.app",
-  messagingSenderId: "426333975738",
-  appId: "1:426333975738:web:66f58f385cc5cd7cfa3e83",
-  measurementId: "G-2LHGJH40DD"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
-
-let currentUser = null;
-let unsubSnapshot = null;
-
-// ─── AUTH UI ───
-function renderAuthBar(user) {
-  const bar = document.getElementById('auth-bar');
-  if (user) {
-    bar.innerHTML = `
-      <div style="position:relative">
-        <img src="${user.photoURL||'https://ui-avatars.com/api/?name='+encodeURIComponent(user.displayName||'U')+'&background=f59e0b&color=000'}"
-          title="${user.displayName||user.email}"
-          onclick="showSignOutModal()"
-          style="width:30px;height:30px;border-radius:50%;border:2px solid var(--amber);cursor:pointer;display:block;transition:opacity .2s"
-          onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
-      </div>`;
-  } else {
-    bar.innerHTML = `
-      <button class="btn btn-primary btn-sm" id="btn-signin" style="white-space:nowrap;font-size:12px;padding:6px 10px">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle;margin-right:3px"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>Login
-      </button>`;
-    document.getElementById('btn-signin').onclick = () => {
-      window._fbSignIn && window._fbSignIn();
-    };
-  }
-}
-
-// ─── SIGN OUT MODAL ───
-window.showSignOutModal = function() {
-  const user = window.currentUserFn && window.currentUserFn();
-  if (!user) return;
-  const modal = document.getElementById('signout-modal');
-  document.getElementById('modal-avatar').src = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName||'U')}&background=f59e0b&color=000`;
-  document.getElementById('modal-name').textContent = user.displayName || 'ผู้ใช้';
-  document.getElementById('modal-email').textContent = user.email || '';
-  modal.style.display = 'flex';
-  requestAnimationFrame(() => modal.classList.add('show'));
-};
-window.hideSignOutModal = function() {
-  const modal = document.getElementById('signout-modal');
-  modal.classList.remove('show');
-  setTimeout(() => modal.style.display = 'none', 250);
-};
-window.confirmSignOut = function() {
-  window.hideSignOutModal();
-  setTimeout(() => window._fbSignOut && window._fbSignOut(), 200);
-};
-
-// ─── CLOUD SAVE/LOAD ───
-async function saveToCloud(d) {
-  if (!currentUser) return;
-  try {
-    await setDoc(doc(db, 'users', currentUser.uid), { studypath: JSON.stringify(d) });
-  } catch(e) { console.error('Save error:', e); }
-}
-
-
-// ─── AUTH STATE ───
-onAuthStateChanged(auth, user => {
-  currentUser = user;
-  renderAuthBar(user);
-  if (user) {
-    document.getElementById('loading-overlay').style.display = 'flex';
-    subscribeUserData(user.uid);
-    // Fallback: hide overlay after 8s even if snapshot never fires
-    setTimeout(() => { document.getElementById('loading-overlay').style.display = 'none'; }, 8000);
-    // showToast after main script loaded
-    setTimeout(() => window.showToast && window.showToast('ยินดีต้อนรับ ' + (user.displayName || user.email) + ' 👋'), 500);
-  } else {
-    if (unsubSnapshot) { unsubSnapshot(); unsubSnapshot = null; }
-    document.getElementById('loading-overlay').style.display = 'none';
-    window.data = JSON.parse(localStorage.getItem('studypath')||'null') || {
-      logs:[], chapters:{tgat:[],tpat:[],phys:[],math:[]}, streak:0, bestStreak:0, lastStudyDate:null, pomoDone:0, dailyGoal:4
-    };
-    setTimeout(() => {
-      if (window.renderDashboard) { window.renderDashboard(); window.renderLog(); window.renderSubjects(); window.renderGoals(); window.renderSubjectSelects && window.renderSubjectSelects(); window.renderQuickAddChips && window.renderQuickAddChips(); }
-      // ถ้าเคยเลือกวิชาแล้ว ไม่ต้องแสดงหน้าเลือกวิชา
-      const hasSubjects = (window.data.selectedSubjects||[]).length > 0;
-      if (hasSubjects && window.data.onboarded && window.showPage) { window.showPage('dashboard'); }
-    }, 300);
-  }
-});
-
-// ─── EXPOSE to global scope ───
-window.fbSave = saveToCloud;
-window.currentUserFn = () => currentUser;
-window._fbSignIn = () => signInWithPopup(auth, provider).catch(e => { window.showToast && window.showToast('Login ไม่สำเร็จ: ' + e.message); });
-window._fbSignOut = () => signOut(auth);
-
-// ─── subscribeUserData calls render via window ───
-function subscribeUserData(uid) {
-  if (unsubSnapshot) unsubSnapshot();
-  unsubSnapshot = onSnapshot(doc(db, 'users', uid), snap => {
-    if (snap.exists()) {
-      const cloud = JSON.parse(snap.data().studypath || 'null');
-      if (cloud) {
-        window.data = cloud;
-        if (!window.data.chapters) window.data.chapters = {tgat:[],tpat:[],phys:[],math:[]};
-        setTimeout(() => {
-          if (window.renderDashboard) { window.renderDashboard(); window.renderLog(); window.renderSubjects(); window.renderGoals(); window.renderSubjectSelects && window.renderSubjectSelects(); window.renderQuickAddChips && window.renderQuickAddChips(); }
-          // ถ้าเคยเลือกวิชาแล้ว ไม่ต้องแสดงหน้าเลือกวิชา
-          const hasSubjects = (window.data.selectedSubjects||[]).length > 0;
-          if (hasSubjects && window.data.onboarded && window.showPage) { window.showPage('dashboard'); }
-        }, 100);
-      }
-    }
-    document.getElementById('loading-overlay').style.display = 'none';
-  });
-}
-</script>
+<title>ก๊าซฮีเลียม (HELIUM GAS)</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#0e1117;--bg2:#161b27;--bg3:#1e2535;--bg4:#252d3d;
-  --border:#2a3348;--border2:#364057;
-  --text:#e8ecf4;--text2:#94a3b8;--text3:#5c6b88;
-  --amber:#f59e0b;--amber2:#d97706;--amber3:#fbbf24;
-  --teal:#0d9488;--teal2:#14b8a6;
-  --blue:#3b82f6;--blue2:#60a5fa;
-  --green:#22c55e;--green2:#4ade80;
-  --red:#ef4444;--red2:#f87171;
-  --purple:#8b5cf6;--purple2:#a78bfa;
-  --coral:#f97316;
-  --r8:8px;--r12:12px;--r16:16px;--r20:20px;
-  --shadow:0 4px 24px rgba(0,0,0,.4);
-}
-body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
-/* NAV */
-nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(14,17,23,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center;padding:0 20px;gap:0}
-.nav-brand{font-size:17px;font-weight:700;color:var(--amber);letter-spacing:-.5px;margin-right:12px;white-space:nowrap}
-.nav-tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;flex:1}
-.nav-tabs::-webkit-scrollbar{display:none}
-.nav-tab{background:none;border:none;color:var(--text2);font-family:'Sarabun',sans-serif;font-size:13px;padding:6px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;transition:all .15s;font-weight:500}
-.nav-tab:hover{background:var(--bg3);color:var(--text)}
-.nav-tab.active{background:rgba(245,158,11,.12);color:var(--amber)}
-.phase-badge{font-size:11px;background:rgba(139,92,246,.15);color:var(--purple2);border:1px solid rgba(139,92,246,.25);padding:2px 8px;border-radius:20px;margin-left:auto;white-space:nowrap}
-/* LAYOUT */
-.page{display:none;padding:76px 20px 40px;max-width:1100px;margin:0 auto}
-.page.active{display:block}
-/* GRID */
-.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-@media(max-width:700px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
-@media(max-width:900px){.grid3{grid-template-columns:repeat(2,1fr)}.grid4{grid-template-columns:repeat(2,1fr)}}
-/* CARDS */
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r16);padding:20px}
-.card-sm{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r12);padding:16px}
-.card-title{font-size:12px;font-weight:600;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;margin-bottom:12px}
-/* STAT CARDS */
-.stat-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r12);padding:16px 18px}
-.stat-label{font-size:11px;color:var(--text3);font-weight:500;letter-spacing:.3px;margin-bottom:6px}
-.stat-value{font-size:28px;font-weight:700;color:var(--text);line-height:1}
-.stat-sub{font-size:12px;color:var(--text2);margin-top:4px}
-/* COUNTDOWN */
-.countdown-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-.cd-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r12);padding:14px;position:relative;overflow:hidden}
-.cd-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
-.cd-card.tgat::before,.cd-card.tpat::before{background:var(--amber)}
-.cd-card.phys::before{background:var(--teal)}
-.cd-card.math::before{background:var(--blue)}
-.cd-subj{font-size:11px;font-weight:600;letter-spacing:.4px;color:var(--text2);margin-bottom:4px}
-.cd-days{font-size:32px;font-weight:700;font-family:'DM Mono',monospace;line-height:1}
-.cd-date{font-size:11px;color:var(--text3);margin-top:2px}
-/* PROGRESS */
-.subj-progress{margin-bottom:14px}
-.subj-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-.subj-name{font-size:13px;font-weight:600}
-.subj-pct{font-size:12px;font-family:'DM Mono',monospace;color:var(--text2)}
-.prog-track{height:6px;background:var(--bg4);border-radius:3px;overflow:hidden}
-.prog-fill{height:100%;border-radius:3px;transition:width .6s cubic-bezier(.4,0,.2,1)}
-/* STREAK */
-.streak-display{display:flex;align-items:center;gap:16px;padding:16px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-radius:var(--r12);margin-bottom:16px}
-.streak-num{font-size:42px;font-weight:700;color:var(--amber);font-family:'DM Mono',monospace;line-height:1}
-.streak-dots{display:flex;gap:4px;flex-wrap:wrap;margin-top:10px}
-.streak-dot{width:22px;height:22px;border-radius:50%;background:var(--bg4);border:1px solid var(--border);font-size:9px;display:flex;align-items:center;justify-content:center;color:var(--text3)}
-.streak-dot.done{background:rgba(245,158,11,.25);border-color:var(--amber);color:var(--amber)}
-.streak-dot.today{box-shadow:0 0 0 2px var(--amber);color:#000}
-.streak-dot.today.done{background:var(--amber);border-color:var(--amber);color:#000;box-shadow:none}
-/* TIMER */
-.timer-display{text-align:center;padding:32px 0 24px}
-.timer-circle{width:180px;height:180px;border-radius:50%;border:3px solid var(--border);margin:0 auto 20px;display:flex;align-items:center;justify-content:center;position:relative;background:var(--bg3)}
-.timer-circle svg{position:absolute;top:0;left:0;transform:rotate(-90deg)}
-.timer-time{font-size:42px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text)}
-.timer-phase{font-size:12px;color:var(--text2);margin-bottom:16px}
-.timer-btns{display:flex;gap:10px;justify-content:center}
-.btn{font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;padding:9px 20px;border-radius:8px;border:none;cursor:pointer;transition:all .15s}
-.btn-primary{background:var(--amber);color:#000}
-.btn-primary:hover{background:var(--amber3)}
-.btn-secondary{background:var(--bg4);color:var(--text);border:1px solid var(--border2)}
-.btn-secondary:hover{background:var(--bg3);border-color:var(--amber)}
-.btn-danger{background:rgba(239,68,68,.15);color:var(--red2);border:1px solid rgba(239,68,68,.25)}
-.btn-danger:hover{background:rgba(239,68,68,.25)}
-.btn-sm{padding:6px 14px;font-size:12px}
-/* SELECT + INPUT */
-select,input[type=number],input[type=text],input[type=date],textarea{
-  background:var(--bg3);border:1px solid var(--border2);border-radius:8px;
-  color:var(--text);font-family:'Sarabun',sans-serif;font-size:14px;padding:9px 12px;width:100%;outline:none;
-  transition:border-color .15s}
-select:focus,input:focus,textarea:focus{border-color:var(--amber)}
-select option{background:var(--bg2)}
-label{font-size:13px;color:var(--text2);display:block;margin-bottom:5px;font-weight:500}
-.form-group{margin-bottom:14px}
-/* WEEKLY PLAN */
-.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;min-width:680px}
-.week-wrap{overflow-x:auto}
-.day-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r12);padding:12px;min-height:160px}
-.day-card.today{border-color:var(--amber);background:rgba(245,158,11,.04)}
-.day-name{font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--text2);margin-bottom:8px;text-transform:uppercase}
-.day-date{font-size:10px;color:var(--text3);margin-bottom:10px}
-.session{border-radius:6px;padding:6px 8px;margin-bottom:6px;font-size:11px;font-weight:600}
-.session.tgat{background:rgba(245,158,11,.15);color:var(--amber3);border:1px solid rgba(245,158,11,.2)}
-.session.tpat{background:rgba(139,92,246,.15);color:var(--purple2);border:1px solid rgba(139,92,246,.2)}
-.session.phys{background:rgba(13,148,136,.15);color:var(--teal2);border:1px solid rgba(13,148,136,.2)}
-.session.math{background:rgba(59,130,246,.15);color:var(--blue2);border:1px solid rgba(59,130,246,.2)}
-.session.review{background:rgba(34,197,94,.12);color:var(--green2);border:1px solid rgba(34,197,94,.2)}
-.session.mock{background:rgba(249,115,22,.12);color:#fb923c;border:1px solid rgba(249,115,22,.2)}
-.day-hours{font-size:10px;color:var(--text3);margin-top:auto;padding-top:6px;border-top:1px solid var(--border)}
-/* LOG TABLE */
-.log-table{width:100%;border-collapse:collapse;font-size:13px}
-.log-table th{text-align:left;padding:10px 12px;color:var(--text3);font-size:11px;font-weight:600;letter-spacing:.4px;border-bottom:1px solid var(--border)}
-.log-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text)}
-.log-table tr:last-child td{border-bottom:none}
-.log-table tr:hover td{background:rgba(255,255,255,.02)}
-.badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.3px}
-/* CHAPTERS */
-.chapter-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
-.chapter-item:last-child{border-bottom:none}
-.chapter-check{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
-.chapter-check.done{background:var(--green);border-color:var(--green)}
-.chapter-title{font-size:13px;flex:1}
-.chapter-title.done{color:var(--text3);text-decoration:line-through}
-/* RECOMMENDATION */
-.rec-item{display:flex;gap:12px;padding:14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r12);margin-bottom:10px}
-.rec-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-.rec-title{font-size:13px;font-weight:600;margin-bottom:3px}
-.rec-desc{font-size:12px;color:var(--text2)}
-/* PHASE PROGRESS */
-.phase-row{display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg3);border-radius:var(--r12);margin-bottom:8px}
-.phase-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.phase-info{flex:1}
-.phase-name{font-size:13px;font-weight:600}
-.phase-range{font-size:11px;color:var(--text3)}
-.phase-check{font-size:18px}
-/* ANALYSIS */
-.insight-card{background:var(--bg3);border-left:3px solid var(--amber);border-radius:0 var(--r12) var(--r12) 0;padding:14px 16px;margin-bottom:10px}
-.insight-title{font-size:13px;font-weight:600;margin-bottom:4px}
-.insight-desc{font-size:12px;color:var(--text2);line-height:1.6}
-/* SECTION HEADERS */
-h2{font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px}
-h3{font-size:15px;font-weight:600;margin-bottom:12px}
-.page-sub{font-size:13px;color:var(--text2);margin-bottom:24px}
-/* TOAST */
-.toast{position:fixed;bottom:24px;right:24px;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px 18px;font-size:13px;color:var(--text);z-index:999;opacity:0;transform:translateY(10px);transition:all .25s;pointer-events:none}
-.toast.show{opacity:1;transform:translateY(0)}
-/* ACHIEVEMENT */
-.achievement{display:flex;align-items:center;gap:12px;padding:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-radius:var(--r12);margin-bottom:8px}
-.ach-icon{font-size:24px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:rgba(245,158,11,.1);border-radius:10px}
-.ach-name{font-size:13px;font-weight:700;color:var(--amber)}
-.ach-desc{font-size:11px;color:var(--text2);margin-top:2px}
-.ach-locked{filter:grayscale(1);opacity:.4}
-/* Divider */
-.divider{border:none;border-top:1px solid var(--border);margin:20px 0}
-/* Range */
-input[type=range]{-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;background:var(--bg4);border:none;padding:0;cursor:pointer}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--amber);cursor:pointer}
-/* POMODORO ring */
-#pomo-ring{fill:none;stroke:var(--border);stroke-width:8}
-#pomo-progress{fill:none;stroke:var(--amber);stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset .5s linear}
-.pomo-counts{display:flex;gap:8px;justify-content:center;margin-bottom:16px}
-.pomo-dot{width:10px;height:10px;border-radius:50%;background:var(--bg4);border:1px solid var(--border2)}
-.pomo-dot.done{background:var(--amber)}
-/* CHART containers */
-.chart-box{position:relative;height:220px;width:100%}
-/* subject colors util */
-.c-tgat{color:var(--amber)}
-.c-tpat{color:var(--purple2)}
-.c-phys{color:var(--teal2)}
-.c-math{color:var(--blue2)}
-::-webkit-scrollbar{width:5px;height:5px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
-/* QUICK ADD */
-.qa-chip{font-family:'Sarabun',sans-serif;font-size:12px;font-weight:600;padding:8px 14px;border-radius:20px;border:1.5px solid var(--chip-color,var(--border2));background:transparent;color:var(--chip-color,var(--text2));cursor:pointer;transition:all .2s}
-.qa-chip:hover,.qa-chip.active{background:var(--chip-color);color:#000;transform:scale(1.05)}
-.qa-time-btn{font-family:'DM Mono',monospace;font-size:13px;font-weight:600;padding:10px 18px;border-radius:10px;border:1.5px solid var(--border2);background:var(--bg3);color:var(--text);cursor:pointer;transition:all .15s}
-.qa-time-btn:hover{background:var(--amber);color:#000;border-color:var(--amber);transform:translateY(-2px)}
-.qa-time-btn:active{transform:scale(.95)}
-/* FAB */
-.fab{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--amber2));color:#000;font-size:28px;font-weight:700;border:none;cursor:pointer;z-index:200;box-shadow:0 4px 20px rgba(245,158,11,.4);transition:all .25s;display:none}
-.fab:hover{transform:scale(1.1) rotate(90deg)}
-.fab.open{transform:rotate(45deg);background:var(--red)}
-.fab-menu{position:fixed;bottom:90px;right:24px;display:flex;flex-direction:column;gap:8px;z-index:199;opacity:0;pointer-events:none;transform:translateY(20px);transition:all .25s}
-.fab-menu.show{opacity:1;pointer-events:auto;transform:translateY(0)}
-.fab-option{font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;padding:10px 16px;border-radius:12px;border:1px solid var(--border2);background:var(--bg2);color:var(--text);cursor:pointer;white-space:nowrap;text-align:left;transition:all .15s;box-shadow:var(--shadow)}
-.fab-option:hover{border-color:var(--c);color:var(--c);transform:translateX(-4px)}
-@media(max-width:768px){body .fab{display:flex;align-items:center;justify-content:center}body .quick-add-card{display:none}}
-@media(min-width:769px){body .fab,body .fab-menu{display:none}}
-/* DAILY RING */
-.daily-ring-wrap{position:relative;width:130px;height:130px;flex-shrink:0}
-.daily-ring-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
-/* HIGHLIGHT */
-.highlight-card{transition:transform .2s}.highlight-card:hover{transform:translateY(-2px)}
-/* STREAK FIRE */
-@keyframes fireGlow{0%,100%{text-shadow:0 0 8px rgba(245,158,11,.5)}50%{text-shadow:0 0 16px rgba(245,158,11,.8),0 0 32px rgba(245,158,11,.3)}}
-.streak-fire{animation:fireGlow 1.5s ease-in-out infinite}
-/* ═══════════════ BOTTOM NAV ═══════════════ */
-#bottom-nav{
-  display:none;
-  position:fixed;bottom:0;left:0;right:0;z-index:150;
-  background:rgba(14,17,23,.97);
-  backdrop-filter:blur(16px);
-  border-top:1px solid var(--border2);
-  height:62px;
-  padding:0 4px;
-  padding-bottom:env(safe-area-inset-bottom,0px);
-  align-items:center;
-  justify-content:space-around;
-}
-.bn-tab{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:3px;flex:1;height:54px;background:none;border:none;cursor:pointer;
-  color:var(--text3);font-family:'Sarabun',sans-serif;font-size:10px;font-weight:600;
-  letter-spacing:.2px;transition:color .15s;padding:0;border-radius:10px;
-  -webkit-tap-highlight-color:transparent;
-}
-.bn-tab svg{transition:transform .15s;}
-.bn-tab.active{color:var(--amber);}
-.bn-tab.active svg{transform:scale(1.12);}
-.bn-center-wrap{flex:1;display:flex;justify-content:center;align-items:center;}
-.bn-center{
-  width:52px;height:52px;border-radius:16px;
-  background:linear-gradient(135deg,var(--amber),var(--amber2));
-  color:#000;font-size:26px;font-weight:700;
-  border:none;cursor:pointer;
-  box-shadow:0 4px 18px rgba(245,158,11,.45);
-  transition:all .18s;display:flex;align-items:center;justify-content:center;
-  -webkit-tap-highlight-color:transparent;
-}
-.bn-center:active{transform:scale(.9);}
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* ═══════════════ BOTTOM SHEETS ═══════════════ */
-.sheet-overlay{
-  position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.55);
-  backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .25s;
-}
-.sheet-overlay.show{opacity:1;pointer-events:auto;}
-.bottom-sheet{
-  position:fixed;bottom:0;left:0;right:0;z-index:301;
-  background:var(--bg2);border:1px solid var(--border2);
-  border-radius:20px 20px 0 0;
-  padding:12px 20px 24px;
-  padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));
-  transform:translateY(105%);transition:transform .3s cubic-bezier(.32,0,.67,0);
-  max-height:80vh;overflow-y:auto;
-  will-change:transform; /* GPU-accelerated animations */
-}
-.bottom-sheet.show{transform:translateY(0);transition-timing-function:cubic-bezier(.34,1.56,.64,1);}
-.sheet-handle{
-  width:36px;height:4px;border-radius:2px;background:var(--border2);
-  margin:0 auto 16px;
-}
-.sheet-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:14px;}
-/* More menu grid */
-.more-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:4px;}
-.more-btn{
-  display:flex;flex-direction:column;align-items:center;gap:6px;
-  padding:14px 8px;background:var(--bg3);border:1px solid var(--border);
-  border-radius:14px;cursor:pointer;font-family:'Sarabun',sans-serif;
-  font-size:12px;font-weight:600;color:var(--text2);
-  transition:all .15s;-webkit-tap-highlight-color:transparent;
-}
-.more-btn:active{transform:scale(.95);background:var(--bg4);}
-.more-btn span{font-size:22px;}
-
-/* ═══════════════ MOBILE OVERRIDES ═══════════════ */
-/* Uses `body` prefix for specificity instead of !important */
-@media(max-width:768px){
-  /* Hide top nav tabs, keep brand + auth */
-  body .nav-tabs{display:none}
-  body .phase-badge{display:none}
-  body nav{padding:0 14px;justify-content:space-between;}
-  body .nav-brand{margin-right:0;}
-
-  /* Show bottom nav */
-  body #bottom-nav{display:flex;}
-
-  /* Page padding: top nav + bottom nav */
-  body .page{padding:66px 14px calc(72px + env(safe-area-inset-bottom,0px));}
-
-  /* Hide desktop FAB (replaced by bottom nav + sheet) */
-  body .fab,body .fab-menu{display:none;}
-
-  /* Grid: full width on mobile */
-  body .grid2,body .grid3,body .grid4{grid-template-columns:1fr;gap:12px;}
-
-  /* Dashboard: daily ring card — compact */
-  body #page-dashboard .card:has(#daily-ring-progress){padding:16px;}
-  body .daily-ring-wrap{width:110px;height:110px;}
-  body .daily-ring-wrap svg{width:110px;height:110px;}
-  body #daily-ring-pct{font-size:22px;}
-
-  /* Stat grid stays 2-col even when parent stacks */
-  body #page-dashboard .grid2 > div[style*="grid-template-columns"]{
-    display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  body {
+    background: #d4eaf7;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 32px 16px;
+    font-family: 'Sarabun', sans-serif;
   }
 
-  /* rec-item fix — prevent text overflow */
-  body .rec-item{flex-wrap:nowrap;align-items:flex-start;}
-  body .rec-item > div:last-child{flex:1;min-width:0;word-break:break-word;}
-  body .rec-title{font-size:13px;line-height:1.4;}
-  body .rec-desc{font-size:11px;line-height:1.5;}
-  body .stat-card{padding:12px 14px;}
-  body .stat-value{font-size:22px;}
-  body .cd-days{font-size:26px;}
-
-  /* Cards */
-  body .card{padding:16px;}
-  body .card-sm{padding:14px;}
-  body h2{font-size:19px;}
-  body .page-sub{font-size:12px;margin-bottom:16px;}
-
-  /* Buttons — bigger tap targets */
-  body .btn{padding:11px 20px;font-size:14px;}
-  body .btn-sm{padding:8px 14px;font-size:12px;}
-  body .qa-time-btn{padding:12px 16px;font-size:14px;min-width:64px;}
-  body .qa-chip{padding:10px 16px;font-size:13px;}
-
-  /* Inputs */
-  body select,body input[type=number],body input[type=text],body input[type=date],body textarea{
-    font-size:16px!important; /* prevent iOS zoom — this one genuinely needs !important */
-    padding:12px 14px;
-  }
-  body label{font-size:14px;margin-bottom:6px;}
-  body .form-group{margin-bottom:16px;}
-
-  /* Timer — bigger on mobile */
-  body .timer-circle{width:210px;height:210px;}
-  body .timer-time{font-size:46px;}
-  body .timer-display{padding:24px 0 16px;}
-  body .timer-btns .btn{padding:13px 28px;font-size:15px;}
-
-  /* Log — card layout instead of table */
-  body .log-table thead{display:none;}
-  body .log-table tbody tr{
-    display:flex;flex-wrap:wrap;gap:6px;align-items:center;
-    padding:12px 0;border-bottom:1px solid var(--border);
-  }
-  body .log-table tbody tr td{border:none;padding:0;}
-  body .log-table tbody tr td:nth-child(1){font-size:11px;color:var(--text3);width:100%;order:3;}
-  body .log-table tbody tr td:nth-child(2){order:1;flex:1;}
-  body .log-table tbody tr td:nth-child(3){font-weight:700;color:var(--amber);font-family:'DM Mono',monospace;order:2;}
-  body .log-table tbody tr td:nth-child(4){font-size:12px;color:var(--text2);order:4;width:calc(100% - 60px);}
-  body .log-table tbody tr td:nth-child(5){order:5;margin-left:auto;}
-
-  /* Week plan horizontal scroll */
-  body .week-wrap{-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;}
-  body .week-grid{grid-template-columns:repeat(7,200px);}
-  body .day-card{scroll-snap-align:start;}
-
-  /* Countdown 2 col always */
-  body .countdown-grid{grid-template-columns:repeat(2,1fr);}
-
-  /* Subject progress */
-  body .subj-progress{margin-bottom:10px;}
-
-  /* Achievements 1 col */
-  body #achievements-grid{grid-template-columns:1fr;}
-
-  /* Plan tips — single col */
-  body #page-plan .card div[style*="grid-template-columns:1fr 1fr"]{
-    grid-template-columns:1fr;
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    background: #f7fbff;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 50px rgba(0,100,180,0.18);
   }
 
-  /* Footer — hide on mobile */
-  body #site-footer{display:none;}
+  /* Floating orb decorations */
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0.45;
+  }
 
-  /* Quick Add card — PC only, mobile uses bottom sheet */
-  body .quick-add-card{display:none;}
-}
+  /* ─── HEADER ─── */
+  .header {
+    background: linear-gradient(135deg, #00356b 0%, #0077b6 55%, #00b4d8 100%);
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .header-inner {
+    padding: 26px 30px 0px 30px;
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+  .header-left { flex: 1; }
+
+  /* Decorative bubbles in header */
+  .header-bubbles {
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 200px;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .header-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    color: #b3e5fc;
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(255,255,255,0.22);
+  }
+  .header-title-th {
+    font-family: 'Kanit', sans-serif;
+    font-size: 34px;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.1;
+    margin-bottom: 3px;
+  }
+  .header-title-en {
+    font-family: 'Kanit', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.65);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 0;
+  }
+
+  /* Wave divider */
+  .header-wave {
+    display: block;
+    width: 100%;
+    margin-top: -1px;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ─── CONTENT ─── */
+  .content { padding: 18px 28px 0; }
+
+  /* Intro */
+  .intro-box {
+    background: white;
+    border-left: 4px solid #0077b6;
+    border-radius: 0 12px 12px 0;
+    padding: 13px 16px;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 10px rgba(0,119,182,0.08);
+  }
+  .intro-box p {
+    font-size: 13px;
+    line-height: 1.8;
+    color: #2c3e50;
+  }
+
+  /* Top row */
+  .top-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .chem-card {
+    background: white;
+    border-radius: 14px;
+    border: 1.5px solid #b3d9f0;
+    padding: 14px;
+    text-align: center;
+    box-shadow: 0 3px 14px rgba(0,119,182,0.08);
+  }
+  .chem-card-title {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #0077b6;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #e3f4ff;
+    padding-bottom: 8px;
+  }
+  .symbol-display {
+    position: relative;
+    display: inline-block;
+  }
+  .symbol-glow {
+    font-family: 'Kanit', sans-serif;
+    font-size: 60px;
+    font-weight: 700;
+    color: #0077b6;
+    line-height: 1;
+    text-shadow: 0 0 30px rgba(0,180,216,0.3);
+    display: block;
+  }
+  .symbol-number {
+    font-size: 12px;
+    color: #78909c;
+    margin-top: 4px;
+  }
+
+  /* Atom SVG card */
+  .atom-wrap { display: flex; justify-content: center; padding: 4px 0; }
+
+  /* Properties pills */
+  .props-row {
+    display: flex;
+    gap: 8px;
+    margin: 0 0 18px;
+  }
+  .prop-pill {
+    flex: 1;
+    background: white;
+    border: 1.5px solid #b3d9f0;
+    border-radius: 12px;
+    padding: 9px 6px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,119,182,0.06);
+  }
+  .prop-pill-icon { font-size: 18px; margin-bottom: 3px; display: block; }
+  .prop-pill-label { font-size: 9.5px; color: #78909c; display: block; }
+  .prop-pill-val {
+    font-family: 'Kanit', sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #0077b6;
+    display: block;
+    margin-top: 2px;
+  }
+
+  /* Section headers */
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 11px;
+  }
+  .section-icon {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+  }
+  .section-icon.pros { background: #e0f7fa; }
+  .section-icon.cons { background: #fff3e0; }
+  .section-label {
+    font-family: 'Kanit', sans-serif;
+    font-size: 15.5px;
+    font-weight: 600;
+    color: #1a1a2e;
+  }
+  .section-line {
+    flex: 1; height: 1.5px;
+    background: linear-gradient(to right, #b3d9f0, transparent);
+  }
+
+  /* Cards grid */
+  .items-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .item-card {
+    border-radius: 11px;
+    padding: 12px 13px;
+    position: relative;
+    overflow: hidden;
+  }
+  .item-card.pro {
+    background: linear-gradient(135deg, #e0f7fa 0%, #f0fffe 100%);
+    border: 1px solid #b2ebf2;
+  }
+  .item-card.con {
+    background: linear-gradient(135deg, #fff8e1 0%, #fff3e0 100%);
+    border: 1px solid #ffe0b2;
+  }
+  .item-num {
+    position: absolute;
+    top: 7px; right: 10px;
+    font-family: 'Kanit', sans-serif;
+    font-size: 24px; font-weight: 700;
+    opacity: 0.07; color: #000;
+  }
+  .item-head {
+    font-family: 'Kanit', sans-serif;
+    font-size: 12.5px; font-weight: 600;
+    margin-bottom: 5px;
+  }
+  .item-card.pro .item-head { color: #006064; }
+  .item-card.con .item-head { color: #e65100; }
+  .item-body {
+    font-size: 11.5px;
+    line-height: 1.65;
+    color: #455a64;
+  }
+
+  /* ─── BALLOON BANNER ─── */
+  .balloon-banner {
+    background: linear-gradient(to right, #e3f6ff, #f0fbff, #e3f6ff);
+    border-top: 1px dashed #b3d9f0;
+    border-bottom: 1px dashed #b3d9f0;
+    padding: 10px 20px;
+    margin: 14px 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .balloon-banner-text {
+    font-size: 11.5px;
+    color: #01579b;
+    line-height: 1.6;
+    flex: 1;
+  }
+  .balloon-banner-text strong { color: #00356b; }
+
+  /* Footer */
+  .footer {
+    background: linear-gradient(135deg, #00356b 0%, #0077b6 100%);
+    margin-top: 18px;
+    padding: 11px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .footer-text {
+    font-family: 'Kanit', sans-serif;
+    font-size: 12.5px;
+    color: rgba(255,255,255,0.85);
+    font-weight: 400;
+  }
+  .footer-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Kanit', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.22);
+  }
+
+  @media print {
+    body { background: white; padding: 0; }
+    .page { box-shadow: none; }
+  }
 </style>
 </head>
 <body>
+<div class="page">
 
-<nav>
-  <div class="nav-brand">📚 StudyPath</div>
-  <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showPage('dashboard')">Dashboard</button>
-    <button class="nav-tab" onclick="showPage('plan')">แผนอ่าน</button>
-    <button class="nav-tab" onclick="showPage('timer')">จับเวลา</button>
-    <button class="nav-tab" onclick="showPage('log')">บันทึก</button>
-    <button class="nav-tab" onclick="showPage('subjects')">เนื้อหา</button>
-    <button class="nav-tab" onclick="showPage('analysis')">วิเคราะห์</button>
-    <button class="nav-tab" onclick="showPage('goals')">เป้าหมาย</button>
-    <button class="nav-tab" onclick="showPage('select')" style="color:var(--amber)">⚙️ วิชา</button>
-  </div>
-  <div class="phase-badge" id="current-phase-badge">ระยะปูพื้น</div>
-  <div id="auth-bar" style="display:flex;align-items:center;gap:6px;margin-left:8px;flex-shrink:0"></div>
-</nav>
+  <!-- ─── HEADER ─── -->
+  <div class="header">
+    <!-- Decorative bubbles -->
+    <svg class="header-bubbles" viewBox="0 0 200 110" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMaxYMid meet">
+      <circle cx="170" cy="25" r="22" fill="rgba(255,255,255,0.09)"/>
+      <circle cx="140" cy="70" r="14" fill="rgba(255,255,255,0.07)"/>
+      <circle cx="185" cy="72" r="10" fill="rgba(255,255,255,0.12)"/>
+      <circle cx="110" cy="40" r="8" fill="rgba(255,255,255,0.06)"/>
+      <circle cx="155" cy="42" r="6" fill="rgba(255,255,255,0.1)"/>
+      <circle cx="125" cy="85" r="5" fill="rgba(255,255,255,0.08)"/>
+      <circle cx="195" cy="50" r="16" fill="rgba(0,180,216,0.15)"/>
 
-<!-- ═══ BOTTOM NAV (Mobile) ═══ -->
-<div id="bottom-nav">
-  <button class="bn-tab active" data-page="dashboard" onclick="showPage('dashboard')">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-      <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+      <!-- Mini balloons in header -->
+      <ellipse cx="168" cy="26" rx="13" ry="16" fill="rgba(255,255,255,0.18)" stroke="rgba(255,255,255,0.3)" stroke-width="0.7"/>
+      <line x1="168" y1="42" x2="167" y2="52" stroke="rgba(255,255,255,0.35)" stroke-width="0.8"/>
+
+      <ellipse cx="190" cy="60" rx="9" ry="11" fill="rgba(179,229,252,0.25)" stroke="rgba(255,255,255,0.3)" stroke-width="0.7"/>
+      <line x1="190" y1="71" x2="189" y2="79" stroke="rgba(255,255,255,0.35)" stroke-width="0.8"/>
     </svg>
-    <span>หน้าหลัก</span>
-  </button>
-  <button class="bn-tab" data-page="timer" onclick="showPage('timer')">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M9 3h6"/><path d="M12 3v2"/>
+
+    <div class="header-inner">
+      <div class="header-left">
+        <div class="header-badge">CHEMISTRY</div>
+        <div class="header-title-th">ก๊าซฮีเลียม</div>
+        <div class="header-title-en">Helium Gas</div>
+      </div>
+    </div>
+
+    <!-- Wave bottom -->
+    <svg class="header-wave" viewBox="0 0 794 36" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" height="36">
+      <path d="M0,20 C150,36 300,4 450,18 C600,32 700,8 794,20 L794,36 L0,36 Z" fill="#f7fbff"/>
     </svg>
-    <span>จับเวลา</span>
-  </button>
-  <div class="bn-center-wrap">
-    <button class="bn-center" onclick="openQuickAddSheet()" title="Quick Add">+</button>
-  </div>
-  <button class="bn-tab" data-page="log" onclick="showPage('log')">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-      <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/>
-    </svg>
-    <span>บันทึก</span>
-  </button>
-  <button class="bn-tab" data-page="more" onclick="openMoreSheet()">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="19" r="1" fill="currentColor"/>
-    </svg>
-    <span>เพิ่มเติม</span>
-  </button>
-</div>
-
-<!-- Sheet overlay -->
-<div class="sheet-overlay" id="sheet-overlay" onclick="closeAllSheets()"></div>
-
-<!-- ═══ QUICK ADD SHEET ═══ -->
-<div class="bottom-sheet" id="qa-sheet" role="dialog" aria-modal="true" aria-label="Quick Add">
-  <div class="sheet-handle"></div>
-  <div class="sheet-title">⚡ Quick Add — บันทึกใน 2 คลิก</div>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px" id="qa-sheet-subjects">
-    <span style="font-size:12px;color:var(--text3)">กำลังโหลด...</span>
-  </div>
-  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px">
-    <button class="qa-time-btn" style="font-size:13px;padding:14px 4px" onclick="qaSheetAdd(0.5)">+30m</button>
-    <button class="qa-time-btn" style="font-size:13px;padding:14px 4px" onclick="qaSheetAdd(1)">+1h</button>
-    <button class="qa-time-btn" style="font-size:13px;padding:14px 4px" onclick="qaSheetAdd(1.5)">+1.5h</button>
-    <button class="qa-time-btn" style="font-size:13px;padding:14px 4px" onclick="qaSheetAdd(2)">+2h</button>
-    <button class="qa-time-btn" style="font-size:13px;padding:14px 4px" onclick="qaSheetAdd(3)">+3h</button>
-  </div>
-  <div id="qa-sheet-feedback" style="font-size:13px;color:var(--green2);opacity:0;transition:opacity .3s;text-align:center;min-height:20px"></div>
-</div>
-
-<!-- ═══ MORE MENU SHEET ═══ -->
-<div class="bottom-sheet" id="more-sheet" role="dialog" aria-modal="true" aria-label="เมนูเพิ่มเติม">
-  <div class="sheet-handle"></div>
-  <div class="sheet-title">เมนูเพิ่มเติม</div>
-  <div class="more-grid">
-    <button class="more-btn" onclick="showPage('plan');closeAllSheets()"><span>📅</span>แผนอ่าน</button>
-    <button class="more-btn" onclick="showPage('subjects');closeAllSheets()"><span>📚</span>เนื้อหา</button>
-    <button class="more-btn" onclick="showPage('analysis');closeAllSheets()"><span>📊</span>วิเคราะห์</button>
-    <button class="more-btn" onclick="showPage('goals');closeAllSheets()"><span>🏆</span>เป้าหมาย</button>
-    <button class="more-btn" onclick="showPage('select');closeAllSheets()"><span>⚙️</span>วิชา</button>
-    <button class="more-btn" id="more-auth-btn" onclick="closeAllSheets()"><span>👤</span>บัญชี</button>
-  </div>
-  <div style="margin-top:20px;padding-top:14px;border-top:1px solid var(--border);text-align:center;font-size:11px;color:var(--text3);line-height:1.8">
-    📚 <span style="color:var(--amber);font-weight:600">StudyPath</span><br>
-    developed by <span style="color:var(--amber);font-weight:600">_xzc_mxn</span> with <span style="color:#cc785c;font-weight:600">Claude</span><br>
-    <span style="font-size:10px">© 2570 · Good luck Dek70 🎯</span>
-  </div>
-</div><!-- /more-sheet -->
-<div id="loading-overlay" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(14,17,23,.85);align-items:center;justify-content:center;flex-direction:column;gap:12px">
-  <div style="width:40px;height:40px;border:3px solid var(--border2);border-top-color:var(--amber);border-radius:50%;animation:spin 0.8s linear infinite"></div>
-  <div style="font-size:13px;color:var(--text2)">กำลังโหลดข้อมูลจาก Cloud...</div>
-</div>
-<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
-
-<!-- ═══════════════════════════════ SUBJECT SELECTION ═══════════════════════════════ -->
-<div class="page" id="page-select">
-  <div style="text-align:center;margin-bottom:32px">
-    <div style="font-size:48px;margin-bottom:8px">📚</div>
-    <h2 style="font-size:24px">เลือกวิชาที่จะสอบ</h2>
-    <p class="page-sub" style="max-width:500px;margin:8px auto 0">เลือกวิชาที่ต้องการเตรียมสอบ ระบบจะคำนวณเวลาอ่านที่เหมาะสมให้อัตโนมัติ<br><span style="font-size:11px;color:var(--text3)">อ้างอิงเนื้อหาจาก mytcas.com/blueprint</span></p>
-  </div>
-  <div id="select-groups"></div>
-  <div style="text-align:center;margin-top:24px">
-    <div id="select-summary" style="font-size:13px;color:var(--text2);margin-bottom:12px"></div>
-    <button class="btn btn-primary" style="padding:12px 40px;font-size:15px" onclick="confirmSubjects()">✅ ยืนยันและเริ่มวางแผน</button>
-    <div style="font-size:11px;color:var(--text3);margin-top:8px">สามารถเปลี่ยนภายหลังได้</div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════ DASHBOARD ═══════════════════════════════ -->
-<div class="page active" id="page-dashboard">
-  <h2>Dashboard</h2>
-  <p class="page-sub">ภาพรวม Dek70</p>
-
-  <!-- ★ QUICK ADD PANEL — 2 clicks max ★ -->
-  <div class="card quick-add-card" style="margin-bottom:16px;border-color:rgba(245,158,11,.3);background:linear-gradient(135deg,var(--bg2),rgba(245,158,11,.04))">
-    <div class="card-title" style="color:var(--amber)">⚡ Quick Add — บันทึกใน 2 คลิก</div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="qa-subjects">
-      <span style="font-size:12px;color:var(--text3)">กำลังโหลดวิชา...</span>
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="qa-time-btn" onclick="qaAddTime(0.5)">+30m</button>
-      <button class="qa-time-btn" onclick="qaAddTime(1)">+1h</button>
-      <button class="qa-time-btn" onclick="qaAddTime(1.5)">+1.5h</button>
-      <button class="qa-time-btn" onclick="qaAddTime(2)">+2h</button>
-      <button class="qa-time-btn" onclick="qaAddTime(3)">+3h</button>
-    </div>
-    <div id="qa-feedback" style="margin-top:10px;font-size:12px;color:var(--green2);opacity:0;transition:opacity .3s"></div>
   </div>
 
-  <!-- ★ DAILY PROGRESS RING + STATS ★ -->
-  <div class="grid2" style="margin-bottom:16px">
-    <div class="card" style="display:flex;align-items:center;gap:20px">
-      <div class="daily-ring-wrap">
-        <svg width="130" height="130" viewBox="0 0 130 130" style="width:100%;height:100%">
-          <circle cx="65" cy="65" r="56" fill="none" stroke="var(--bg4)" stroke-width="10"/>
-          <circle id="daily-ring-progress" cx="65" cy="65" r="56" fill="none" stroke="var(--amber)" stroke-width="10" stroke-linecap="round" stroke-dasharray="351.86" stroke-dashoffset="351.86" style="transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset .8s ease,stroke .3s"/>
-        </svg>
-        <div class="daily-ring-text">
-          <div id="daily-ring-pct" style="font-size:28px;font-weight:700;font-family:'DM Mono',monospace">0%</div>
-          <div style="font-size:10px;color:var(--text3)">วันนี้</div>
-        </div>
-      </div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;color:var(--text2);margin-bottom:4px">เป้าวันนี้</div>
-        <div style="font-size:22px;font-weight:700;color:var(--text)" id="daily-goal-display">0 / 4h</div>
-        <div style="margin-top:8px;display:flex;gap:6px;align-items:center">
-          <span style="font-size:11px;color:var(--text3)">เป้า:</span>
-          <input type="range" id="daily-goal-slider" min="1" max="10" step="0.5" value="4" oninput="setDailyGoal(this.value)" style="flex:1;max-width:100px">
-          <span style="font-size:12px;color:var(--amber);font-family:'DM Mono'" id="daily-goal-val">4h</span>
-        </div>
-      </div>
+  <!-- ─── CONTENT ─── -->
+  <div class="content">
+
+    <!-- INTRO -->
+    <div class="intro-box">
+      <p>ฮีเลียมเป็นธาตุเคมีที่<strong>เบาที่สุดเป็นอันดับสอง</strong> (รองจากไฮโดรเจน) จัดอยู่ในกลุ่ม<strong>ก๊าซเฉื่อย (Noble Gas)</strong> มีลักษณะเป็นก๊าซที่ไม่มีสี ไม่มีกลิ่น ไม่มีรส ไม่เป็นพิษ ไม่ติดไฟ และ<strong>ไม่ทำปฏิกิริยาเคมีกับสารอื่น</strong> ในสภาวะปกติ จึงมีความปลอดภัยและความเสถียรสูงมาก</p>
     </div>
 
-    <!-- Stats 2x2 -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div class="stat-card">
-        <div class="stat-label">🔥 Streak</div>
-        <div class="stat-value c-tgat" id="dash-streak" style="display:flex;align-items:center;gap:6px">0</div>
-        <div class="stat-sub">วันต่อเนื่อง</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">⏱ ชั่วโมงรวม</div>
-        <div class="stat-value" id="dash-total-hours">0</div>
-        <div class="stat-sub">ชั่วโมงทั้งหมด</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">📅 เฉลี่ย/วัน</div>
-        <div class="stat-value" id="dash-avg">0</div>
-        <div class="stat-sub">ชั่วโมง</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">📖 บทเรียน</div>
-        <div class="stat-value" id="dash-chapters">0</div>
-        <div class="stat-sub">บทที่อ่านแล้ว</div>
-      </div>
-    </div>
-  </div>
+    <!-- SYMBOL + ATOM STRUCTURE -->
+    <div class="top-row">
 
-  <!-- ★ HIGHLIGHTS — Best Day + Weakest Subject ★ -->
-  <div class="grid2" style="margin-bottom:16px">
-    <div class="card highlight-card" id="highlight-best" style="border-left:3px solid var(--green)">
-      <div style="font-size:11px;color:var(--text3);margin-bottom:4px">🏆 วันที่ดีที่สุด</div>
-      <div style="font-size:18px;font-weight:700;color:var(--green2)" id="best-day-text">—</div>
-      <div style="font-size:12px;color:var(--text2)" id="best-day-sub"></div>
-    </div>
-    <div class="card highlight-card" id="highlight-weak" style="border-left:3px solid var(--red)">
-      <div style="font-size:11px;color:var(--text3);margin-bottom:4px">⚠️ วิชาที่ต้องเพิ่ม</div>
-      <div style="font-size:18px;font-weight:700;color:var(--red2)" id="weak-subj-text">—</div>
-      <div style="font-size:12px;color:var(--text2)" id="weak-subj-sub"></div>
-    </div>
-  </div>
+      <!-- Symbol card -->
+      <div class="chem-card">
+        <div class="chem-card-title">สัญลักษณ์ทางเคมี</div>
 
-  <!-- Countdown -->
-  <div class="card" style="margin-bottom:16px">
-    <div class="card-title">⏳ นับถอยหลังถึงวันสอบ</div>
-    <div id="countdown-dynamic" class="countdown-grid"></div>
-  </div>
-
-  <!-- Progress + Recommendations -->
-  <div class="grid2" style="margin-bottom:16px">
-    <div class="card">
-      <div class="card-title">📊 Progress รายวิชา</div>
-      <div id="dash-progress-container"><p style="color:var(--text3);font-size:12px">กำลังโหลด...</p></div>
-    </div>
-    <div class="card">
-      <div class="card-title">💡 แนะนำวันนี้</div>
-      <div id="today-rec"></div>
-      <hr class="divider">
-      <div class="card-title">📈 การทำนาย</div>
-      <div id="prediction-box" style="font-size:13px;color:var(--text2);line-height:1.7"></div>
-    </div>
-  </div>
-
-  <!-- Weekly chart -->
-  <div class="card">
-    <div class="card-title">📈 ชั่วโมงอ่านรายสัปดาห์ (7 วันล่าสุด)</div>
-    <div class="chart-box"><canvas id="weekChart" role="img" aria-label="Bar chart showing study hours for last 7 days"></canvas></div>
-  </div>
-</div>
-
-<!-- ★ FLOATING ACTION BUTTON (Mobile) ★ -->
-<button class="fab" id="fab-btn" onclick="toggleFabMenu()">+</button>
-<div class="fab-menu" id="fab-menu">
-  <button class="fab-option" onclick="fabQuickAdd('tgat',1)" style="--c:var(--amber)">📝 TGAT +1h</button>
-  <button class="fab-option" onclick="fabQuickAdd('tpat',1)" style="--c:var(--purple2)">🔧 TPAT +1h</button>
-  <button class="fab-option" onclick="fabQuickAdd('phys',1)" style="--c:var(--teal2)">⚡ Physics +1h</button>
-  <button class="fab-option" onclick="fabQuickAdd('math',1)" style="--c:var(--blue2)">📐 Math +1h</button>
-  <button class="fab-option" onclick="showPage('timer')" style="--c:var(--coral)">🍅 Timer</button>
-</div>
-
-<!-- ═══════════════════════════════ PLAN ═══════════════════════════════ -->
-<div class="page" id="page-plan">
-  <h2>แผนการอ่านหนังสือ</h2>
-  <p class="page-sub">ตารางอ่านแบบ 7 วัน แบ่ง 3 ระยะ</p>
-
-  <!-- Phases -->
-  <div class="card" style="margin-bottom:16px">
-    <div class="card-title">🗺 ระยะการเตรียมสอบ</div>
-    <div class="phase-row">
-      <div class="phase-dot" style="background:var(--green)"></div>
-      <div class="phase-info">
-        <div class="phase-name">ระยะที่ 1 — ปูพื้นฐาน <span style="font-size:11px;color:var(--text3)">(Foundation)</span></div>
-        <div class="phase-range">พ.ค. 2569 – ต.ค. 2569 · อ่านทุกบทให้ครบ เน้นเข้าใจ</div>
-      </div>
-      <div class="phase-check" id="phase1-check">🟢</div>
-    </div>
-    <div class="phase-row">
-      <div class="phase-dot" style="background:var(--amber)"></div>
-      <div class="phase-info">
-        <div class="phase-name">ระยะที่ 2 — ทำโจทย์ <span style="font-size:11px;color:var(--text3)">(Practice)</span></div>
-        <div class="phase-range">พ.ย. 2569 – ธ.ค. 2569 · ทำโจทย์ทุกบท + ทบทวนจุดอ่อน</div>
-      </div>
-      <div class="phase-check">⚪</div>
-    </div>
-    <div class="phase-row">
-      <div class="phase-dot" style="background:var(--red)"></div>
-      <div class="phase-info">
-        <div class="phase-name">ระยะที่ 3 — ตะลุยข้อสอบ <span style="font-size:11px;color:var(--text3)">(Mock Exam)</span></div>
-        <div class="phase-range">ม.ค. 2570 – ก.ม. 2570 · สอบเสมือนจริงทุกสัปดาห์</div>
-      </div>
-      <div class="phase-check">⚪</div>
-    </div>
-  </div>
-
-  <!-- Recommended hours -->
-  <div class="grid2" style="margin-bottom:16px">
-    <div class="card-sm" style="background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.2)">
-      <div class="card-title">จันทร์ – ศุกร์</div>
-      <div style="font-size:32px;font-weight:700;color:var(--amber);font-family:'DM Mono',monospace">4–5 <span style="font-size:16px;color:var(--text2)">ชั่วโมง/วัน</span></div>
-      <div style="font-size:12px;color:var(--text2);margin-top:6px">แบ่งเช้า 2h + เย็น/ดึก 2-3h</div>
-    </div>
-    <div class="card-sm" style="background:rgba(59,130,246,.06);border-color:rgba(59,130,246,.2)">
-      <div class="card-title">เสาร์ – อาทิตย์</div>
-      <div style="font-size:32px;font-weight:700;color:var(--blue2);font-family:'DM Mono',monospace">6–8 <span style="font-size:16px;color:var(--text2)">ชั่วโมง/วัน</span></div>
-      <div style="font-size:12px;color:var(--text2);margin-top:6px">เช้า 3h + บ่าย 3-5h</div>
-    </div>
-  </div>
-
-  <!-- Weekly schedule -->
-  <div class="card">
-    <div class="card-title">📅 ตารางอ่าน 7 วัน (ระยะปูพื้น)</div>
-    <div class="week-wrap">
-      <div class="week-grid" id="week-grid"></div>
-    </div>
-  </div>
-
-  <div class="card" style="margin-top:16px">
-    <div class="card-title">💡 คำแนะนำเพิ่มเติม</div>
-    <div style="font-size:13px;color:var(--text2);line-height:2;display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <div>✅ อ่านก่อนนอน 30 นาที = ทบทวนวันนั้น</div>
-      <div>✅ ทำ Pomodoro 25/5 นาที ลด burnout</div>
-      <div>✅ วันเสาร์ = Mock test ทั้งวิชา</div>
-      <div>✅ อาทิตย์ = ทบทวนจุดอ่อน + วางแผนอาทิตย์ถัดไป</div>
-      <div>✅ ไม่อ่านวิชาเดิมเกิน 2.5h ต่อเนื่อง</div>
-      <div>✅ บันทึกทุกคืน ใช้เวลา 2 นาที</div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════ TIMER ═══════════════════════════════ -->
-<div class="page" id="page-timer">
-  <h2>จับเวลาอ่าน</h2>
-  <p class="page-sub">Pomodoro Timer บันทึกอัตโนมัติ</p>
-
-  <div class="grid2">
-    <div class="card">
-      <div class="timer-display">
-        <div class="timer-circle">
-          <svg viewBox="0 0 180 180" style="position:absolute;top:0;left:0;width:100%;height:100%;transform:rotate(-90deg)">
-            <circle id="pomo-ring" cx="90" cy="90" r="80" stroke-dasharray="502" stroke-dashoffset="0"/>
-            <circle id="pomo-progress" cx="90" cy="90" r="80" stroke-dasharray="502" stroke-dashoffset="502"/>
+        <!-- Stylized He symbol with electron cloud -->
+        <div style="display:flex;justify-content:center;align-items:center;padding:4px 0 6px;">
+          <svg width="130" height="110" viewBox="0 0 130 110" xmlns="http://www.w3.org/2000/svg">
+            <!-- Outer glow -->
+            <circle cx="65" cy="55" r="46" fill="url(#heGlow)" opacity="0.6"/>
+            <!-- Electron cloud rings -->
+            <ellipse cx="65" cy="55" rx="44" ry="20" fill="none" stroke="#b3d9f0" stroke-width="1" stroke-dasharray="3 3" opacity="0.6"/>
+            <ellipse cx="65" cy="55" rx="20" ry="44" fill="none" stroke="#b3d9f0" stroke-width="1" stroke-dasharray="3 3" opacity="0.6"/>
+            <!-- Outer ring -->
+            <circle cx="65" cy="55" r="44" fill="none" stroke="#0077b6" stroke-width="1.2" stroke-dasharray="4 4" opacity="0.4"/>
+            <!-- Atom core -->
+            <circle cx="65" cy="55" r="28" fill="url(#heCore)"/>
+            <circle cx="65" cy="55" r="28" fill="none" stroke="#0055a5" stroke-width="1.5"/>
+            <!-- He text -->
+            <text x="65" y="62" text-anchor="middle" fill="white" font-family="Kanit,sans-serif" font-size="26" font-weight="700">He</text>
+            <!-- Two electrons -->
+            <circle cx="65" cy="11" r="5" fill="#00b4d8" stroke="white" stroke-width="1.2"/>
+            <text x="65" y="14.5" text-anchor="middle" fill="white" font-family="Kanit,sans-serif" font-size="6.5" font-weight="600">e⁻</text>
+            <circle cx="65" cy="99" r="5" fill="#00b4d8" stroke="white" stroke-width="1.2"/>
+            <text x="65" y="102.5" text-anchor="middle" fill="white" font-family="Kanit,sans-serif" font-size="6.5" font-weight="600">e⁻</text>
+            <!-- Proton label inside -->
+            <text x="65" y="43" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-family="Kanit,sans-serif" font-size="9">นิวเคลียส</text>
+            <text x="65" y="53" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-family="Kanit,sans-serif" font-size="8">2p⁺ · 2n</text>
+            <defs>
+              <radialGradient id="heGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#00b4d8" stop-opacity="0.3"/>
+                <stop offset="100%" stop-color="#f7fbff" stop-opacity="0"/>
+              </radialGradient>
+              <radialGradient id="heCore" cx="38%" cy="35%" r="65%">
+                <stop offset="0%" stop-color="#0099cc"/>
+                <stop offset="100%" stop-color="#00356b"/>
+              </radialGradient>
+            </defs>
           </svg>
-          <div>
-            <div class="timer-time" id="timer-display">25:00</div>
-          </div>
         </div>
-        <div class="timer-phase" id="timer-phase-label">🍅 โฟกัส</div>
-        <div class="pomo-counts" id="pomo-dots"></div>
-        <div class="timer-btns">
-          <button class="btn btn-primary" id="timer-start-btn" onclick="timerToggle()">เริ่ม</button>
-          <button class="btn btn-secondary" onclick="timerReset()">รีเซ็ต</button>
-        </div>
+
+        <div style="font-size:11px;color:#78909c;margin-top:2px;">อะตอมเดี่ยว · ไม่สร้างพันธะเคมี</div>
       </div>
 
-      <hr class="divider">
-      <div class="form-group">
-        <label>วิชาที่กำลังอ่าน</label>
-        <select id="timer-subject">
-          <option value="">-- เลือกวิชา --</option>
-        </select>
+      <!-- Balloon illustration card -->
+      <div class="chem-card">
+        <div class="chem-card-title">การประยุกต์ใช้งาน</div>
+        <div class="atom-wrap">
+          <svg width="150" height="115" viewBox="0 0 150 115" xmlns="http://www.w3.org/2000/svg">
+            <!-- Balloon 1 (big, center-left) -->
+            <ellipse cx="52" cy="42" rx="22" ry="28" fill="#ff7043" opacity="0.92"/>
+            <ellipse cx="44" cy="30" rx="7" ry="5" fill="rgba(255,255,255,0.35)" transform="rotate(-20,44,30)"/>
+            <polygon points="52,70 48,78 56,78" fill="#d84315"/>
+            <line x1="52" y1="78" x2="52" y2="108" stroke="#78909c" stroke-width="1.2" stroke-dasharray="2,2"/>
+
+            <!-- Balloon 2 (medium, right) -->
+            <ellipse cx="98" cy="35" rx="18" ry="23" fill="#7c4dff" opacity="0.9"/>
+            <ellipse cx="91" cy="24" rx="6" ry="4" fill="rgba(255,255,255,0.32)" transform="rotate(-18,91,24)"/>
+            <polygon points="98,58 94,65 102,65" fill="#512da8"/>
+            <line x1="98" y1="65" x2="96" y2="108" stroke="#78909c" stroke-width="1.2" stroke-dasharray="2,2"/>
+
+            <!-- Balloon 3 (small, far right) -->
+            <ellipse cx="130" cy="48" rx="13" ry="17" fill="#26c6da" opacity="0.9"/>
+            <ellipse cx="124" cy="39" rx="4" ry="3" fill="rgba(255,255,255,0.35)" transform="rotate(-15,124,39)"/>
+            <polygon points="130,65 127,71 133,71" fill="#00838f"/>
+            <line x1="130" y1="71" x2="128" y2="108" stroke="#78909c" stroke-width="1.2" stroke-dasharray="2,2"/>
+
+            <!-- Balloon 4 (small, far left) -->
+            <ellipse cx="20" cy="55" rx="11" ry="14" fill="#ffca28" opacity="0.9"/>
+            <ellipse cx="15" cy="47" rx="3.5" ry="2.5" fill="rgba(255,255,255,0.35)" transform="rotate(-15,15,47)"/>
+            <polygon points="20,69 17,74 23,74" fill="#f9a825"/>
+            <line x1="20" y1="74" x2="20" y2="108" stroke="#78909c" stroke-width="1.2" stroke-dasharray="2,2"/>
+
+            <!-- He labels on balloons -->
+            <text x="52" y="46" text-anchor="middle" fill="white" font-family="Kanit,sans-serif" font-size="13" font-weight="700">He</text>
+            <text x="98" y="39" text-anchor="middle" fill="white" font-family="Kanit,sans-serif" font-size="11" font-weight="700">He</text>
+            <text x="130" y="51" text-anchor="middle" fill="white" font-family="Kanit,sans-serif" font-size="9" font-weight="700">He</text>
+            <text x="20" y="58" text-anchor="middle" fill="white" font-family="Kanit,sans-serif" font-size="8" font-weight="700">He</text>
+
+            <!-- Ground line -->
+            <rect x="8" y="108" width="134" height="2" rx="1" fill="#b0bec5"/>
+            <!-- Hand holding strings -->
+            <circle cx="75" cy="110" r="5" fill="#f48fb1"/>
+          </svg>
+        </div>
+        <div style="font-size:11px;color:#78909c;margin-top:0px;">ลูกโป่งฮีเลียม — ปลอดภัย ไม่ติดไฟ</div>
       </div>
-      <div class="form-group">
-        <label>โหมด Pomodoro</label>
-        <select id="pomo-mode" onchange="setPomoMode(this.value)">
-          <option value="25-5">คลาสสิก 25/5</option>
-          <option value="50-10">ยาว 50/10</option>
-          <option value="90-20">Deep Work 90/20</option>
-        </select>
-      </div>
-      <div style="font-size:12px;color:var(--text2)">เซสชันที่ทำเสร็จจะถูกบันทึกอัตโนมัติ</div>
+
     </div>
 
-    <div class="card">
-      <div class="card-title">📋 Session วันนี้</div>
-      <div id="today-sessions">
-        <div style="font-size:13px;color:var(--text3);padding:20px 0;text-align:center">ยังไม่มีเซสชัน<br>กดเริ่มเพื่อเริ่มจับเวลา</div>
+    <!-- PROPERTIES PILLS -->
+    <div class="props-row">
+      <div class="prop-pill">
+        <span class="prop-pill-icon">🌡</span>
+        <span class="prop-pill-label">จุดเดือด</span>
+        <span class="prop-pill-val">−268.9 °C</span>
       </div>
-      <hr class="divider">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div style="font-size:13px;color:var(--text2)">รวมวันนี้</div>
-        <div style="font-size:18px;font-weight:700;font-family:'DM Mono',monospace" id="today-total-timer">0:00</div>
+      <div class="prop-pill">
+        <span class="prop-pill-icon">⚖️</span>
+        <span class="prop-pill-label">มวลโมเลกุล</span>
+        <span class="prop-pill-val">4.00 g/mol</span>
+      </div>
+      <div class="prop-pill">
+        <span class="prop-pill-icon">🔢</span>
+        <span class="prop-pill-label">เลขอะตอม</span>
+        <span class="prop-pill-val">2</span>
+      </div>
+      <div class="prop-pill">
+        <span class="prop-pill-icon">💨</span>
+        <span class="prop-pill-label">ความหนาแน่น</span>
+        <span class="prop-pill-val">0.164 kg/m³</span>
+      </div>
+      <div class="prop-pill">
+        <span class="prop-pill-icon">🌌</span>
+        <span class="prop-pill-label">กลุ่มธาตุ</span>
+        <span class="prop-pill-val">Noble Gas</span>
       </div>
     </div>
+
+    <!-- PROS -->
+    <div class="section-title">
+      <div class="section-icon pros">✅</div>
+      <span class="section-label">ข้อดีและประโยชน์</span>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="items-grid">
+      <div class="item-card pro">
+        <span class="item-num">1</span>
+        <div class="item-head">🎈 ความปลอดภัยในการลอยตัว</div>
+        <div class="item-body">เบากว่าอากาศและไม่ติดไฟ นิยมบรรจุในลูกโป่งและบอลลูนอย่างปลอดภัย ทดแทนไฮโดรเจนที่มีความเสี่ยงต่อการระเบิด</div>
+      </div>
+      <div class="item-card pro">
+        <span class="item-num">2</span>
+        <div class="item-head">🏥 การแพทย์ระดับสูง (MRI)</div>
+        <div class="item-body">ฮีเลียมเหลวใช้เป็นสารหล่อเย็นสำหรับแม่เหล็กตัวนำยิ่งยวดในเครื่องสแกน MRI ของโรงพยาบาล</div>
+      </div>
+      <div class="item-card pro">
+        <span class="item-num">3</span>
+        <div class="item-head">🔧 อุตสาหกรรมเชื่อมโลหะ</div>
+        <div class="item-body">ใช้เป็น Shielding gas ป้องกันไม่ให้โลหะที่กำลังเชื่อมทำปฏิกิริยากับออกซิเจนในอากาศ</div>
+      </div>
+      <div class="item-card pro">
+        <span class="item-num">4</span>
+        <div class="item-head">🤿 การประดาน้ำลึก</div>
+        <div class="item-body">ผสมกับออกซิเจนให้นักประดาน้ำลึกหายใจ เพื่อลดอันตรายจากภาวะเมาไนโตรเจน (Nitrogen narcosis)</div>
+      </div>
+    </div>
+
+    <!-- CONS -->
+    <div class="section-title" style="margin-top:14px;">
+      <div class="section-icon cons">⚠️</div>
+      <span class="section-label">ข้อเสียและข้อควรระวัง</span>
+      <div class="section-line" style="background:linear-gradient(to right,#ffe0b2,transparent);"></div>
+    </div>
+
+    <div class="items-grid">
+      <div class="item-card con">
+        <span class="item-num">1</span>
+        <div class="item-head">😵 อันตรายจากการสูดดม</div>
+        <div class="item-body">การสูดดมฮีเลียมเพื่อดัดเสียงเป็นอันตรายมาก ก๊าซจะไปแทนที่ออกซิเจนในปอด อาจหมดสติหรือเสียชีวิตได้</div>
+      </div>
+      <div class="item-card con">
+        <span class="item-num">2</span>
+        <div class="item-head">🌍 ทรัพยากรใช้แล้วหมดไป</div>
+        <div class="item-body">เมื่อปล่อยออกสู่บรรยากาศจะลอยหลุดออกสู่อวกาศทันที ทำให้เป็นทรัพยากรหายากและมีราคาแพงขึ้นเรื่อยๆ</div>
+      </div>
+      <div class="item-card con" style="grid-column: 1 / -1; max-width:50%; margin: 0 auto; width:100%;">
+        <span class="item-num">3</span>
+        <div class="item-head">🥶 อันตรายจากความเย็นจัด</div>
+        <div class="item-body">ฮีเลียมเหลวมีอุณหภูมิต่ำถึง −268 °C หากสัมผัสผิวหนังโดยตรง เกิด Frostbite อย่างรุนแรง เนื้อเยื่อถูกทำลาย</div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <span class="footer-text">นาย อัสดาฟี่ ศรีไสยเพชร &nbsp;·&nbsp; ม.6/7 ล.9</span>
+    <span class="footer-right">He &nbsp;·&nbsp; Z=2</span>
   </div>
+
 </div>
-
-<!-- ═══════════════════════════════ LOG ═══════════════════════════════ -->
-<div class="page" id="page-log">
-  <h2>บันทึกการอ่าน</h2>
-  <p class="page-sub">กรอกชั่วโมงอ่านประจำวัน · รองรับแก้ไขย้อนหลัง</p>
-
-  <div class="grid2" style="margin-bottom:16px">
-    <div class="card">
-      <div class="card-title">➕ เพิ่มรายการ</div>
-      <div class="form-group">
-        <label>วันที่</label>
-        <input type="date" id="log-date">
-      </div>
-      <div class="form-group">
-        <label>วิชา</label>
-        <select id="log-subject">
-          <option value="">-- เลือกวิชา --</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>ชั่วโมง</label>
-        <input type="number" id="log-hours" min="0" max="12" step="0.5" placeholder="0.0">
-      </div>
-      <div class="form-group">
-        <label>หมายเหตุ (ไม่บังคับ)</label>
-        <input type="text" id="log-note" placeholder="เช่น อ่านบท 3-4 ทำโจทย์">
-      </div>
-      <button class="btn btn-primary" style="width:100%" onclick="addLog()">บันทึก</button>
-    </div>
-
-    <div class="card">
-      <div class="card-title">📊 สรุปรายสัปดาห์</div>
-      <div class="chart-box" style="height:180px">
-        <canvas id="logWeekChart" role="img" aria-label="Study hours per subject this week"></canvas>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">📝 ประวัติการบันทึก</div>
-    <div style="overflow-x:auto">
-      <table class="log-table">
-        <thead>
-          <tr><th>วันที่</th><th>วิชา</th><th>ชั่วโมง</th><th>หมายเหตุ</th><th></th></tr>
-        </thead>
-        <tbody id="log-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════ SUBJECTS ═══════════════════════════════ -->
-<div class="page" id="page-subjects">
-  <h2>เนื้อหาและบทเรียน</h2>
-  <p class="page-sub">ติ๊กบทที่อ่านจบแล้ว ติดตาม progress รายวิชา</p>
-
-  <div class="grid2" id="subjects-grid"></div>
-</div>
-
-<!-- ═══════════════════════════════ ANALYSIS ═══════════════════════════════ -->
-<div class="page" id="page-analysis">
-  <h2>วิเคราะห์การเรียน</h2>
-  <p class="page-sub">ดูข้อมูลเชิงลึก หาจุดอ่อน ปรับแผน</p>
-
-  <div class="grid2" style="margin-bottom:16px">
-    <div class="card">
-      <div class="card-title">📊 ชั่วโมงสะสมรายวิชา</div>
-      <div class="chart-box">
-        <canvas id="subjectHoursChart" role="img" aria-label="Total hours per subject"></canvas>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">📅 ชั่วโมงรายวัน (30 วัน)</div>
-      <div class="chart-box">
-        <canvas id="dailyChart" role="img" aria-label="Daily study hours for past 30 days"></canvas>
-      </div>
-    </div>
-  </div>
-
-  <div class="card" style="margin-bottom:16px">
-    <div class="card-title">🔍 Insights อัตโนมัติ</div>
-    <div id="insights-box"></div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">⚡ เปรียบเทียบ แผน vs จริง (สัปดาห์นี้)</div>
-    <div class="chart-box" style="height:180px">
-      <canvas id="planVsActualChart" role="img" aria-label="Planned vs actual hours per day this week"></canvas>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════ GOALS ═══════════════════════════════ -->
-<div class="page" id="page-goals">
-  <h2>เป้าหมายและ Achievements</h2>
-  <p class="page-sub">Milestones · Streak · Badges</p>
-
-  <div class="grid2" style="margin-bottom:16px">
-    <div class="card">
-      <div class="card-title">🔥 Streak ปัจจุบัน</div>
-      <div class="streak-display">
-        <div>
-          <div class="streak-num" id="streak-num">0</div>
-          <div style="font-size:12px;color:var(--text2)">วันต่อเนื่อง</div>
-        </div>
-        <div>
-          <div style="font-size:13px;color:var(--text2);margin-bottom:6px">Best: <span style="color:var(--amber)" id="best-streak">0</span> วัน</div>
-          <div style="font-size:12px;color:var(--text3)">อ่านหนังสือทุกวัน<br>อย่างน้อย 30 นาที</div>
-        </div>
-      </div>
-      <div class="card-title" style="margin-top:4px">7 วันล่าสุด</div>
-      <div class="streak-dots" id="streak-dots-7"></div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">🎯 Milestones</div>
-      <div id="milestones-list"></div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">🏆 Achievements</div>
-    <div class="grid2" id="achievements-grid"></div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════ SIGN OUT MODAL ═══════════════════════════════ -->
-<div id="signout-modal" style="display:none" role="dialog" aria-modal="true" aria-label="Sign out" onclick="if(event.target===this)hideSignOutModal()">
-  <div class="so-card">
-    <div class="so-glow"></div>
-    <div class="so-avatar-wrap">
-      <img id="modal-avatar" src="" alt="avatar" class="so-avatar">
-      <div class="so-avatar-ring"></div>
-    </div>
-    <div class="so-name" id="modal-name">—</div>
-    <div class="so-email" id="modal-email">—</div>
-    <div class="so-divider"></div>
-    <div class="so-info">
-      <div class="so-info-row">
-        <span class="so-info-icon">☁️</span>
-        <span>ข้อมูลซิงค์กับ Cloud อัตโนมัติ</span>
-      </div>
-      <div class="so-info-row">
-        <span class="so-info-icon">🔒</span>
-        <span>ออกจากระบบจะไม่ลบข้อมูล</span>
-      </div>
-    </div>
-    <div class="so-actions">
-      <button class="so-btn-cancel" onclick="hideSignOutModal()">ยกเลิก</button>
-      <button class="so-btn-signout" onclick="confirmSignOut()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        ออกจากระบบ
-      </button>
-    </div>
-  </div>
-</div>
-
-<style>
-#signout-modal{
-  position:fixed;inset:0;z-index:1000;
-  background:rgba(0,0,0,.6);
-  backdrop-filter:blur(6px);
-  display:flex;align-items:center;justify-content:center;
-  opacity:0;transition:opacity .25s;
-  padding:20px;
-}
-#signout-modal.show{opacity:1;}
-.so-card{
-  position:relative;overflow:hidden;
-  background:var(--bg2);
-  border:1px solid var(--border2);
-  border-radius:24px;
-  padding:36px 28px 28px;
-  width:100%;max-width:320px;
-  text-align:center;
-  box-shadow:0 24px 64px rgba(0,0,0,.6);
-  transform:translateY(20px) scale(.97);
-  transition:transform .25s cubic-bezier(.34,1.56,.64,1);
-}
-#signout-modal.show .so-card{transform:translateY(0) scale(1);}
-.so-glow{
-  position:absolute;top:-60px;left:50%;transform:translateX(-50%);
-  width:200px;height:200px;border-radius:50%;
-  background:radial-gradient(circle,rgba(245,158,11,.15) 0%,transparent 70%);
-  pointer-events:none;
-}
-.so-avatar-wrap{
-  position:relative;width:76px;height:76px;margin:0 auto 14px;
-}
-.so-avatar{
-  width:76px;height:76px;border-radius:50%;
-  border:3px solid var(--amber);
-  display:block;object-fit:cover;
-}
-.so-avatar-ring{
-  position:absolute;inset:-5px;border-radius:50%;
-  border:2px solid transparent;
-  background:linear-gradient(135deg,var(--amber),var(--purple2)) border-box;
-  -webkit-mask:linear-gradient(#fff 0 0) padding-box,linear-gradient(#fff 0 0);
-  -webkit-mask-composite:destination-out;
-  mask-composite:exclude;
-  animation:spinRing 4s linear infinite;
-}
-@keyframes spinRing{to{transform:rotate(360deg);}}
-.so-name{font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px;}
-.so-email{font-size:12px;color:var(--text3);margin-bottom:20px;word-break:break-all;}
-.so-divider{height:1px;background:var(--border);margin-bottom:16px;}
-.so-info{
-  background:var(--bg3);border-radius:12px;
-  padding:12px 14px;margin-bottom:20px;text-align:left;
-}
-.so-info-row{
-  display:flex;align-items:center;gap:8px;
-  font-size:12px;color:var(--text2);padding:3px 0;
-}
-.so-info-icon{font-size:14px;width:18px;text-align:center;}
-.so-actions{display:flex;gap:10px;}
-.so-btn-cancel{
-  flex:1;padding:11px;border-radius:12px;
-  background:var(--bg4);color:var(--text2);
-  border:1px solid var(--border2);
-  font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;cursor:pointer;
-  transition:all .15s;
-}
-.so-btn-cancel:hover{background:var(--bg3);color:var(--text);}
-.so-btn-signout{
-  flex:1.4;padding:11px;border-radius:12px;
-  background:rgba(239,68,68,.12);color:var(--red2);
-  border:1px solid rgba(239,68,68,.25);
-  font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  transition:all .15s;
-}
-.so-btn-signout:hover{background:rgba(239,68,68,.22);border-color:rgba(239,68,68,.5);}
-</style>
-
-<!-- ═══════════════════════════════ FOOTER ═══════════════════════════════ -->
-<footer id="site-footer">
-  <div class="footer-inner">
-    <div class="footer-brand">📚 StudyPath</div>
-    <div class="footer-credit">
-      <span class="footer-dev">developed by</span>
-      <span class="footer-name">_xzc_mxn</span>
-      <span class="footer-with">with</span>
-      <span class="footer-claude">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="vertical-align:middle;margin-right:3px"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z" fill="currentColor" opacity=".3"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" fill="currentColor"/></svg>Claude
-      </span>
-    </div>
-    <div class="footer-copy">© 2570 · Good luck Dek70 🎯</div>
-  </div>
-</footer>
-<style>
-#site-footer{
-  margin-top:48px;
-  padding:0 20px 32px;
-  max-width:1100px;
-  margin-left:auto;
-  margin-right:auto;
-}
-@media(max-width:768px){body #site-footer{display:none;}}
-.footer-inner{
-  border-top:1px solid var(--border);
-  padding-top:24px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:10px;
-  text-align:center;
-}
-.footer-brand{
-  font-size:15px;
-  font-weight:700;
-  color:var(--amber);
-  letter-spacing:-.3px;
-}
-.footer-credit{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  font-size:13px;
-}
-.footer-dev{
-  color:var(--text3);
-  font-size:12px;
-}
-.footer-name{
-  color:var(--text);
-  font-weight:700;
-  font-family:'DM Mono',monospace;
-  font-size:14px;
-  background:linear-gradient(90deg,var(--amber),var(--purple2));
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  background-clip:text;
-}
-.footer-with{
-  color:var(--text3);
-  font-size:12px;
-}
-.footer-claude{
-  color:#cc785c;
-  font-weight:600;
-  font-size:13px;
-  display:inline-flex;
-  align-items:center;
-  gap:2px;
-}
-.footer-copy{
-  font-size:11px;
-  color:var(--text3);
-  letter-spacing:.3px;
-}
-</style>
-
-<div class="toast" id="toast"></div>
-
-<script>
-// ═══════════════════════════ TCAS SUBJECTS DATABASE ═══════════════════════════
-// All data constants are frozen for immutability — edit the source, not at runtime.
-const TCAS_SUBJECTS = Object.freeze({
-  tgat1:{id:'tgat1',group:'TGAT',name:'TGAT1 การสื่อสารภาษาอังกฤษ',code:'91',color:'#f59e0b',icon:'🌐',examDate:'2027-01-30',difficulty:3,
-    chapters:['Reading Comprehension','Vocabulary in Context','Grammar & Usage','Sentence Completion','Error Identification','Paragraph Organization']},
-  tgat2:{id:'tgat2',group:'TGAT',name:'TGAT2 การคิดอย่างมีเหตุผล',code:'92',color:'#f59e0b',icon:'🧠',examDate:'2027-01-30',difficulty:3,
-    chapters:['การคิดเชิงวิพากษ์','การคิดเชิงวิเคราะห์','การอ่านเชิงวิเคราะห์','การใช้เหตุผลเชิงตรรกะ','การแก้ปัญหาเชิงสร้างสรรค์','การตัดสินใจ']},
-  tgat3:{id:'tgat3',group:'TGAT',name:'TGAT3 สมรรถนะการทำงาน',code:'93',color:'#f59e0b',icon:'💼',examDate:'2027-01-30',difficulty:2,
-    chapters:['การสร้างคุณค่าและนวัตกรรม','การแก้ไขปัญหาที่ซับซ้อน','การบริหารจัดการอารมณ์','ภาวะผู้นำ','การทำงานร่วมกับผู้อื่น']},
-  tpat1:{id:'tpat1',group:'TPAT',name:'TPAT1 กสพท.',code:'10',color:'#ec4899',icon:'🏥',examDate:'2027-02-13',difficulty:5,
-    chapters:['จริยธรรมทางการแพทย์','ทักษะการคิดเชิงวิเคราะห์','ความเชื่อมโยง','เชาวน์ปัญญา','จิตวิทยาการแพทย์','สถานการณ์จำลอง']},
-  tpat2:{id:'tpat2',group:'TPAT',name:'TPAT2 ศิลปกรรมศาสตร์',code:'20',color:'#8b5cf6',icon:'🎨',examDate:'2027-01-30',difficulty:3,
-    chapters:['ทัศนศิลป์','ดนตรี','นาฏศิลป์','ศิลปะการแสดง','ประวัติศาสตร์ศิลปะ','ความคิดสร้างสรรค์']},
-  tpat3:{id:'tpat3',group:'TPAT',name:'TPAT3 วิศวกรรมศาสตร์',code:'30',color:'#8b5cf6',icon:'🔧',examDate:'2027-01-30',difficulty:4,
-    chapters:['มิติสัมพันธ์','การใช้เหตุผลเชิงกล','ฟิสิกส์พื้นฐาน','คณิตศาสตร์เชิงวิศวกรรม','การอ่านแบบเทคนิค','วิเคราะห์แผนภาพวงจร','โจทย์บูรณาการ STEM']},
-  tpat4:{id:'tpat4',group:'TPAT',name:'TPAT4 สถาปัตยกรรม',code:'40',color:'#8b5cf6',icon:'🏛️',examDate:'2027-01-30',difficulty:4,
-    chapters:['ออกแบบ 2 มิติ','ออกแบบ 3 มิติ','มิติสัมพันธ์ทางสถาปัตย์','ทฤษฎีสีและองค์ประกอบ','ประวัติศาสตร์สถาปัตยกรรม','การเขียนแบบ']},
-  tpat5:{id:'tpat5',group:'TPAT',name:'TPAT5 ครุศาสตร์',code:'50',color:'#8b5cf6',icon:'📚',examDate:'2027-01-30',difficulty:3,
-    chapters:['ความรู้ทั่วไปทางการศึกษา','จิตวิทยาพัฒนาการ','การจัดการเรียนรู้','คุณธรรมจริยธรรมวิชาชีพครู','การวัดและประเมินผล','ความถนัดทางวิชาชีพครู']},
-  alv_math1:{id:'alv_math1',group:'A-Level',name:'A-Level คณิตศาสตร์ 1',code:'61',color:'#3b82f6',icon:'📐',examDate:'2027-03-13',difficulty:5,
-    chapters:['เซต','ตรรกศาสตร์','จำนวนจริง','ฟังก์ชัน','เรขาคณิตวิเคราะห์','เมทริกซ์','เวกเตอร์','ลำดับและอนุกรม','แคลคูลัส','สถิติ','ความน่าจะเป็น','จำนวนเชิงซ้อน']},
-  alv_math2:{id:'alv_math2',group:'A-Level',name:'A-Level คณิตศาสตร์ 2',code:'62',color:'#3b82f6',icon:'🔢',examDate:'2027-03-13',difficulty:3,
-    chapters:['สถิติศาสตร์','การวิเคราะห์ข้อมูล','ความน่าจะเป็น','การแจกแจง','ดัชนี','คณิตศาสตร์การเงิน']},
-  alv_sci:{id:'alv_sci',group:'A-Level',name:'A-Level วิทยาศาสตร์ประยุกต์',code:'63',color:'#0d9488',icon:'🔬',examDate:'2027-03-13',difficulty:3,
-    chapters:['กระบวนการทางวิทยาศาสตร์','ชีวิตกับสิ่งแวดล้อม','สารในชีวิตประจำวัน','แรงและพลังงาน','โลกและอวกาศ','เทคโนโลยี']},
-  alv_phy:{id:'alv_phy',group:'A-Level',name:'A-Level ฟิสิกส์',code:'64',color:'#0d9488',icon:'⚡',examDate:'2027-03-13',difficulty:5,
-    chapters:['กลศาสตร์','แรงและกฎการเคลื่อนที่','งานและพลังงาน','โมเมนตัม','การเคลื่อนที่แบบหมุน','คลื่น','เสียง','แสงและทัศนอุปกรณ์','ไฟฟ้าสถิต','ไฟฟ้ากระแส','แม่เหล็กไฟฟ้า','ฟิสิกส์อะตอม','ฟิสิกส์นิวเคลียร์']},
-  alv_chem:{id:'alv_chem',group:'A-Level',name:'A-Level เคมี',code:'65',color:'#0d9488',icon:'🧪',examDate:'2027-03-13',difficulty:5,
-    chapters:['โครงสร้างอะตอม','พันธะเคมี','สมบัติของธาตุ','ปริมาณสัมพันธ์','ของแข็ง ของเหลว แก๊ส','อัตราการเกิดปฏิกิริยา','สมดุลเคมี','กรด-เบส','ไฟฟ้าเคมี','เคมีอินทรีย์','พอลิเมอร์']},
-  alv_bio:{id:'alv_bio',group:'A-Level',name:'A-Level ชีววิทยา',code:'66',color:'#0d9488',icon:'🧬',examDate:'2027-03-13',difficulty:4,
-    chapters:['เซลล์','โครงสร้างและหน้าที่ของพืช','โครงสร้างและหน้าที่ของสัตว์','พันธุศาสตร์','วิวัฒนาการ','นิเวศวิทยา','ความหลากหลายทางชีวภาพ','เทคโนโลยีชีวภาพ']},
-  alv_soc:{id:'alv_soc',group:'A-Level',name:'A-Level สังคมศึกษา',code:'70',color:'#f97316',icon:'🌍',examDate:'2027-03-13',difficulty:3,
-    chapters:['ศาสนา ศีลธรรม จริยธรรม','หน้าที่พลเมือง','เศรษฐศาสตร์','ประวัติศาสตร์ไทย','ประวัติศาสตร์สากล','ภูมิศาสตร์']},
-  alv_thai:{id:'alv_thai',group:'A-Level',name:'A-Level ภาษาไทย',code:'81',color:'#f97316',icon:'📝',examDate:'2027-03-13',difficulty:3,
-    chapters:['การอ่าน','การเขียน','หลักภาษา','วรรณคดีและวรรณกรรม','การฟัง การดู การพูด','คำศัพท์และสำนวน']},
-  alv_eng:{id:'alv_eng',group:'A-Level',name:'A-Level ภาษาอังกฤษ',code:'82',color:'#f97316',icon:'🔤',examDate:'2027-03-13',difficulty:4,
-    chapters:['Listening & Speaking','Reading Comprehension','Writing','Grammar & Structure','Vocabulary','Functional Language']}
-});
-const SUBJECT_GROUPS=Object.freeze([
-  {key:'TGAT',label:'TGAT (ความถนัดทั่วไป)',color:'#f59e0b',subjects:['tgat1','tgat2','tgat3']},
-  {key:'TPAT',label:'TPAT (ความถนัดเฉพาะ)',color:'#8b5cf6',subjects:['tpat1','tpat2','tpat3','tpat4','tpat5']},
-  {key:'A-Level',label:'A-Level',color:'#3b82f6',subjects:['alv_math1','alv_math2','alv_sci','alv_phy','alv_chem','alv_bio','alv_soc','alv_thai','alv_eng']}
-]);
-function getEstimatedHours(sid){const s=TCAS_SUBJECTS[sid];if(!s)return 0;const h={1:3,2:5,3:7,4:10,5:14};return s.chapters.length*(h[s.difficulty]||7);}
-function getSelectedSubjects(){return(data.selectedSubjects||[]).map(id=>TCAS_SUBJECTS[id]).filter(Boolean);}
-function getActiveExams(){const subs=getSelectedSubjects();const map={};subs.forEach(s=>{map[s.id]={name:s.name,date:s.examDate,color:s.color};});return map;}
-function getActiveSubjectsData(){const subs=getSelectedSubjects();const map={};subs.forEach(s=>{map[s.id]={name:s.name,color:s.color,chapters:s.chapters,icon:s.icon};});return map;}
-
-const ACHIEVEMENTS_DEF=Object.freeze([
-  {id:'first',icon:'🌱',name:'เริ่มต้นแล้ว!',desc:'บันทึกวันแรก',cond:s=>s.totalLogs>0},
-  {id:'week1',icon:'🔥',name:'ติดต่อ 7 วัน',desc:'Streak 7 วัน',cond:s=>s.streak>=7},
-  {id:'week4',icon:'💎',name:'มืออาชีพ',desc:'Streak 30 วัน',cond:s=>s.streak>=30},
-  {id:'h50',icon:'⏰',name:'50 ชั่วโมง',desc:'อ่านรวม 50h',cond:s=>s.totalHours>=50},
-  {id:'h200',icon:'🚀',name:'200 ชั่วโมง',desc:'อ่านรวม 200h',cond:s=>s.totalHours>=200},
-  {id:'chapter10',icon:'📖',name:'นักอ่านตัวจริง',desc:'อ่านครบ 10 บท',cond:s=>s.chapsDone>=10},
-  {id:'chapter30',icon:'🏆',name:'ครบทุกบท',desc:'อ่านครบ 30 บท',cond:s=>s.chapsDone>=30},
-  {id:'all4',icon:'⭐',name:'นักเรียนรอบด้าน',desc:'เรียนครบทุกวิชาที่เลือก',cond:s=>s.subjTouched>=s.totalSubj},
-]);
-
-// Weekly plan template (จ-อา) — sessions ใช้ cls ของกลุ่มวิชา dynamic
-const WEEK_PLAN=Object.freeze([
-  {day:'จันทร์', target:4, sessions:[{cls:'tgat',label:'TGAT',h:'2h'},{cls:'tpat',label:'TPAT',h:'2h'}]},
-  {day:'อังคาร', target:5, sessions:[{cls:'tgat',label:'A-Level วิทย์/คณิต',h:'3h'},{cls:'tpat',label:'TGAT',h:'2h'}]},
-  {day:'พุธ',   target:4, sessions:[{cls:'tpat',label:'TPAT',h:'2h'},{cls:'tgat',label:'A-Level',h:'2h'}]},
-  {day:'พฤหัส', target:5, sessions:[{cls:'tgat',label:'A-Level วิทย์/คณิต',h:'3h'},{cls:'tpat',label:'ทบทวน',h:'2h'}]},
-  {day:'ศุกร์', target:3, sessions:[{cls:'review',label:'ทบทวนรวม',h:'3h'}]},
-  {day:'เสาร์', target:6, sessions:[{cls:'mock',label:'ทำข้อสอบเก่า',h:'4h'},{cls:'tgat',label:'เสริมจุดอ่อน',h:'2h'}]},
-  {day:'อาทิตย์',target:3, sessions:[{cls:'review',label:'พักผ่อน/ทบทวนเบาๆ',h:'2h'},{cls:'tgat',label:'วางแผนสัปดาห์',h:'1h'}]},
-]);
-
-let data = window.data || {
-  logs:[], chapters:{}, streak:0, bestStreak:0, lastStudyDate:null, pomoDone:0, dailyGoal:4,
-  selectedSubjects:[], onboarded:false
-};
-Object.defineProperty(window, 'data', {get:()=>data,set:(v)=>{data=v;},configurable:true});
-
-// ═══════════════════════════ STATE MANAGER ═══════════════════════════
-// Debounced save: prevents spamming localStorage/Firebase on rapid changes
-let _saveTimer = null;
-function save() {
-  if (_saveTimer) clearTimeout(_saveTimer);
-  _saveTimer = setTimeout(() => {
-    localStorage.setItem('studypath', JSON.stringify(data));
-    if (window.fbSave) window.fbSave(data);
-    _saveTimer = null;
-  }, 300);
-}
-// Force immediate save (for critical moments like page unload)
-function saveNow() {
-  if (_saveTimer) { clearTimeout(_saveTimer); _saveTimer = null; }
-  localStorage.setItem('studypath', JSON.stringify(data));
-  if (window.fbSave) window.fbSave(data);
-}
-window.addEventListener('beforeunload', saveNow);
-
-// Simple render scheduler — batches multiple render calls into one rAF
-const _pendingRenders = new Set();
-let _renderScheduled = false;
-function scheduleRender(...fns) {
-  fns.forEach(fn => _pendingRenders.add(fn));
-  if (!_renderScheduled) {
-    _renderScheduled = true;
-    requestAnimationFrame(() => {
-      _pendingRenders.forEach(fn => fn());
-      _pendingRenders.clear();
-      _renderScheduled = false;
-    });
-  }
-}
-
-function ensureChapters(){if(!data.chapters)data.chapters={};(data.selectedSubjects||[]).forEach(id=>{if(!data.chapters[id])data.chapters[id]=[];});}
-// Migrate old data: if user had subjects selected before onboarded flag existed
-function migrateData(){if(!data.onboarded&&(data.selectedSubjects||[]).length>0){data.onboarded=true;save();}}
-
-
-// ═══════════════════════════ NAV ═══════════════════════════
-function showPage(id){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
-  const pageEl=document.getElementById('page-'+id);
-  if(pageEl)pageEl.classList.add('active');
-  document.querySelectorAll('.nav-tab').forEach(t=>{
-    if(t.getAttribute('onclick')===`showPage('${id}')`)t.classList.add('active');
-  });
-  // Sync bottom nav
-  document.querySelectorAll('.bn-tab[data-page]').forEach(t=>t.classList.remove('active'));
-  const mainPages=['dashboard','timer','log'];
-  if(mainPages.includes(id)){
-    const bnTab=document.querySelector(`.bn-tab[data-page="${id}"]`);
-    if(bnTab)bnTab.classList.add('active');
-  }else{
-    // pages reached via "more" sheet → highlight more tab
-    const moreTab=document.querySelector('.bn-tab[data-page="more"]');
-    if(moreTab)moreTab.classList.add('active');
-  }
-  if(id==='analysis')renderAnalysis();
-  if(id==='dashboard')renderDashboard();
-  if(id==='select')renderSelectPage();
-  window.scrollTo(0,0);
-}
-
-// ═══════════════════════════ COUNTDOWN ═══════════════════════════
-function daysUntil(dateStr){
-  const now=new Date();now.setHours(0,0,0,0);
-  const target=new Date(dateStr);
-  return Math.max(0,Math.ceil((target-now)/(1000*60*60*24)));
-}
-
-// กลุ่มวันสอบตาม TCAS จริง
-const EXAM_GROUPS=[
-  {key:'tgat',   label:'TGAT',       subLabel:'TGAT1·2·3',       date:'2027-01-30', color:'#f59e0b', icon:'🧠', ids:['tgat1','tgat2','tgat3']},
-  {key:'tpat25', label:'TPAT 2–5',   subLabel:'ศิลปะ·วิศวะ·สถาปัตย์·ครู', date:'2027-01-30', color:'#8b5cf6', icon:'🎨', ids:['tpat2','tpat3','tpat4','tpat5']},
-  {key:'tpat1',  label:'TPAT 1',     subLabel:'กสพท.',           date:'2027-02-13', color:'#ec4899', icon:'🏥', ids:['tpat1']},
-  {key:'alevel', label:'A-Level',    subLabel:'คณิต·วิทย์·ภาษา', date:'2027-03-13', color:'#3b82f6', icon:'📐', ids:['alv_math1','alv_math2','alv_sci','alv_phy','alv_chem','alv_bio','alv_soc','alv_thai','alv_eng']},
-];
-
-function renderCountdowns(){
-  const box=document.getElementById('countdown-dynamic');if(!box)return;
-  const sel=data.selectedSubjects||[];
-  if(!sel.length){box.innerHTML='<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px;grid-column:1/-1">เลือกวิชาก่อนเพื่อดูนับถอยหลัง</div>';return;}
-
-  // หา group ที่มีวิชาที่เลือกอยู่
-  const activeGroups=EXAM_GROUPS.filter(g=>g.ids.some(id=>sel.includes(id)));
-  if(!activeGroups.length){box.innerHTML='<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px;grid-column:1/-1">เลือกวิชาก่อนเพื่อดูนับถอยหลัง</div>';return;}
-
-  box.innerHTML=activeGroups.map(g=>{
-    const d=daysUntil(g.date);
-    const dt=new Date(g.date);
-    const thaiDate=dt.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});
-    const selectedInGroup=g.ids.filter(id=>sel.includes(id)).map(id=>TCAS_SUBJECTS[id]?.name.replace(/^(TGAT|TPAT\d*|A-Level)\s*/,'')||id);
-    return`<div class="cd-card" style="border-top:2px solid ${g.color}">
-      <div class="cd-subj" style="color:${g.color};font-size:13px;font-weight:700;margin-bottom:2px">${g.icon} ${g.label}</div>
-      <div class="cd-days" style="color:${g.color};font-size:36px;font-weight:700;font-family:'DM Mono',monospace;line-height:1">${d===0?'วันนี้!':d}<span style="font-size:14px;font-weight:500;color:var(--text2);margin-left:4px">${d===0?'':'วัน'}</span></div>
-      <div class="cd-date" style="margin-top:4px">${thaiDate}</div>
-      <div style="margin-top:6px;font-size:10px;color:var(--text3);line-height:1.5">${selectedInGroup.join(' · ')}</div>
-    </div>`;
-  }).join('');
-}
-
-// ═══════════════════════════ STREAK ═══════════════════════════
-function updateStreak(dateStr){
-  const today=dateStr||new Date().toISOString().split('T')[0];
-  if(data.lastStudyDate===today)return;
-  const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);
-  const yStr=yesterday.toISOString().split('T')[0];
-  if(data.lastStudyDate===yStr){data.streak++;} else if(data.lastStudyDate!==today){data.streak=1;}
-  data.lastStudyDate=today;
-  data.bestStreak=Math.max(data.bestStreak,data.streak);
-  save();
-}
-
-// ═══════════════════════════ LOGS ═══════════════════════════
-function addLog(){
-  const date=document.getElementById('log-date').value;
-  const subj=document.getElementById('log-subject').value;
-  const hours=parseFloat(document.getElementById('log-hours').value)||0;
-  const note=document.getElementById('log-note').value;
-  if(!date||hours<=0||!subj||subj===''){showToast('กรุณากรอกข้อมูลให้ครบ');return;}
-  data.logs.push({id:Date.now(),date,subj,hours,note});
-  data.logs.sort((a,b)=>b.date.localeCompare(a.date));
-  updateStreak(date);
-  save(); scheduleRender(renderLog, renderDashboard); showToast('บันทึกแล้ว ✅');
-  document.getElementById('log-hours').value='';
-  document.getElementById('log-note').value='';
-}
-function deleteLog(id){
-  data.logs=data.logs.filter(l=>l.id!==id); save(); scheduleRender(renderLog, renderDashboard); showToast('ลบแล้ว');
-}
-function renderLog(){
-  const tbody=document.getElementById('log-tbody');
-  if(!data.logs.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px">ยังไม่มีรายการ</td></tr>';return;}
-  tbody.innerHTML=data.logs.map(l=>{
-    const s=TCAS_SUBJECTS[l.subj];
-    const color=s?s.color:'var(--text2)';
-    const name=s?s.name:l.subj;
-    return`<tr>
-      <td style="font-family:'DM Mono',monospace;font-size:12px">${l.date}</td>
-      <td><span class="badge" style="background:${color}20;color:${color}">${name}</span></td>
-      <td style="font-family:'DM Mono',monospace">${l.hours}h</td>
-      <td style="color:var(--text2)">${l.note||'—'}</td>
-      <td><button class="btn btn-sm btn-danger" onclick="deleteLog(${l.id})">ลบ</button></td>
-    </tr>`;
-  }).join('');
-  renderLogChart();
-}
-function getHoursBySubj(){
-  const h={};(data.selectedSubjects||[]).forEach(id=>h[id]=0);
-  data.logs.forEach(l=>h[l.subj]=(h[l.subj]||0)+l.hours);return h;
-}
-function getHoursLast7(){
-  const days=[];const today=new Date();
-  for(let i=6;i>=0;i--){const d=new Date(today);d.setDate(d.getDate()-i);days.push(d.toISOString().split('T')[0]);}
-  return days.map(d=>({date:d,hours:data.logs.filter(l=>l.date===d).reduce((a,b)=>a+b.hours,0)}));
-}
-let weekChart,logWeekChart,subjectChart,dailyChart,planVsChart;
-
-// ═══════════════════════════ QUICK ADD ═══════════════════════════
-let qaSelectedSubj='';
-function renderQuickAddChips(){
-  const box=document.getElementById('qa-subjects');if(!box)return;
-  const subs=getSelectedSubjects();
-  if(!subs.length){box.innerHTML='<span style="font-size:12px;color:var(--text3)">เลือกวิชาก่อน</span>';return;}
-  qaSelectedSubj=subs[0].id;
-  box.innerHTML=subs.map((s,i)=>`<button class="qa-chip ${i===0?'active':''}" data-subj="${s.id}" onclick="qaSelectSubj(this)" style="--chip-color:${s.color}">${s.icon} ${s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')}</button>`).join('');
-}
-function qaSelectSubj(btn){
-  document.querySelectorAll('#qa-subjects .qa-chip').forEach(c=>c.classList.remove('active'));
-  btn.classList.add('active');qaSelectedSubj=btn.dataset.subj;
-}
-function qaAddTime(hours){
-  const today=new Date().toISOString().split('T')[0];
-  const s=TCAS_SUBJECTS[qaSelectedSubj];if(!s)return;
-  data.logs.push({id:Date.now(),date:today,subj:qaSelectedSubj,hours,note:'Quick Add ⚡',source:'quick'});
-  data.logs.sort((a,b)=>b.date.localeCompare(a.date));
-  updateStreak(today);save(); scheduleRender(renderDashboard, renderLog);
-  const fb=document.getElementById('qa-feedback');
-  fb.textContent=`✅ บันทึกแล้ว! ${s.name} +${hours}h`;
-  fb.style.opacity='1';setTimeout(()=>fb.style.opacity='0',2000);
-  showToast(`⚡ ${s.name} +${hours}h`);
-}
-// ═══════════════════════════ FAB ═══════════════════════════
-function toggleFabMenu(){
-  const btn=document.getElementById('fab-btn'),menu=document.getElementById('fab-menu');
-  btn.classList.toggle('open');menu.classList.toggle('show');
-}
-function renderFabMenu(){
-  const box=document.getElementById('fab-menu');if(!box)return;
-  const subs=getSelectedSubjects().slice(0,4);
-  box.innerHTML=subs.map(s=>`<button class="fab-option" onclick="fabQuickAdd('${s.id}',1)" style="--c:${s.color}">${s.icon} ${s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')} +1h</button>`).join('')
-    +`<button class="fab-option" onclick="showPage('timer')" style="--c:var(--coral)">🍅 Timer</button>`;
-}
-function fabQuickAdd(subj,hours){
-  const today=new Date().toISOString().split('T')[0];
-  const s=TCAS_SUBJECTS[subj];if(!s)return;
-  data.logs.push({id:Date.now(),date:today,subj,hours,note:'Quick Add 📱',source:'quick'});
-  data.logs.sort((a,b)=>b.date.localeCompare(a.date));
-  updateStreak(today);save(); scheduleRender(renderDashboard, renderLog);
-  toggleFabMenu();showToast(`⚡ ${s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')} +${hours}h`);
-}
-// ═══════════════════════════ DAILY GOAL ═══════════════════════════
-function setDailyGoal(val){
-  data.dailyGoal=parseFloat(val);
-  document.getElementById('daily-goal-val').textContent=val+'h';
-  save();renderDailyRing();
-}
-function getTodayHours(){
-  const today=new Date().toISOString().split('T')[0];
-  return data.logs.filter(l=>l.date===today).reduce((a,b)=>a+b.hours,0);
-}
-function renderDailyRing(){
-  const goal=data.dailyGoal||4;
-  const done=getTodayHours();
-  const pct=Math.min(done/goal,1);
-  const circ=2*Math.PI*56;
-  const ring=document.getElementById('daily-ring-progress');
-  ring.style.strokeDashoffset=circ*(1-pct);
-  // Color: red(<30%) → amber(30-70%) → green(>70%)
-  ring.style.stroke=pct>=.7?'var(--green)':pct>=.3?'var(--amber)':'var(--red)';
-  document.getElementById('daily-ring-pct').textContent=Math.round(pct*100)+'%';
-  document.getElementById('daily-ring-pct').style.color=pct>=.7?'var(--green2)':pct>=.3?'var(--amber)':'var(--red2)';
-  document.getElementById('daily-goal-display').textContent=`${done.toFixed(1)} / ${goal}h`;
-  const slider=document.getElementById('daily-goal-slider');
-  if(slider)slider.value=goal;
-  const valEl=document.getElementById('daily-goal-val');
-  if(valEl)valEl.textContent=goal+'h';
-}
-// ═══════════════════════════ HIGHLIGHTS ═══════════════════════════
-function renderHighlights(){
-  const activeSubs=getActiveSubjectsData();
-  const nameMap={};Object.entries(activeSubs).forEach(([k,s])=>nameMap[k]=s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,''));
-  // Best day
-  const dayMap={};
-  data.logs.forEach(l=>{dayMap[l.date]=(dayMap[l.date]||0)+l.hours;});
-  const days=Object.entries(dayMap);
-  if(days.length){
-    days.sort((a,b)=>b[1]-a[1]);
-    const best=days[0];
-    const dt=new Date(best[0]);
-    const dayNames=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
-    document.getElementById('best-day-text').textContent=dayNames[dt.getDay()]+' '+dt.getDate()+'/'+(dt.getMonth()+1);
-    document.getElementById('best-day-sub').textContent=best[1].toFixed(1)+' ชั่วโมง';
-  }
-  // Weakest subject
-  const subj=getHoursBySubj();const total=Object.values(subj).reduce((a,b)=>a+b,0)||1;
-  const activeKeys=Object.keys(activeSubs);
-  const equalShare=activeKeys.length?1/activeKeys.length:0.25;
-  const targets={};activeKeys.forEach(k=>targets[k]=equalShare);
-  let weakest=null,maxDiff=0;
-  activeKeys.forEach(k=>{
-    const diff=(targets[k]||0)-(subj[k]||0)/total;
-    if(diff>maxDiff){maxDiff=diff;weakest=k;}
-  });
-  if(weakest&&maxDiff>0.05){
-    document.getElementById('weak-subj-text').textContent=nameMap[weakest]||weakest;
-    document.getElementById('weak-subj-sub').textContent=`เป้า ${Math.round((targets[weakest]||0)*100)}% — ทำได้ ${Math.round((subj[weakest]||0)/total*100)}%`;
-  }else{
-    document.getElementById('weak-subj-text').textContent='สมดุลดี ✅';
-    document.getElementById('weak-subj-sub').textContent='ทุกวิชาอยู่ในเกณฑ์';
-  }
-}
-
-function renderDashboard(){
-  renderCountdowns();
-  const total=data.logs.reduce((a,b)=>a+b.hours,0);
-  // Streak with fire animation
-  const streakEl=document.getElementById('dash-streak');
-  streakEl.innerHTML=data.streak+(data.streak>=3?' <span class="streak-fire" style="font-size:20px">🔥</span>':'');
-  document.getElementById('dash-total-hours').textContent=total.toFixed(1);
-  const days=new Set(data.logs.map(l=>l.date)).size;
-  document.getElementById('dash-avg').textContent=days?+(total/days).toFixed(1):0;
-  const chapsDone=Object.values(data.chapters).reduce((a,b)=>a+b.length,0);
-  document.getElementById('dash-chapters').textContent=chapsDone;
-
-  // progress per subject (dynamic)
-  const SUBJECTS_DATA_DASH=getActiveSubjectsData();
-  const progContainer=document.getElementById('dash-progress-container');
-  if(progContainer){
-    progContainer.innerHTML=Object.entries(SUBJECTS_DATA_DASH).map(([k,s])=>{
-      const done=(data.chapters[k]||[]).length;
-      const total=s.chapters.length;
-      const pct=total?Math.round(done/total*100):0;
-      return`<div class="subj-progress">
-        <div class="subj-header">
-          <span class="subj-name" style="color:${s.color}">${s.icon} ${s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')}</span>
-          <span class="subj-pct" style="color:${s.color}">${pct}%</span>
-        </div>
-        <div class="prog-track"><div class="prog-fill" style="width:${pct}%;background:${s.color}"></div></div>
-      </div>`;
-    }).join('')||'<p style="color:var(--text3);font-size:12px">ยังไม่ได้เลือกวิชา</p>';
-  }
-
-  // Daily ring + highlights
-  renderDailyRing();
-  renderHighlights();
-
-  // week chart
-  const last7=getHoursLast7();
-  const labels=last7.map(d=>{const dt=new Date(d.date);return['อา','จ','อ','พ','พฤ','ศ','ส'][dt.getDay()]});
-  const vals=last7.map(d=>d.hours);
-  const maxVal=Math.max(...vals,1);
-  const barColors=vals.map(v=>v>=4?'rgba(34,197,94,0.7)':v>=2?'rgba(245,158,11,0.7)':'rgba(239,68,68,0.5)');
-  const ctx=document.getElementById('weekChart').getContext('2d');
-  if(weekChart)weekChart.destroy();
-  weekChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'ชั่วโมง',data:vals,backgroundColor:barColors,borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#5c6b88'}},y:{grid:{color:'#2a3348'},ticks:{color:'#5c6b88'},beginAtZero:true}}}});
-
-  renderRecommendation();renderPrediction();
-  renderQuickAddChips();
-}
-function renderLogChart(){
-  const activeSubs=getActiveSubjectsData();
-  const subj=getHoursBySubj();
-  const activeKeys=Object.keys(activeSubs);
-  if(!activeKeys.length)return;
-  const dataVals=activeKeys.map(k=>subj[k]||0);
-  // If all zero, Chart.js doughnut renders empty — add tiny sentinel to avoid crash
-  const allZero=dataVals.every(v=>v===0);
-  const labels=activeKeys.map(k=>activeSubs[k].name.replace(/^(TGAT|TPAT|A-Level)\s*/,''));
-  const bgColors=activeKeys.map(k=>(activeSubs[k].color||'#888')+'99');
-  const ctx2=document.getElementById('logWeekChart').getContext('2d');
-  if(logWeekChart)logWeekChart.destroy();
-  if(allZero){
-    logWeekChart=new Chart(ctx2,{type:'doughnut',data:{labels:['ยังไม่มีข้อมูล'],datasets:[{data:[1],backgroundColor:['#2a3348'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}}}});
-    return;
-  }
-  logWeekChart=new Chart(ctx2,{type:'doughnut',data:{labels,datasets:[{data:dataVals,backgroundColor:bgColors,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',font:{size:11}}}}}});
-}
-
-// ═══════════════════════════ SMART RECOMMENDATION ═══════════════════════════
-function renderRecommendation(){
-  const box=document.getElementById('today-rec');
-  const activeSubs=getActiveSubjectsData();
-  if(!Object.keys(activeSubs).length){box.innerHTML='<p style="color:var(--text3);font-size:12px">เลือกวิชาก่อนเพื่อดูคำแนะนำ</p>';return;}
-  const subj=getHoursBySubj();
-  const total=Object.values(subj).reduce((a,b)=>a+b,0)||1;
-  const activeKeys=Object.keys(activeSubs);
-  const equalShare=1/activeKeys.length;
-  const priorityLabels=['🔴 สำคัญมาก','🟡 สำคัญ','🟢 ปกติ'];
-  const scores=activeKeys.map(k=>{
-    const s=TCAS_SUBJECTS[k];
-    const gap=equalShare-(subj[k]||0)/total;
-    const examDays=s?daysUntil(s.examDate)||1:100;
-    return{key:k,gap,urgency:gap*(300/examDays),examDays,s:activeSubs[k]};
-  }).sort((a,b)=>b.urgency-a.urgency);
-  const day=new Date().getDay();
-  const dayPlan=WEEK_PLAN[day===0?6:day-1];
-  box.innerHTML=scores.slice(0,3).map((item,i)=>{
-    const gapPct=Math.abs(Math.round(item.gap*100));
-    const desc=item.gap>0.05?`ขาดอีก ${gapPct}% จากเป้า · สอบอีก ${item.examDays} วัน`:`อยู่ในเป้า ✅ · สอบอีก ${item.examDays} วัน`;
-    return`<div class="rec-item">
-      <div class="rec-icon" style="background:${item.s.color}20">${item.s.icon}</div>
-      <div>
-        <div class="rec-title">${item.s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')} <span style="font-size:10px;color:var(--text3)">${priorityLabels[Math.min(i,2)]}</span></div>
-        <div class="rec-desc">${desc}</div>
-      </div>
-    </div>`;
-  }).join('')+(dayPlan?`<div style="font-size:11px;color:var(--text3);margin-top:8px">📅 แผนวันนี้: ${dayPlan.sessions.map(s=>s.label+' '+s.h).join(' · ')}</div>`:'');
-}
-// น้ำหนักชั่วโมงเป้าหมายรายวิชา (ตาม difficulty + ปริมาณเนื้อหา)
-// A-Level วิทย์/คณิต (diff 4-5) = 120-150h, A-Level ภาษา/สังคม = 80h
-// TPAT1 (diff 5) = 80h, TPAT อื่น (diff 3-4) = 60h
-// TGAT (diff 2-3) = 40-50h
-const SUBJECT_HOUR_TARGETS={
-  tgat1:45, tgat2:50, tgat3:35,
-  tpat1:80, tpat2:55, tpat3:70, tpat4:60, tpat5:50,
-  alv_math1:150, alv_math2:80, alv_sci:70,
-  alv_phy:140, alv_chem:130, alv_bio:110,
-  alv_soc:70, alv_thai:65, alv_eng:80,
-};
-function getSubjTarget(id){return SUBJECT_HOUR_TARGETS[id]||60;}
-
-function renderPrediction(){
-  const box=document.getElementById('prediction-box');
-  const studyDays=new Set(data.logs.map(l=>l.date)).size;
-  const total=data.logs.reduce((a,b)=>a+b.hours,0);
-  const avgPerDay=studyDays?total/studyDays:0;
-  const activeSubs=getActiveSubjectsData();
-  const subj=getHoursBySubj();
-  const activeKeys=Object.keys(activeSubs);
-
-  // คำนวณเป้ารวมจากวิชาที่เลือก
-  const targetTotal=activeKeys.reduce((a,k)=>a+getSubjTarget(k),0);
-
-  // แสดงรายวิชาแบบ group
-  const groups=[
-    {label:'TGAT',color:'#f59e0b',keys:activeKeys.filter(k=>k.startsWith('tgat'))},
-    {label:'TPAT',color:'#8b5cf6',keys:activeKeys.filter(k=>k.startsWith('tpat'))},
-    {label:'A-Level',color:'#3b82f6',keys:activeKeys.filter(k=>k.startsWith('alv'))},
-  ].filter(g=>g.keys.length);
-
-  let perSubjHTML='';
-  groups.forEach(g=>{
-    perSubjHTML+=`<div style="font-size:10px;font-weight:700;color:${g.color};letter-spacing:.5px;margin:8px 0 3px;text-transform:uppercase">${g.label}</div>`;
-    g.keys.forEach(k=>{
-      const s=activeSubs[k];const tcas=TCAS_SUBJECTS[k];
-      const done=subj[k]||0;
-      const need=getSubjTarget(k);
-      const examDays=tcas?daysUntil(tcas.examDate)||1:100;
-      const remaining=Math.max(0,need-done);
-      const reqDaily=remaining/examDays;
-      const ok=remaining<=0||reqDaily<=Math.max(avgPerDay*0.35,0.5);
-      const pct=Math.min(Math.round(done/need*100),100);
-      perSubjHTML+=`<div style="margin-bottom:5px">
-        <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:3px">
-          <span style="color:var(--text)">${s.icon} ${s.name.replace(/^(TGAT|TPAT\d*|A-Level)\s*/,'')}</span>
-          <span style="color:${ok?'var(--green2)':'var(--red2)'};font-family:'DM Mono',monospace;font-size:11px">${done.toFixed(0)}/${need}h ${ok?'✅':'⚠️ +'+reqDaily.toFixed(1)+'/d'}</span>
-        </div>
-        <div style="height:3px;background:var(--bg4);border-radius:2px;overflow:hidden">
-          <div style="height:100%;width:${pct}%;background:${s.color};border-radius:2px;transition:width .6s"></div>
-        </div>
-      </div>`;
-    });
-  });
-
-  // คาดการณ์จาก earliest exam date
-  const earliestExam=activeKeys.reduce((min,k)=>{
-    const d=TCAS_SUBJECTS[k]?.examDate;return(!min||d<min)?d:min;
-  },null)||'2027-01-30';
-  const daysLeft=daysUntil(earliestExam);
-  const projectedTotal=total+avgPerDay*daysLeft;
-  const onTrack=projectedTotal>=targetTotal;
-  const gap=targetTotal-projectedTotal;
-
-  box.innerHTML=`
-    <div style="font-size:12px;margin-bottom:4px;color:var(--text2)">เฉลี่ย: <strong style="color:var(--amber)">${avgPerDay.toFixed(1)}h/วัน</strong> · เป้ารวม: <strong style="color:var(--amber)">${targetTotal}h</strong> · คาดการณ์: <strong style="color:${onTrack?'var(--green2)':'var(--red2)'}">${Math.round(projectedTotal)}h</strong></div>
-    ${perSubjHTML}
-    <div style="font-size:12px;padding:8px 10px;border-radius:8px;margin-top:8px;background:${onTrack?'rgba(34,197,94,.1)':'rgba(239,68,68,.1)'};color:${onTrack?'var(--green2)':'var(--red2)'}">
-      ${onTrack?`✅ อยู่ในเกณฑ์ดี เหลือ ${daysLeft} วัน`:`⚠️ ต้องเพิ่ม ${Math.ceil(gap/Math.max(daysLeft,1)*10)/10}h/วัน (ขาด ${Math.round(gap)}h จากเป้า)`}
-    </div>`;
-}
-
-// ═══════════════════════════ WEEKLY PLAN ═══════════════════════════
-function renderWeekPlan(){
-  const grid=document.getElementById('week-grid');
-  const today=new Date().getDay();// 0=sun,1=mon
-  const startOfWeek=new Date();startOfWeek.setDate(startOfWeek.getDate()-(today===0?6:today-1));
-  grid.innerHTML=WEEK_PLAN.map((d,i)=>{
-    const date=new Date(startOfWeek);date.setDate(date.getDate()+i);
-    const isToday=date.toDateString()===new Date().toDateString();
-    return`<div class="day-card ${isToday?'today':''}">
-      <div class="day-name">${d.day}</div>
-      <div class="day-date">${date.getDate()}/${date.getMonth()+1}</div>
-      ${d.sessions.map(s=>`<div class="session ${s.cls}">${s.label}<br><small>${s.h}</small></div>`).join('')}
-      <div class="day-hours">เป้า ${d.target}h</div>
-    </div>`;
-  }).join('');
-}
-
-// ═══════════════════════════ SUBJECTS/CHAPTERS ═══════════════════════════
-function renderSubjects(){
-  ensureChapters();
-  const grid=document.getElementById('subjects-grid');
-  const SUBJECTS_DATA=getActiveSubjectsData();
-  if(!Object.keys(SUBJECTS_DATA).length){
-    grid.innerHTML='<div class="card" style="grid-column:1/-1;text-align:center;padding:40px"><p style="color:var(--text3)">ยังไม่ได้เลือกวิชา — กรุณาเลือกวิชาที่ต้องการเรียนก่อน</p></div>';
-    return;
-  }
-  grid.innerHTML=Object.entries(SUBJECTS_DATA).map(([k,s])=>{
-    const done=(data.chapters[k]||[]).length;
-    const total=s.chapters.length;
-    const pct=total?Math.round(done/total*100):0;
-    return`<div class="card">
-      <div class="card-title" style="color:${s.color}">${s.name}</div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <span style="font-size:12px;color:var(--text2)">${done}/${total} บท</span>
-        <span style="font-size:14px;font-weight:700;color:${s.color}">${pct}%</span>
-      </div>
-      <div class="prog-track" style="margin-bottom:14px"><div class="prog-fill" style="width:${pct}%;background:${s.color}"></div></div>
-      ${s.chapters.map((ch,i)=>{
-        const isDone=(data.chapters[k]||[]).includes(i);
-        return`<div class="chapter-item" onclick="toggleChapter('${k}',${i})">
-          <div class="chapter-check ${isDone?'done':''}">${isDone?'<svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}</div>
-          <div class="chapter-title ${isDone?'done':''}">${ch}</div>
-        </div>`;
-      }).join('')}
-    </div>`;
-  }).join('');
-}
-function toggleChapter(subj,idx){
-  ensureChapters();
-  if(!data.chapters[subj])data.chapters[subj]=[];
-  const arr=data.chapters[subj];
-  const pos=arr.indexOf(idx);
-  if(pos>=0)arr.splice(pos,1);else arr.push(idx);
-  save(); scheduleRender(renderSubjects, renderDashboard);
-}
-
-// ═══════════════════════════ ANALYSIS ═══════════════════════════
-function renderAnalysis(){
-  const subj=getHoursBySubj();
-  const activeSubs=getActiveSubjectsData();
-  const activeKeys=Object.keys(activeSubs);
-  // Subject hours bar chart (dynamic)
-  const ctx1=document.getElementById('subjectHoursChart').getContext('2d');
-  if(subjectChart)subjectChart.destroy();
-  subjectChart=new Chart(ctx1,{type:'bar',data:{
-    labels:activeKeys.map(k=>activeSubs[k].name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')),
-    datasets:[{data:activeKeys.map(k=>subj[k]||0),backgroundColor:activeKeys.map(k=>activeSubs[k].color||'#888'),borderRadius:8,borderSkipped:false}]
-  },options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#2a3348'},ticks:{color:'#5c6b88'}},y:{grid:{display:false},ticks:{color:'#94a3b8'}}}}});
-
-  // Daily last 30
-  const days30=[];const now=new Date();
-  for(let i=29;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i);days30.push(d.toISOString().split('T')[0]);}
-  const dailyVals=days30.map(d=>data.logs.filter(l=>l.date===d).reduce((a,b)=>a+b.hours,0));
-  const ctx2=document.getElementById('dailyChart').getContext('2d');
-  if(dailyChart)dailyChart.destroy();
-  dailyChart=new Chart(ctx2,{type:'line',data:{
-    labels:days30.map((_,i)=>i%5===0?days30[i].slice(5):''),
-    datasets:[{data:dailyVals,borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,0.1)',borderWidth:2,tension:.4,fill:true,pointRadius:2,pointBackgroundColor:'#f59e0b'}]
-  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#2a3348'},ticks:{color:'#5c6b88',maxRotation:0}},y:{grid:{color:'#2a3348'},ticks:{color:'#5c6b88'},beginAtZero:true}}}});
-
-  // Plan vs actual
-  const last7=getHoursLast7();
-  const planned=WEEK_PLAN.map(d=>d.target);
-  const day=new Date().getDay();
-  const reorderedPlanned=[];
-  for(let i=0;i<7;i++){const idx=(day===0?6:day-1+i)%7;reorderedPlanned.push(WEEK_PLAN[idx].target);}
-  const ctx3=document.getElementById('planVsActualChart').getContext('2d');
-  if(planVsChart)planVsChart.destroy();
-  planVsChart=new Chart(ctx3,{type:'bar',data:{
-    labels:last7.map(d=>{const dt=new Date(d.date);return['อา','จ','อ','พ','พฤ','ศ','ส'][dt.getDay()]}),
-    datasets:[
-      {label:'เป้า',data:WEEK_PLAN.map(d=>d.target),backgroundColor:'rgba(94,94,120,0.4)',borderRadius:4,borderSkipped:false},
-      {label:'จริง',data:last7.map(d=>d.hours),backgroundColor:'rgba(245,158,11,0.75)',borderRadius:4,borderSkipped:false}
-    ]
-  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{color:'#94a3b8',font:{size:11}}}},scales:{x:{grid:{display:false},ticks:{color:'#5c6b88'}},y:{grid:{color:'#2a3348'},ticks:{color:'#5c6b88'},beginAtZero:true}}}});
-
-  renderInsights(subj,dailyVals);
-}
-function renderInsights(subj,dailyVals){
-  const box=document.getElementById('insights-box');
-  const total=Object.values(subj).reduce((a,b)=>a+b,0)||1;
-  const insights=[];
-  const activeSubs=getActiveSubjectsData();
-  const activeKeys=Object.keys(activeSubs);
-  const equalShare=activeKeys.length?1/activeKeys.length:0.25;
-  // 1. Weak subject alerts
-  activeKeys.forEach(k=>{
-    const actual=(subj[k]||0)/total;
-    if(actual<equalShare-0.08){
-      const diff=Math.round((equalShare-actual)*100);
-      insights.push({icon:'⚠️',title:`${activeSubs[k].name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')} น้อยกว่าแผน ${diff}%`,desc:`ทำได้ ${Math.round(actual*100)}% (เป้า ${Math.round(equalShare*100)}%)`});
-    }
-  });
-  // 2. Productive day analysis
-  const dayHours=[0,0,0,0,0,0,0],dayCounts=[0,0,0,0,0,0,0];
-  data.logs.forEach(l=>{const d=new Date(l.date).getDay();dayHours[d]+=l.hours;dayCounts[d]++;});
-  const dayAvg=dayHours.map((h,i)=>dayCounts[i]?h/dayCounts[i]:0);
-  const bestDayIdx=dayAvg.indexOf(Math.max(...dayAvg));
-  const dayLabels=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
-  if(Math.max(...dayAvg)>0) insights.push({icon:'📅',title:`วัน${dayLabels[bestDayIdx]} productive ที่สุด`,desc:`เฉลี่ย ${dayAvg[bestDayIdx].toFixed(1)}h`});
-  // 3. Plan vs actual
-  const last7=getHoursLast7();
-  const weekActual=last7.reduce((a,b)=>a+b.hours,0);
-  const weekTarget=WEEK_PLAN.reduce((a,b)=>a+b.target,0);
-  if(weekTarget>0){
-    const completion=Math.round(weekActual/weekTarget*100);
-    insights.push({icon:completion>=80?'✅':'📊',title:`สัปดาห์นี้ ${completion}% ของแผน`,desc:`${weekActual.toFixed(1)}h / ${weekTarget}h`});
-  }
-  // 4. Trend (this vs last week)
-  if(dailyVals.length>=14){
-    const tw=dailyVals.slice(-7).reduce((a,b)=>a+b,0);
-    const lw=dailyVals.slice(-14,-7).reduce((a,b)=>a+b,0);
-    if(lw>0){const ch=Math.round((tw-lw)/lw*100);if(Math.abs(ch)>=10)insights.push({icon:ch>0?'📈':'📉',title:`ชั่วโมง${ch>0?'เพิ่ม':'ลด'} ${Math.abs(ch)}%`,desc:`${tw.toFixed(1)}h vs ${lw.toFixed(1)}h สัปดาห์ก่อน`});}
-  }
-  // 5. Active days
-  const activeDay=dailyVals.filter(v=>v>0).length;
-  if(activeDay>0){const avg=dailyVals.filter(v=>v>0).reduce((a,b)=>a+b,0)/activeDay;insights.push({icon:'📈',title:`อ่าน ${activeDay}/30 วัน · เฉลี่ย ${avg.toFixed(1)}h`,desc:'เฉพาะวันที่มีบันทึก'});}
-  if(data.streak>=3)insights.push({icon:'🔥',title:`Streak ${data.streak} วัน!`,desc:'ต่อเนื่องดีมาก!'});
-  if(!insights.length)insights.push({icon:'📊',title:'ยังไม่มีข้อมูลพอ',desc:'บันทึก 1 สัปดาห์เพื่อดู Insights'});
-  box.innerHTML=insights.map(ins=>`<div class="insight-card"><div class="insight-title">${ins.icon} ${ins.title}</div><div class="insight-desc">${ins.desc}</div></div>`).join('');
-}
-
-// ═══════════════════════════ GOALS & ACHIEVEMENTS ═══════════════════════════
-function renderGoals(){
-  document.getElementById('streak-num').textContent=data.streak;
-  document.getElementById('best-streak').textContent=data.bestStreak;
-  // 7-day dots
-  const dots=document.getElementById('streak-dots-7');
-  const days7=[];const now=new Date();
-  for(let i=6;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i);days7.push(d.toISOString().split('T')[0]);}
-  const studiedDates=new Set(data.logs.map(l=>l.date));
-  dots.innerHTML=days7.map((d,i)=>{
-    const isToday=i===6;const done=studiedDates.has(d);
-    const dt=new Date(d);const label=['อา','จ','อ','พ','พฤ','ศ','ส'][dt.getDay()];
-    const cls=done?(isToday?'today done':'done'):(isToday?'today':'');
-    return`<div class="streak-dot ${cls}" title="${d}">${label}</div>`;
-  }).join('');
-
-  // Milestones
-  const chapsDone=Object.values(data.chapters).reduce((a,b)=>a+b.length,0);
-  const totalChs=Object.values(getActiveSubjectsData()).reduce((a,b)=>a+b.chapters.length,0);
-  const totalHours=data.logs.reduce((a,b)=>a+b.hours,0);
-  const milestones=[
-    {name:'อ่านครบ 50 ชั่วโมง',target:50,current:Math.min(totalHours,50),unit:'h'},
-    {name:'อ่านครบ 200 ชั่วโมง',target:200,current:Math.min(totalHours,200),unit:'h'},
-    {name:'อ่านครบ 500 ชั่วโมง',target:500,current:Math.min(totalHours,500),unit:'h'},
-    {name:'อ่านครบทุกบทเรียน',target:totalChs,current:chapsDone,unit:'บท'},
-    {name:'Streak 7 วัน',target:7,current:Math.min(data.streak,7),unit:'วัน'},
-    {name:'Streak 30 วัน',target:30,current:Math.min(data.streak,30),unit:'วัน'},
-  ];
-  document.getElementById('milestones-list').innerHTML=milestones.map(m=>{
-    const pct=Math.round(m.current/m.target*100);
-    return`<div style="margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
-        <span>${m.name}</span><span style="color:var(--text2)">${m.current}/${m.target} ${m.unit}</span>
-      </div>
-      <div class="prog-track"><div class="prog-fill" style="width:${pct}%;background:${pct>=100?'var(--green)':'var(--amber)'}"></div></div>
-    </div>`;
-  }).join('');
-
-  // Achievements
-  const hoursBySubj=getHoursBySubj();
-  const state={streak:data.streak,totalHours,chapsDone,totalLogs:data.logs.length,subjTouched:Object.keys(hoursBySubj).filter(k=>hoursBySubj[k]>0).length,totalSubj:(data.selectedSubjects||[]).length};
-  document.getElementById('achievements-grid').innerHTML=ACHIEVEMENTS_DEF.map(a=>{
-    const unlocked=a.cond(state);
-    return`<div class="achievement ${unlocked?'':'ach-locked'}">
-      <div class="ach-icon">${a.icon}</div>
-      <div><div class="ach-name">${a.name}</div><div class="ach-desc">${a.desc}</div></div>
-    </div>`;
-  }).join('');
-}
-
-// ═══════════════════════════ POMODORO TIMER (Timestamp-based) ═══════════════════════════
-// FIX: Old timer used setInterval + timeLeft-- which drifts when Chrome throttles
-// background tabs (intervals drop to ~1/min). New approach stores an absolute
-// endTime (Date.now() + remaining) and recomputes on every tick + on visibility change.
-let pomoState = {
-  running: false,
-  mode: 'focus',            // 'focus' | 'break'
-  remainingMs: 25 * 60000,  // ms remaining when paused
-  endTime: 0,               // absolute timestamp when timer should fire (only valid when running)
-  focusDuration: 25 * 60000,
-  breakDuration: 5 * 60000,
-  session: 0,
-  interval: null,
-  todaySessions: []
-};
-
-function setPomoMode(v) {
-  const [f, b] = v.split('-').map(Number);
-  pomoState.focusDuration = f * 60000;
-  pomoState.breakDuration = b * 60000;
-  timerReset();
-}
-
-/** Core tick — computes remaining from absolute endTime */
-function _pomoTick() {
-  if (!pomoState.running) return;
-  const now = Date.now();
-  const remaining = pomoState.endTime - now;
-
-  if (remaining <= 0) {
-    // Phase completed
-    clearInterval(pomoState.interval);
-    pomoState.running = false;
-    pomoState.remainingMs = 0;
-
-    if (pomoState.mode === 'focus') {
-      const subj = document.getElementById('timer-subject').value;
-      const minutes = Math.round(pomoState.focusDuration / 60000);
-      pomoState.todaySessions.push({ subj, minutes });
-      pomoState.session = (pomoState.session + 1);
-      if (pomoState.session >= 4) pomoState.session = 0;
-      data.logs.push({
-        id: Date.now(), date: new Date().toISOString().split('T')[0],
-        subj, hours: +(minutes / 60).toFixed(2), note: 'Pomodoro ⏱'
-      });
-      updateStreak(); save(); renderDashboard();
-      showToast(`✅ เสร็จ! ${minutes}m ${subj.toUpperCase()}`);
-      // Switch to break
-      pomoState.mode = 'break';
-      pomoState.remainingMs = pomoState.breakDuration;
-    } else {
-      pomoState.mode = 'focus';
-      pomoState.remainingMs = pomoState.focusDuration;
-      showToast('☕ พักเสร็จ! เริ่มใหม่ได้เลย');
-    }
-  } else {
-    pomoState.remainingMs = remaining;
-  }
-  updateTimerDisplay();
-}
-
-/** Recalculate immediately when user returns to tab */
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && pomoState.running) _pomoTick();
-});
-
-function updateTimerDisplay() {
-  const totalSec = Math.max(0, Math.ceil(pomoState.remainingMs / 1000));
-  const m = Math.floor(totalSec / 60), s = totalSec % 60;
-  document.getElementById('timer-display').textContent =
-    `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-
-  const phaseDuration = pomoState.mode === 'focus' ? pomoState.focusDuration : pomoState.breakDuration;
-  const prog = 1 - pomoState.remainingMs / phaseDuration;
-  const circ = 2 * Math.PI * 80;
-  document.getElementById('pomo-progress').style.strokeDashoffset = circ * (1 - prog);
-  document.getElementById('timer-phase-label').textContent =
-    pomoState.mode === 'focus' ? '🍅 โฟกัส' : '☕ พัก';
-  document.getElementById('pomo-progress').style.stroke =
-    pomoState.mode === 'focus' ? 'var(--amber)' : 'var(--teal2)';
-  document.getElementById('timer-start-btn').textContent =
-    pomoState.running ? 'หยุด' : 'เริ่ม';
-
-  // dots
-  const dots = document.getElementById('pomo-dots');
-  dots.innerHTML = Array.from({ length: 4 }, (_, i) =>
-    `<div class="pomo-dot ${i < pomoState.session ? 'done' : ''}"></div>`
-  ).join('');
-
-  // today sessions list
-  const box = document.getElementById('today-sessions');
-  if (!pomoState.todaySessions.length) {
-    box.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:20px 0;text-align:center">ยังไม่มีเซสชัน<br>กดเริ่มเพื่อเริ่มจับเวลา</div>';
-    return;
-  }
-  box.innerHTML = pomoState.todaySessions.map(s => {
-    const subjData = TCAS_SUBJECTS[s.subj];
-    const color = subjData ? subjData.color : 'var(--text2)';
-    const name = subjData ? subjData.name.replace(/^(TGAT|TPAT|A-Level)\s*/, '') : s.subj.toUpperCase();
-    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
-      <span style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0"></span>
-      <span style="font-size:12px;flex:1">${name}</span>
-      <span style="font-size:12px;font-family:'DM Mono';color:var(--amber)">${s.minutes}m</span>
-    </div>`;
-  }).join('');
-  const totalMin = pomoState.todaySessions.reduce((a, b) => a + b.minutes, 0);
-  document.getElementById('today-total-timer').textContent =
-    `${Math.floor(totalMin / 60)}:${String(totalMin % 60).padStart(2, '0')}`;
-}
-
-function timerToggle() {
-  if (pomoState.running) {
-    // Pause — freeze remaining time
-    clearInterval(pomoState.interval);
-    pomoState.remainingMs = Math.max(0, pomoState.endTime - Date.now());
-    pomoState.running = false;
-  } else {
-    // Start — set absolute end timestamp
-    pomoState.endTime = Date.now() + pomoState.remainingMs;
-    pomoState.running = true;
-    pomoState.interval = setInterval(_pomoTick, 250); // 250ms for smooth display even in bg
-  }
-  updateTimerDisplay();
-}
-
-function timerReset() {
-  clearInterval(pomoState.interval);
-  pomoState.running = false;
-  pomoState.mode = 'focus';
-  pomoState.remainingMs = pomoState.focusDuration;
-  updateTimerDisplay();
-}
-
-// ═══════════════════════════ SUBJECT SELECTION PAGE ═══════════════════════════
-function renderSelectPage(){
-  const container=document.getElementById('select-groups');
-  if(!container)return;
-  const sel=data.selectedSubjects||[];
-  container.innerHTML=Object.values(SUBJECT_GROUPS).map(g=>`
-    <div class="card" style="margin-bottom:16px">
-      <div class="card-title" style="color:${g.color}">${g.label}</div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px">
-        ${g.subjects.map(id=>{
-          const s=TCAS_SUBJECTS[id];if(!s)return'';
-          const active=sel.includes(id);
-          return`<button onclick="toggleSelectSubj('${id}')" style="
-            font-family:'Sarabun',sans-serif;font-size:12px;font-weight:600;
-            padding:8px 14px;border-radius:20px;cursor:pointer;transition:all .2s;
-            border:1.5px solid ${active?s.color:' var(--border2)'};
-            background:${active?s.color+'22':'transparent'};
-            color:${active?s.color:'var(--text2)'}
-          ">${s.icon} ${s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')}</button>`;
-        }).join('')}
-      </div>
-    </div>`).join('');
-  updateSelectSummary();
-}
-function toggleSelectSubj(id){
-  if(!data.selectedSubjects)data.selectedSubjects=[];
-  const idx=data.selectedSubjects.indexOf(id);
-  if(idx>=0)data.selectedSubjects.splice(idx,1);
-  else data.selectedSubjects.push(id);
-  renderSelectPage();
-}
-function updateSelectSummary(){
-  const el=document.getElementById('select-summary');
-  if(!el)return;
-  const sel=data.selectedSubjects||[];
-  if(!sel.length){el.textContent='ยังไม่ได้เลือกวิชา';return;}
-  const total=sel.reduce((a,id)=>a+getEstimatedHours(id),0);
-  el.textContent=`เลือก ${sel.length} วิชา · ประมาณ ${total} ชั่วโมง`;
-}
-function confirmSubjects(){
-  if(!(data.selectedSubjects||[]).length){showToast('กรุณาเลือกอย่างน้อย 1 วิชา');return;}
-  ensureChapters();
-  data.onboarded=true;
-  save();
-  renderSubjectSelects();
-  renderQuickAddChips();
-  renderFabMenu();
-  renderDashboard();
-  renderLog();
-  renderSubjects();
-  showToast('✅ บันทึกวิชาที่เลือกแล้ว');
-  showPage('dashboard');
-}
-
-// ═══════════════════════════ SUBJECT SELECTS ═══════════════════════════
-function renderSubjectSelects(){
-  const subs=getSelectedSubjects();
-  const opts=subs.length
-    ? subs.map(s=>`<option value="${s.id}">${s.icon} ${s.name}</option>`).join('')
-    : '<option value="">-- ยังไม่ได้เลือกวิชา --</option>';
-  ['log-subject','timer-subject'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el){el.innerHTML=opts;}
-  });
-}
-
-// ═══════════════════════════ BOTTOM SHEETS ═══════════════════════════
-let qaSheetSelectedSubj='';
-function openQuickAddSheet(){
-  renderQaSheetSubjects();
-  document.getElementById('qa-sheet').classList.add('show');
-  document.getElementById('sheet-overlay').classList.add('show');
-}
-function openMoreSheet(){
-  // show/hide auth button based on login state
-  const authBtn=document.getElementById('more-auth-btn');
-  if(authBtn){
-    const user=window.currentUserFn&&window.currentUserFn();
-    authBtn.querySelector('span').textContent=user?'🔓':'👤';
-    authBtn.querySelector('span').nextSibling&&(authBtn.childNodes[1].textContent=user?'ออกจากระบบ':'เข้าสู่ระบบ');
-    authBtn.onclick=user?()=>{closeAllSheets();setTimeout(()=>window.showSignOutModal&&window.showSignOutModal(),200);}:()=>{closeAllSheets();setTimeout(()=>window._fbSignIn&&window._fbSignIn(),200);};
-  }
-  document.getElementById('more-sheet').classList.add('show');
-  document.getElementById('sheet-overlay').classList.add('show');
-}
-function closeAllSheets(){
-  document.querySelectorAll('.bottom-sheet').forEach(s=>s.classList.remove('show'));
-  document.getElementById('sheet-overlay').classList.remove('show');
-}
-// Keyboard accessibility: Escape key closes any open sheet or modal
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    // Close bottom sheets first
-    const openSheet = document.querySelector('.bottom-sheet.show');
-    if (openSheet) { closeAllSheets(); return; }
-    // Close signout modal
-    const modal = document.getElementById('signout-modal');
-    if (modal && modal.classList.contains('show')) { window.hideSignOutModal(); }
-  }
-});
-function renderQaSheetSubjects(){
-  const box=document.getElementById('qa-sheet-subjects');if(!box)return;
-  const subs=getSelectedSubjects();
-  if(!subs.length){box.innerHTML='<span style="font-size:13px;color:var(--text3)">กรุณาเลือกวิชาก่อน</span>';return;}
-  if(!qaSheetSelectedSubj||!subs.find(s=>s.id===qaSheetSelectedSubj))qaSheetSelectedSubj=subs[0].id;
-  box.innerHTML=subs.map(s=>`<button class="qa-chip ${s.id===qaSheetSelectedSubj?'active':''}" data-subj="${s.id}" onclick="qaSheetSelectSubj(this)" style="--chip-color:${s.color}">${s.icon} ${s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')}</button>`).join('');
-}
-function qaSheetSelectSubj(btn){
-  document.querySelectorAll('#qa-sheet .qa-chip').forEach(c=>c.classList.remove('active'));
-  btn.classList.add('active');qaSheetSelectedSubj=btn.dataset.subj;
-}
-function qaSheetAdd(hours){
-  const subj=qaSheetSelectedSubj||qaSelectedSubj;
-  const today=new Date().toISOString().split('T')[0];
-  const s=TCAS_SUBJECTS[subj];if(!s){showToast('กรุณาเลือกวิชาก่อน');return;}
-  data.logs.push({id:Date.now(),date:today,subj,hours,note:'Quick Add ⚡',source:'quick'});
-  data.logs.sort((a,b)=>b.date.localeCompare(a.date));
-  updateStreak(today);save();renderDashboard();renderLog();
-  const fb=document.getElementById('qa-sheet-feedback');
-  fb.textContent=`✅ บันทึกแล้ว! ${s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')} +${hours}h`;
-  fb.style.opacity='1';
-  setTimeout(()=>{fb.style.opacity='0';closeAllSheets();},1400);
-}
-function showToast(msg){
-  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2500);
-}
-
-// ═══════════════════════════ INIT ═══════════════════════════
-function init(){
-  migrateData();
-  // Set today's date in log form
-  document.getElementById('log-date').value=new Date().toISOString().split('T')[0];
-  renderCountdowns();
-  renderSubjectSelects();
-  renderQuickAddChips();
-  renderFabMenu();
-  renderDashboard();
-  renderWeekPlan();
-  renderLog();
-  renderSubjects();
-  renderGoals();
-  updateTimerDisplay();
-  // ถ้าเคย onboard แล้ว (เลือกวิชาและกด confirm) ให้ไปหน้า dashboard เลย
-  const hasSubjects=(data.selectedSubjects||[]).length>0;
-  if(hasSubjects&&data.onboarded){
-    showPage('dashboard');
-  }else{
-    showPage('select');
-  }
-  // Determine current phase
-  const now=new Date();
-  let phase='ระยะปูพื้น';
-  if(now>new Date('2026-11-01'))phase='ระยะทำโจทย์';
-  if(now>new Date('2027-01-01'))phase='ระยะตะลุยข้อสอบ';
-  document.getElementById('current-phase-badge').textContent=phase;
-  // Refresh countdown every minute
-  setInterval(renderCountdowns,60000);
-}
-
-// Refresh goals when switching to that page
-document.querySelectorAll('.nav-tab').forEach(t=>{
-  t.addEventListener('click',()=>{
-    setTimeout(()=>{if(document.getElementById('page-goals').classList.contains('active'))renderGoals();},50);
-    setTimeout(()=>{if(document.getElementById('page-log').classList.contains('active'))renderLog();},50);
-    setTimeout(()=>{if(document.getElementById('page-subjects').classList.contains('active'))renderSubjects();},50);
-  });
-});
-
-// ═══ EXPOSE to window for Firebase module & onclick handlers ═══
-window.renderDashboard = renderDashboard;
-window.renderLog = renderLog;
-window.renderSubjects = renderSubjects;
-window.renderGoals = renderGoals;
-window.showToast = showToast;
-window.showPage = showPage;
-window.addLog = addLog;
-window.deleteLog = deleteLog;
-window.toggleChapter = toggleChapter;
-window.timerToggle = timerToggle;
-window.timerReset = timerReset;
-window.setPomoMode = setPomoMode;
-window.qaSelectSubj = qaSelectSubj;
-window.qaAddTime = qaAddTime;
-window.toggleFabMenu = toggleFabMenu;
-window.fabQuickAdd = fabQuickAdd;
-window.setDailyGoal = setDailyGoal;
-window.confirmSubjects = confirmSubjects;
-window.toggleSelectSubj = toggleSelectSubj;
-window.renderSubjectSelects = renderSubjectSelects;
-window.renderQuickAddChips = renderQuickAddChips;
-window.openQuickAddSheet = openQuickAddSheet;
-window.openMoreSheet = openMoreSheet;
-window.closeAllSheets = closeAllSheets;
-window.qaSheetSelectSubj = qaSheetSelectSubj;
-window.qaSheetAdd = qaSheetAdd;
-
-init();
-</script>
 </body>
 </html>
