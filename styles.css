@@ -122,6 +122,14 @@ input {
   transform: translateY(-1px);
 }
 
+.nav-icon {
+  display: none;
+}
+
+.nav-label {
+  display: inline;
+}
+
 .section {
   position: relative;
   z-index: 2;
@@ -1228,20 +1236,65 @@ h2 {
 
 @media (max-width: 860px) {
   .topbar {
-    align-items: flex-start;
-    border-radius: 22px;
-    flex-direction: column;
-    gap: 8px;
+    top: 12px;
+    padding: 10px 18px;
+    border-radius: 999px;
   }
 
-  .nav-links {
+  .topbar .nav-links {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 20;
+    display: flex;
+    justify-content: space-around;
+    align-items: stretch;
+    gap: 0;
     width: 100%;
-    overflow-x: auto;
-    padding-bottom: 2px;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 0;
+    background: rgba(255, 255, 255, 0.78);
+    box-shadow: 0 -8px 32px rgba(79, 38, 55, 0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    overflow: visible;
   }
 
   .nav-links a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    flex: 1;
+    min-height: 52px;
+    padding: 6px 4px;
+    border-radius: 12px;
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 600;
     white-space: nowrap;
+    transition: color 200ms ease, background 200ms ease;
+  }
+
+  .nav-links a:hover,
+  .nav-links a.active {
+    color: var(--rose);
+    background: rgba(255, 95, 147, 0.08);
+    transform: none;
+  }
+
+  .nav-icon {
+    display: block;
+    font-size: 1.35rem;
+    line-height: 1;
+  }
+
+  .nav-label {
+    display: block;
+    font-size: 0.7rem;
   }
 
   .hero {
