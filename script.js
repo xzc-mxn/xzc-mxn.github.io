@@ -368,3 +368,28 @@ document.querySelectorAll(".memory-card").forEach((card) => {
 
 // Sparkles
 window.setInterval(createSparkle, 900);
+
+// Active nav tab highlighting based on scroll position
+const navLinksAll = document.querySelectorAll(".nav-links a");
+const sectionIds = Array.from(navLinksAll).map(a => a.getAttribute("href").slice(1));
+
+function updateActiveNav() {
+  let current = sectionIds[0];
+  for (const id of sectionIds) {
+    const el = document.getElementById(id);
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      if (rect.top <= window.innerHeight / 3) current = id;
+    }
+  }
+  navLinksAll.forEach(a => {
+    if (a.getAttribute("href") === "#" + current) {
+      a.classList.add("active");
+    } else {
+      a.classList.remove("active");
+    }
+  });
+}
+
+window.addEventListener("scroll", updateActiveNav, { passive: true });
+updateActiveNav();
