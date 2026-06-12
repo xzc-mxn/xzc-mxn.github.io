@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>StudyPath — วางแผนสอบวิศวกรรม</title>
+<title>StudyPath — วางแผนสอบ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -101,6 +101,8 @@ onAuthStateChanged(auth, user => {
     window.data = JSON.parse(localStorage.getItem('studypath')||'null') || {
       logs:[], chapters:{tgat:[],tpat:[],phys:[],math:[]}, streak:0, bestStreak:0, lastStudyDate:null, pomoDone:0, dailyGoal:4, dailyGoalManual:false, dekPlan:'dek70'
     };
+    // ─── Apply theme from local data ───
+    if (window.applyTheme) window.applyTheme(window.data.theme || localStorage.getItem('studypath-theme') || 'dark');
     setTimeout(() => {
       if (window.renderDashboard) { window.renderDashboard(); window.renderLog(); window.renderSubjects(); window.renderGoals(); window.renderSubjectSelects && window.renderSubjectSelects(); window.renderQuickAddChips && window.renderQuickAddChips(); }
       // ถ้าเคยเลือกวิชาแล้ว ไม่ต้องแสดงหน้าเลือกวิชา
@@ -127,6 +129,8 @@ function subscribeUserData(uid) {
         if (!window.data.chapters) window.data.chapters = {tgat:[],tpat:[],phys:[],math:[]};
         if (!window.data.dekPlan) window.data.dekPlan = 'dek70';
         if (typeof window.data.dailyGoalManual !== 'boolean') window.data.dailyGoalManual = false;
+        // ─── Apply theme from cloud (overrides local) ───
+        if (window.applyTheme) window.applyTheme(window.data.theme || localStorage.getItem('studypath-theme') || 'dark');
         setTimeout(() => {
           if (window.renderDashboard) { window.renderDashboard(); window.renderLog(); window.renderSubjects(); window.renderGoals(); window.renderSubjectSelects && window.renderSubjectSelects(); window.renderQuickAddChips && window.renderQuickAddChips(); }
           // ถ้าเคยเลือกวิชาแล้ว ไม่ต้องแสดงหน้าเลือกวิชา
@@ -154,7 +158,56 @@ function subscribeUserData(uid) {
   --coral:#f97316;
   --r8:8px;--r12:8px;--r16:8px;--r20:10px;
   --shadow:0 10px 30px rgba(0,0,0,.24);
+  /* chart helpers */
+  --chart-grid:#2a3348;--chart-tick:#5c6b88;--chart-label:#94a3b8;
 }
+/* ═══ LIGHT MODE ═══ */
+:root.light{
+  --bg:#dde1ed;       /* พื้นหลังหลัก — เทาฟ้าอ่อน ไม่จ้า */
+  --bg2:#eceef7;      /* การ์ด — ไม่ใช่ขาวล้วน */
+  --bg3:#e4e7f2;      /* การ์ดรอง */
+  --bg4:#d5daea;      /* bg4 เข้มขึ้นนิด */
+  --border:#c2c9db;
+  --border2:#adb6cc;
+  --text:#0f172a;
+  --text2:#3d4a63;
+  --text3:#7a8aaa;
+  --shadow:0 4px 20px rgba(0,0,0,.1);
+  --chart-grid:#c8d0e4;--chart-tick:#7a8aaa;--chart-label:#7a8aaa;
+}
+:root.light nav{background:rgba(221,225,237,.95);}
+:root.light #bottom-nav{background:rgba(221,225,237,.97);}
+:root.light .bottom-sheet{background:var(--bg2);}
+:root.light #loading-overlay{background:rgba(221,225,237,.88);}
+:root.light .sheet-overlay{background:rgba(0,0,0,.3);}
+:root.light .so-card{box-shadow:0 12px 48px rgba(0,0,0,.15);}
+:root.light .fab-option{box-shadow:0 4px 12px rgba(0,0,0,.1);}
+/* Input/select ใน light mode */
+:root.light select,:root.light input,:root.light textarea{background:var(--bg2);border-color:var(--border2);}
+/* Streak display */
+:root.light .streak-display{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.2);}
+/* Highlight cards */
+:root.light #highlight-best{background:var(--bg2);}
+:root.light #highlight-weak{background:var(--bg2);}
+/* ═══ SMOOTH THEME TRANSITIONS ═══ */
+body,nav,#bottom-nav,.card,.card-sm,.stat-card,.cd-card,.day-card,.bottom-sheet,
+.rec-item,.insight-card,.achievement,.phase-row,.dek-stat,.focus-stat,
+select,input,textarea,.btn-secondary,.nav-tab,.phase-badge,.bn-tab,.more-btn,
+.dek-btn,.qa-time-btn,.qa-chip,.focus-subj-chip,.focus-action,.fab-option,
+.chapter-item,.log-table td,.log-table th,.so-card,.so-info,.week-wrap{
+  transition:background-color .22s ease,border-color .22s ease,color .22s ease,box-shadow .22s ease;
+}
+/* ═══ THEME TOGGLE BUTTON ═══ */
+.theme-btn{
+  background:none;border:1px solid var(--border2);border-radius:8px;
+  width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  color:var(--text2);flex-shrink:0;padding:0;
+  transition:background-color .22s,border-color .22s,color .22s;
+}
+.theme-btn:hover{background:var(--bg3);border-color:var(--amber);color:var(--amber);}
+/* ═══ FOCUS VISIBLE (accessibility) ═══ */
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px;}
+select:focus-visible,input:focus-visible,textarea:focus-visible{outline:none;}
 body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;line-height:1.5}
 /* NAV */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(14,17,23,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center;padding:0 20px;gap:0}
@@ -311,8 +364,11 @@ h2{font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px}
 h3{font-size:15px;font-weight:600;margin-bottom:12px}
 .page-sub{font-size:13px;color:var(--text2);margin-bottom:24px}
 /* TOAST */
-.toast{position:fixed;bottom:24px;right:24px;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px 18px;font-size:13px;color:var(--text);z-index:999;opacity:0;transform:translateY(10px);transition:all .25s;pointer-events:none}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px 18px;font-size:13px;color:var(--text);z-index:999;opacity:0;transform:translateY(10px);transition:all .25s;pointer-events:none;max-width:calc(100vw - 48px)}
 .toast.show{opacity:1;transform:translateY(0)}
+@media(max-width:768px){
+  .toast{bottom:76px;right:12px;left:12px;text-align:center;}
+}
 /* ACHIEVEMENT */
 .achievement{display:flex;align-items:center;gap:12px;padding:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-radius:var(--r12);margin-bottom:8px}
 .ach-icon{font-size:24px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:rgba(245,158,11,.1);border-radius:10px}
@@ -463,6 +519,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   body .phase-badge{display:none}
   body nav{padding:0 14px;justify-content:space-between;}
   body .nav-brand{margin-right:0;}
+  /* Keep theme btn visible on mobile, slightly smaller */
+  body .theme-btn{width:30px;height:30px;}
 
   /* Show bottom nav */
   body #bottom-nav{display:flex;}
@@ -587,6 +645,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <button class="nav-tab" onclick="showPage('select')" style="color:var(--amber)">⚙️ วิชา</button>
   </div>
   <div class="phase-badge" id="current-phase-badge">ระยะปูพื้น</div>
+  <button class="theme-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="สลับโหมดมืด/สว่าง" aria-label="สลับโหมดมืด/สว่าง">
+    <span id="theme-icon-nav">🌙</span>
+  </button>
   <div id="auth-bar" style="display:flex;align-items:center;gap:6px;margin-left:8px;flex-shrink:0"></div>
 </nav>
 
@@ -655,6 +716,22 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <button class="more-btn" onclick="showPage('select');closeAllSheets()"><span>⚙️</span>วิชา</button>
     <button class="more-btn" id="more-auth-btn" onclick="closeAllSheets()"><span>👤</span>บัญชี</button>
   </div>
+  <!-- Theme toggle row -->
+  <button id="more-theme-btn" onclick="toggleTheme()" style="
+    width:100%;margin-top:10px;
+    display:flex;align-items:center;justify-content:space-between;
+    gap:10px;padding:13px 16px;
+    background:var(--bg3);border:1px solid var(--border);
+    border-radius:14px;cursor:pointer;font-family:'Sarabun',sans-serif;
+    font-size:13px;font-weight:600;color:var(--text2);
+    transition:all .15s;-webkit-tap-highlight-color:transparent;
+  ">
+    <span style="display:flex;align-items:center;gap:10px;">
+      <span id="more-theme-icon" style="font-size:18px;">☀️</span>
+      <span id="more-theme-label">โหมดสว่าง</span>
+    </span>
+    <span style="font-size:11px;color:var(--text3)">กด ESC ปิด sheet</span>
+  </button>
   <div style="margin-top:20px;padding-top:14px;border-top:1px solid var(--border);text-align:center;font-size:11px;color:var(--text3);line-height:1.8">
     <span style="color:var(--amber);font-weight:600">StudyPath</span><br>
     developed by <span style="color:var(--amber);font-weight:600">_xzc_mxn</span> with <span style="color:#cc785c;font-weight:600">Claude</span><br>
@@ -1964,9 +2041,10 @@ function renderDashboard(){
   const vals=last7.map(d=>d.hours);
   const maxVal=Math.max(...vals,1);
   const barColors=vals.map(v=>v>=4?'rgba(34,197,94,0.7)':v>=2?'rgba(245,158,11,0.7)':'rgba(239,68,68,0.5)');
+  const cc=getChartColors();
   const ctx=document.getElementById('weekChart').getContext('2d');
   if(weekChart)weekChart.destroy();
-  weekChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'ชั่วโมง',data:vals,backgroundColor:barColors,borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#5c6b88'}},y:{grid:{color:'#2a3348'},ticks:{color:'#5c6b88'},beginAtZero:true}}}});
+  weekChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'ชั่วโมง',data:vals,backgroundColor:barColors,borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:cc.tick}},y:{grid:{color:cc.grid},ticks:{color:cc.tick},beginAtZero:true}}}});
 
   renderRecommendation();renderPrediction();
   renderQuickAddChips();
@@ -1984,10 +2062,10 @@ function renderLogChart(){
   const ctx2=document.getElementById('logWeekChart').getContext('2d');
   if(logWeekChart)logWeekChart.destroy();
   if(allZero){
-    logWeekChart=new Chart(ctx2,{type:'doughnut',data:{labels:['ยังไม่มีข้อมูล'],datasets:[{data:[1],backgroundColor:['#2a3348'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}}}});
+    logWeekChart=new Chart(ctx2,{type:'doughnut',data:{labels:['ยังไม่มีข้อมูล'],datasets:[{data:[1],backgroundColor:[document.documentElement.classList.contains('light')?'#e2e8f0':'#2a3348'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}}}});
     return;
   }
-  logWeekChart=new Chart(ctx2,{type:'doughnut',data:{labels,datasets:[{data:dataVals,backgroundColor:bgColors,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',font:{size:11}}}}}});
+  logWeekChart=new Chart(ctx2,{type:'doughnut',data:{labels,datasets:[{data:dataVals,backgroundColor:bgColors,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:getChartColors().label,font:{size:11}}}}}});
 }
 
 // ═══════════════════════════ SMART RECOMMENDATION ═══════════════════════════
@@ -2156,12 +2234,13 @@ function renderAnalysis(){
   const activeSubs=getActiveSubjectsData();
   const activeKeys=Object.keys(activeSubs);
   // Subject hours bar chart (dynamic)
+  const cc=getChartColors();
   const ctx1=document.getElementById('subjectHoursChart').getContext('2d');
   if(subjectChart)subjectChart.destroy();
   subjectChart=new Chart(ctx1,{type:'bar',data:{
     labels:activeKeys.map(k=>activeSubs[k].name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')),
     datasets:[{data:activeKeys.map(k=>subj[k]||0),backgroundColor:activeKeys.map(k=>activeSubs[k].color||'#888'),borderRadius:8,borderSkipped:false}]
-  },options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#2a3348'},ticks:{color:'#5c6b88'}},y:{grid:{display:false},ticks:{color:'#94a3b8'}}}}});
+  },options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:cc.grid},ticks:{color:cc.tick}},y:{grid:{display:false},ticks:{color:cc.label}}}}});
 
   // Daily last 30
   const days30=[];const now=new Date();
@@ -2172,7 +2251,7 @@ function renderAnalysis(){
   dailyChart=new Chart(ctx2,{type:'line',data:{
     labels:days30.map((_,i)=>i%5===0?days30[i].slice(5):''),
     datasets:[{data:dailyVals,borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,0.1)',borderWidth:2,tension:.4,fill:true,pointRadius:2,pointBackgroundColor:'#f59e0b'}]
-  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#2a3348'},ticks:{color:'#5c6b88',maxRotation:0}},y:{grid:{color:'#2a3348'},ticks:{color:'#5c6b88'},beginAtZero:true}}}});
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:cc.grid},ticks:{color:cc.tick,maxRotation:0}},y:{grid:{color:cc.grid},ticks:{color:cc.tick},beginAtZero:true}}}});
 
   // Plan vs actual
   const last7=getHoursLast7();
@@ -2189,7 +2268,7 @@ function renderAnalysis(){
       {label:'เป้า',data:planned,borderColor:'rgba(94,94,120,0.4)',backgroundColor:'rgba(94,94,120,0.4)',borderRadius:4,borderSkipped:false},
       {label:'จริง',data:last7.map(d=>d.hours),backgroundColor:'rgba(245,158,11,0.75)',borderRadius:4,borderSkipped:false}
     ]
-  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{color:'#94a3b8',font:{size:11}}}},scales:{x:{grid:{display:false},ticks:{color:'#5c6b88'}},y:{grid:{color:'#2a3348'},ticks:{color:'#5c6b88'},beginAtZero:true}}}});
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{color:cc.label,font:{size:11}}}},scales:{x:{grid:{display:false},ticks:{color:cc.tick}},y:{grid:{color:cc.grid},ticks:{color:cc.tick},beginAtZero:true}}}});
 
   renderInsights(subj,dailyVals);
 }
@@ -2545,6 +2624,57 @@ function showToast(msg){
   setTimeout(()=>t.classList.remove('show'),2500);
 }
 
+// ═══════════════════════════ THEME ═══════════════════════════
+function getChartColors(){
+  const light=document.documentElement.classList.contains('light');
+  return{
+    grid:light?'#d0d6e8':'#2a3348',
+    tick:light?'#7a8aaa':'#5c6b88',
+    label:light?'#7a8aaa':'#94a3b8',
+    zero:light?'#d0d6e8':'#2a3348',
+  };
+}
+function applyTheme(theme){
+  const root=document.documentElement;
+  const isLight=theme==='light';
+  if(isLight)root.classList.add('light');
+  else root.classList.remove('light');
+  // Update nav icon
+  const navIcon=document.getElementById('theme-icon-nav');
+  if(navIcon)navIcon.textContent=isLight?'🌙':'☀️';
+  // Update more-sheet button
+  const moreIcon=document.getElementById('more-theme-icon');
+  const moreLabel=document.getElementById('more-theme-label');
+  if(moreIcon)moreIcon.textContent=isLight?'🌙':'☀️';
+  if(moreLabel)moreLabel.textContent=isLight?'โหมดมืด':'โหมดสว่าง';
+  // Re-render charts after transition (theme colors change)
+  clearTimeout(window._themeChartTimer);
+  window._themeChartTimer=setTimeout(()=>{
+    if(typeof renderDashboard==='function')renderDashboard();
+    if(typeof renderAnalysis==='function'&&document.getElementById('page-analysis')?.classList.contains('active'))renderAnalysis();
+  },60);
+}
+function toggleTheme(){
+  const isLight=document.documentElement.classList.contains('light');
+  const next=isLight?'dark':'light';
+  // Save to standalone localStorage key (fallback before data loads)
+  localStorage.setItem('studypath-theme',next);
+  // Save to data object → syncs to Firebase via save()
+  if(typeof data!=='undefined'&&data!==null){
+    data.theme=next;
+    if(typeof save==='function')save();
+  }
+  applyTheme(next);
+}
+// Init theme — read from data.theme in localStorage first, then standalone key, then default dark
+(function(){
+  const savedData=JSON.parse(localStorage.getItem('studypath')||'null');
+  const theme=savedData?.theme||localStorage.getItem('studypath-theme')||'dark';
+  applyTheme(theme);
+})();
+window.applyTheme=applyTheme;
+window.toggleTheme=toggleTheme;
+
 // ═══════════════════════════ INIT ═══════════════════════════
 function init(){
   migrateData();
@@ -2618,6 +2748,7 @@ window.openMoreSheet = openMoreSheet;
 window.closeAllSheets = closeAllSheets;
 window.qaSheetSelectSubj = qaSheetSelectSubj;
 window.qaSheetAdd = qaSheetAdd;
+window.renderAnalysis = renderAnalysis;
 
 init();
 </script>
