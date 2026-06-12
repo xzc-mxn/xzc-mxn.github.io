@@ -99,7 +99,7 @@ onAuthStateChanged(auth, user => {
     if (unsubSnapshot) { unsubSnapshot(); unsubSnapshot = null; }
     document.getElementById('loading-overlay').style.display = 'none';
     window.data = JSON.parse(localStorage.getItem('studypath')||'null') || {
-      logs:[], chapters:{tgat:[],tpat:[],phys:[],math:[]}, streak:0, bestStreak:0, lastStudyDate:null, pomoDone:0, dailyGoal:4
+      logs:[], chapters:{tgat:[],tpat:[],phys:[],math:[]}, streak:0, bestStreak:0, lastStudyDate:null, pomoDone:0, dailyGoal:4, dailyGoalManual:false, dekPlan:'dek70'
     };
     setTimeout(() => {
       if (window.renderDashboard) { window.renderDashboard(); window.renderLog(); window.renderSubjects(); window.renderGoals(); window.renderSubjectSelects && window.renderSubjectSelects(); window.renderQuickAddChips && window.renderQuickAddChips(); }
@@ -125,6 +125,8 @@ function subscribeUserData(uid) {
       if (cloud) {
         window.data = cloud;
         if (!window.data.chapters) window.data.chapters = {tgat:[],tpat:[],phys:[],math:[]};
+        if (!window.data.dekPlan) window.data.dekPlan = 'dek70';
+        if (typeof window.data.dailyGoalManual !== 'boolean') window.data.dailyGoalManual = false;
         setTimeout(() => {
           if (window.renderDashboard) { window.renderDashboard(); window.renderLog(); window.renderSubjects(); window.renderGoals(); window.renderSubjectSelects && window.renderSubjectSelects(); window.renderQuickAddChips && window.renderQuickAddChips(); }
           // ถ้าเคยเลือกวิชาแล้ว ไม่ต้องแสดงหน้าเลือกวิชา
@@ -140,9 +142,9 @@ function subscribeUserData(uid) {
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0e1117;--bg2:#161b27;--bg3:#1e2535;--bg4:#252d3d;
-  --border:#2a3348;--border2:#364057;
-  --text:#e8ecf4;--text2:#94a3b8;--text3:#5c6b88;
+  --bg:#0d0f14;--bg2:#141820;--bg3:#1b2029;--bg4:#242a35;
+  --border:#262d39;--border2:#333b49;
+  --text:#edf1f7;--text2:#a7b0c0;--text3:#758195;
   --amber:#f59e0b;--amber2:#d97706;--amber3:#fbbf24;
   --teal:#0d9488;--teal2:#14b8a6;
   --blue:#3b82f6;--blue2:#60a5fa;
@@ -150,19 +152,19 @@ function subscribeUserData(uid) {
   --red:#ef4444;--red2:#f87171;
   --purple:#8b5cf6;--purple2:#a78bfa;
   --coral:#f97316;
-  --r8:8px;--r12:12px;--r16:16px;--r20:20px;
-  --shadow:0 4px 24px rgba(0,0,0,.4);
+  --r8:8px;--r12:8px;--r16:8px;--r20:10px;
+  --shadow:0 10px 30px rgba(0,0,0,.24);
 }
-body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;line-height:1.5}
 /* NAV */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(14,17,23,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center;padding:0 20px;gap:0}
-.nav-brand{font-size:17px;font-weight:700;color:var(--amber);letter-spacing:-.5px;margin-right:12px;white-space:nowrap}
+.nav-brand{font-size:17px;font-weight:700;color:var(--amber);letter-spacing:0;margin-right:12px;white-space:nowrap}
 .nav-tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;flex:1}
 .nav-tabs::-webkit-scrollbar{display:none}
 .nav-tab{background:none;border:none;color:var(--text2);font-family:'Sarabun',sans-serif;font-size:13px;padding:6px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;transition:all .15s;font-weight:500}
 .nav-tab:hover{background:var(--bg3);color:var(--text)}
 .nav-tab.active{background:rgba(245,158,11,.12);color:var(--amber)}
-.phase-badge{font-size:11px;background:rgba(139,92,246,.15);color:var(--purple2);border:1px solid rgba(139,92,246,.25);padding:2px 8px;border-radius:20px;margin-left:auto;white-space:nowrap}
+.phase-badge{font-size:11px;background:var(--bg3);color:var(--text2);border:1px solid var(--border);padding:2px 8px;border-radius:8px;margin-left:auto;white-space:nowrap}
 /* LAYOUT */
 .page{display:none;padding:76px 20px 40px;max-width:1100px;margin:0 auto}
 .page.active{display:block}
@@ -173,12 +175,12 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(14,17,23,.92
 @media(max-width:700px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
 @media(max-width:900px){.grid3{grid-template-columns:repeat(2,1fr)}.grid4{grid-template-columns:repeat(2,1fr)}}
 /* CARDS */
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r16);padding:20px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r16);padding:18px}
 .card-sm{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r12);padding:16px}
-.card-title{font-size:12px;font-weight:600;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;margin-bottom:12px}
+.card-title{font-size:12px;font-weight:600;color:var(--text3);letter-spacing:0;text-transform:none;margin-bottom:12px}
 /* STAT CARDS */
 .stat-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r12);padding:16px 18px}
-.stat-label{font-size:11px;color:var(--text3);font-weight:500;letter-spacing:.3px;margin-bottom:6px}
+.stat-label{font-size:11px;color:var(--text3);font-weight:500;letter-spacing:0;margin-bottom:6px}
 .stat-value{font-size:28px;font-weight:700;color:var(--text);line-height:1}
 .stat-sub{font-size:12px;color:var(--text2);margin-top:4px}
 /* COUNTDOWN */
@@ -235,7 +237,7 @@ label{font-size:13px;color:var(--text2);display:block;margin-bottom:5px;font-wei
 .week-wrap{overflow-x:auto}
 .day-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r12);padding:12px;min-height:160px}
 .day-card.today{border-color:var(--amber);background:rgba(245,158,11,.04)}
-.day-name{font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--text2);margin-bottom:8px;text-transform:uppercase}
+.day-name{font-size:11px;font-weight:700;letter-spacing:0;color:var(--text2);margin-bottom:8px;text-transform:none}
 .day-date{font-size:10px;color:var(--text3);margin-bottom:10px}
 .session{border-radius:6px;padding:6px 8px;margin-bottom:6px;font-size:11px;font-weight:600}
 .session.tgat{background:rgba(245,158,11,.15);color:var(--amber3);border:1px solid rgba(245,158,11,.2)}
@@ -251,7 +253,7 @@ label{font-size:13px;color:var(--text2);display:block;margin-bottom:5px;font-wei
 .log-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text)}
 .log-table tr:last-child td{border-bottom:none}
 .log-table tr:hover td{background:rgba(255,255,255,.02)}
-.badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.3px}
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;letter-spacing:0}
 /* CHAPTERS */
 .chapter-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
 .chapter-item:last-child{border-bottom:none}
@@ -264,6 +266,35 @@ label{font-size:13px;color:var(--text2);display:block;margin-bottom:5px;font-wei
 .rec-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
 .rec-title{font-size:13px;font-weight:600;margin-bottom:3px}
 .rec-desc{font-size:12px;color:var(--text2)}
+/* TODAY FOCUS */
+.focus-card{margin-bottom:16px;border-color:rgba(20,184,166,.28);background:linear-gradient(135deg,var(--bg2),rgba(20,184,166,.05))}
+.focus-layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(260px,.8fr);gap:16px;align-items:stretch}
+.focus-main{min-width:0}
+.focus-kicker{font-size:12px;color:var(--text3);font-weight:600;margin-bottom:6px}
+.focus-title{font-size:24px;font-weight:700;color:var(--text);line-height:1.25;margin-bottom:6px}
+.focus-meta{font-size:13px;color:var(--text2);line-height:1.6}
+.focus-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.focus-subj-chip{
+  font-family:'Sarabun',sans-serif;font-size:12px;font-weight:600;
+  padding:5px 11px;border-radius:20px;border:1.5px solid var(--border2);
+  background:var(--bg3);color:var(--text2);cursor:pointer;
+  transition:all .15s;white-space:nowrap;
+}
+.focus-subj-chip:hover{border-color:var(--chip-color,var(--amber));color:var(--chip-color,var(--amber))}
+.focus-subj-chip.active{
+  background:color-mix(in srgb,var(--chip-color,var(--amber)) 15%,transparent);
+  border-color:var(--chip-color,var(--amber));
+  color:var(--chip-color,var(--amber));
+}
+.focus-action{font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);padding:9px 14px;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.focus-action.primary{background:var(--amber);border-color:var(--amber);color:#000}
+.focus-action:hover{border-color:var(--amber);color:var(--amber)}
+.focus-action.primary:hover{background:var(--amber3);color:#000}
+.focus-side{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.focus-stat{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;min-height:82px}
+.focus-stat span{display:block;font-size:11px;color:var(--text3);margin-bottom:6px}
+.focus-stat strong{display:block;font-size:20px;line-height:1.2;font-family:'DM Mono','Sarabun',monospace;color:var(--text)}
+.focus-stat em{display:block;font-style:normal;font-size:11px;color:var(--text2);margin-top:5px}
 /* PHASE PROGRESS */
 .phase-row{display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg3);border-radius:var(--r12);margin-bottom:8px}
 .phase-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
@@ -311,10 +342,32 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
 /* QUICK ADD */
 .qa-chip{font-family:'Sarabun',sans-serif;font-size:12px;font-weight:600;padding:8px 14px;border-radius:20px;border:1.5px solid var(--chip-color,var(--border2));background:transparent;color:var(--chip-color,var(--text2));cursor:pointer;transition:all .2s}
-.qa-chip:hover,.qa-chip.active{background:var(--chip-color);color:#000;transform:scale(1.05)}
+.qa-chip:hover,.qa-chip.active{background:var(--chip-color);color:#000;transform:none}
 .qa-time-btn{font-family:'DM Mono',monospace;font-size:13px;font-weight:600;padding:10px 18px;border-radius:10px;border:1.5px solid var(--border2);background:var(--bg3);color:var(--text);cursor:pointer;transition:all .15s}
-.qa-time-btn:hover{background:var(--amber);color:#000;border-color:var(--amber);transform:translateY(-2px)}
+.qa-time-btn:hover{background:var(--amber);color:#000;border-color:var(--amber);transform:none}
 .qa-time-btn:active{transform:scale(.95)}
+.quick-add-card{display:none}
+.subject-chip{font-family:'Sarabun',sans-serif;font-size:12px;font-weight:600;padding:9px 12px;border-radius:8px;cursor:pointer;transition:border-color .15s,background .15s,color .15s;border:1px solid var(--border2);background:var(--bg3);color:var(--text2)}
+.subject-chip:hover{border-color:var(--chip-color);color:var(--text)}
+.subject-chip.active{border-color:var(--chip-color);background:color-mix(in srgb,var(--chip-color) 16%,var(--bg3));color:var(--text)}
+/* DEK PLAN */
+.dek-card{border-color:var(--border);background:var(--bg2)}
+.dek-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:14px}
+.dek-title{font-size:18px;font-weight:700;color:var(--text);line-height:1.25}
+.dek-subtitle{font-size:12px;color:var(--text2);margin-top:4px;line-height:1.5}
+.dek-picker{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.dek-btn{font-family:'Sarabun',sans-serif;min-width:74px;height:42px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1}
+.dek-btn strong{font-size:13px;font-weight:700}
+.dek-btn small{font-size:10px;color:var(--text3);margin-top:2px}
+.dek-btn:hover{border-color:var(--dek-color);color:var(--text)}
+.dek-btn.active{background:var(--dek-color);border-color:var(--dek-color);color:#000}
+.dek-btn.active small{color:rgba(0,0,0,.62)}
+.dek-summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.dek-stat{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;min-height:74px}
+.dek-stat span{display:block;font-size:10px;color:var(--text3);font-weight:700;letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px}
+.dek-stat strong{display:block;font-size:17px;color:var(--text);font-family:'DM Mono','Sarabun',monospace;line-height:1.25}
+.dek-stat em{display:block;font-style:normal;font-size:11px;color:var(--text2);margin-top:4px;line-height:1.4}
+.dek-note{font-size:12px;color:var(--text2);line-height:1.7;margin-top:12px}
 /* FAB */
 .fab{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--amber2));color:#000;font-size:28px;font-weight:700;border:none;cursor:pointer;z-index:200;box-shadow:0 4px 20px rgba(245,158,11,.4);transition:all .25s;display:none}
 .fab:hover{transform:scale(1.1) rotate(90deg)}
@@ -329,10 +382,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 .daily-ring-wrap{position:relative;width:130px;height:130px;flex-shrink:0}
 .daily-ring-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
 /* HIGHLIGHT */
-.highlight-card{transition:transform .2s}.highlight-card:hover{transform:translateY(-2px)}
+.highlight-card{transition:border-color .2s}.highlight-card:hover{border-color:var(--border2)}
 /* STREAK FIRE */
 @keyframes fireGlow{0%,100%{text-shadow:0 0 8px rgba(245,158,11,.5)}50%{text-shadow:0 0 16px rgba(245,158,11,.8),0 0 32px rgba(245,158,11,.3)}}
-.streak-fire{animation:fireGlow 1.5s ease-in-out infinite}
+.streak-fire{animation:none}
 /* ═══════════════ BOTTOM NAV ═══════════════ */
 #bottom-nav{
   display:none;
@@ -454,6 +507,16 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   body .btn-sm{padding:8px 14px;font-size:12px;}
   body .qa-time-btn{padding:12px 16px;font-size:14px;min-width:64px;}
   body .qa-chip{padding:10px 16px;font-size:13px;}
+  body .dek-head{display:block;}
+  body .dek-picker{justify-content:flex-start;margin-top:12px;}
+  body .dek-btn{flex:1;min-width:68px;}
+  body .dek-summary-grid{grid-template-columns:1fr 1fr;}
+  body .dek-stat{min-height:70px;padding:10px;}
+  body .dek-stat strong{font-size:15px;}
+  body .focus-layout{grid-template-columns:1fr;gap:12px;}
+  body .focus-title{font-size:20px;}
+  body .focus-side{grid-template-columns:1fr 1fr;}
+  body .focus-action{flex:1;text-align:center;}
 
   /* Inputs */
   body select,body input[type=number],body input[type=text],body input[type=date],body textarea{
@@ -512,9 +575,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 <body>
 
 <nav>
-  <div class="nav-brand">📚 StudyPath</div>
+  <div class="nav-brand">StudyPath</div>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showPage('dashboard')">Dashboard</button>
+    <button class="nav-tab active" onclick="showPage('dashboard')">หน้าหลัก</button>
     <button class="nav-tab" onclick="showPage('plan')">แผนอ่าน</button>
     <button class="nav-tab" onclick="showPage('timer')">จับเวลา</button>
     <button class="nav-tab" onclick="showPage('log')">บันทึก</button>
@@ -593,9 +656,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <button class="more-btn" id="more-auth-btn" onclick="closeAllSheets()"><span>👤</span>บัญชี</button>
   </div>
   <div style="margin-top:20px;padding-top:14px;border-top:1px solid var(--border);text-align:center;font-size:11px;color:var(--text3);line-height:1.8">
-    📚 <span style="color:var(--amber);font-weight:600">StudyPath</span><br>
+    <span style="color:var(--amber);font-weight:600">StudyPath</span><br>
     developed by <span style="color:var(--amber);font-weight:600">_xzc_mxn</span> with <span style="color:#cc785c;font-weight:600">Claude</span><br>
-    <span style="font-size:10px">© 2570 · Good luck Dek70 🎯</span>
+    <a href="team.html" target="_blank" rel="noopener" class="team-link" style="margin-top:8px">Team</a><br>
+    <span style="font-size:10px">© 2570 · Good luck</span>
   </div>
 </div><!-- /more-sheet -->
 <div id="loading-overlay" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(14,17,23,.85);align-items:center;justify-content:center;flex-direction:column;gap:12px">
@@ -607,10 +671,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 <!-- ═══════════════════════════════ SUBJECT SELECTION ═══════════════════════════════ -->
 <div class="page" id="page-select">
   <div style="text-align:center;margin-bottom:32px">
-    <div style="font-size:48px;margin-bottom:8px">📚</div>
     <h2 style="font-size:24px">เลือกวิชาที่จะสอบ</h2>
     <p class="page-sub" style="max-width:500px;margin:8px auto 0">เลือกวิชาที่ต้องการเตรียมสอบ ระบบจะคำนวณเวลาอ่านที่เหมาะสมให้อัตโนมัติ<br><span style="font-size:11px;color:var(--text3)">อ้างอิงเนื้อหาจาก mytcas.com/blueprint</span></p>
   </div>
+  <div id="select-dek-section"></div>
   <div id="select-groups"></div>
   <div style="text-align:center;margin-top:24px">
     <div id="select-summary" style="font-size:13px;color:var(--text2);margin-bottom:12px"></div>
@@ -621,8 +685,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 
 <!-- ═══════════════════════════════ DASHBOARD ═══════════════════════════════ -->
 <div class="page active" id="page-dashboard">
-  <h2>Dashboard</h2>
-  <p class="page-sub">ภาพรวม Dek70</p>
+  <h2>หน้าหลัก</h2>
+  <p class="page-sub" id="dashboard-subtitle">ภาพรวม Dek70</p>
+  <div id="dashboard-dek-summary"></div>
+  <div id="today-focus-card"></div>
 
   <!-- ★ QUICK ADD PANEL — 2 clicks max ★ -->
   <div class="card quick-add-card" style="margin-bottom:16px;border-color:rgba(245,158,11,.3);background:linear-gradient(135deg,var(--bg2),rgba(245,158,11,.04))">
@@ -667,22 +733,22 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <!-- Stats 2x2 -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div class="stat-card">
-        <div class="stat-label">🔥 Streak</div>
+        <div class="stat-label">Streak</div>
         <div class="stat-value c-tgat" id="dash-streak" style="display:flex;align-items:center;gap:6px">0</div>
         <div class="stat-sub">วันต่อเนื่อง</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">⏱ ชั่วโมงรวม</div>
+        <div class="stat-label">ชั่วโมงรวม</div>
         <div class="stat-value" id="dash-total-hours">0</div>
         <div class="stat-sub">ชั่วโมงทั้งหมด</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">📅 เฉลี่ย/วัน</div>
+        <div class="stat-label">เฉลี่ย/วัน</div>
         <div class="stat-value" id="dash-avg">0</div>
         <div class="stat-sub">ชั่วโมง</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">📖 บทเรียน</div>
+        <div class="stat-label">บทเรียน</div>
         <div class="stat-value" id="dash-chapters">0</div>
         <div class="stat-sub">บทที่อ่านแล้ว</div>
       </div>
@@ -692,12 +758,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   <!-- ★ HIGHLIGHTS — Best Day + Weakest Subject ★ -->
   <div class="grid2" style="margin-bottom:16px">
     <div class="card highlight-card" id="highlight-best" style="border-left:3px solid var(--green)">
-      <div style="font-size:11px;color:var(--text3);margin-bottom:4px">🏆 วันที่ดีที่สุด</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:4px">วันที่ดีที่สุด</div>
       <div style="font-size:18px;font-weight:700;color:var(--green2)" id="best-day-text">—</div>
       <div style="font-size:12px;color:var(--text2)" id="best-day-sub"></div>
     </div>
     <div class="card highlight-card" id="highlight-weak" style="border-left:3px solid var(--red)">
-      <div style="font-size:11px;color:var(--text3);margin-bottom:4px">⚠️ วิชาที่ต้องเพิ่ม</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:4px">วิชาที่ต้องเพิ่ม</div>
       <div style="font-size:18px;font-weight:700;color:var(--red2)" id="weak-subj-text">—</div>
       <div style="font-size:12px;color:var(--text2)" id="weak-subj-sub"></div>
     </div>
@@ -705,28 +771,28 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 
   <!-- Countdown -->
   <div class="card" style="margin-bottom:16px">
-    <div class="card-title">⏳ นับถอยหลังถึงวันสอบ</div>
+    <div class="card-title">นับถอยหลังถึงวันสอบ</div>
     <div id="countdown-dynamic" class="countdown-grid"></div>
   </div>
 
   <!-- Progress + Recommendations -->
   <div class="grid2" style="margin-bottom:16px">
     <div class="card">
-      <div class="card-title">📊 Progress รายวิชา</div>
+      <div class="card-title">Progress รายวิชา</div>
       <div id="dash-progress-container"><p style="color:var(--text3);font-size:12px">กำลังโหลด...</p></div>
     </div>
     <div class="card">
-      <div class="card-title">💡 แนะนำวันนี้</div>
+      <div class="card-title">แนะนำวันนี้</div>
       <div id="today-rec"></div>
       <hr class="divider">
-      <div class="card-title">📈 การทำนาย</div>
+      <div class="card-title">การทำนาย</div>
       <div id="prediction-box" style="font-size:13px;color:var(--text2);line-height:1.7"></div>
     </div>
   </div>
 
   <!-- Weekly chart -->
   <div class="card">
-    <div class="card-title">📈 ชั่วโมงอ่านรายสัปดาห์ (7 วันล่าสุด)</div>
+    <div class="card-title">ชั่วโมงอ่านรายสัปดาห์ (7 วันล่าสุด)</div>
     <div class="chart-box"><canvas id="weekChart" role="img" aria-label="Bar chart showing study hours for last 7 days"></canvas></div>
   </div>
 </div>
@@ -744,7 +810,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 <!-- ═══════════════════════════════ PLAN ═══════════════════════════════ -->
 <div class="page" id="page-plan">
   <h2>แผนการอ่านหนังสือ</h2>
-  <p class="page-sub">ตารางอ่านแบบ 7 วัน แบ่ง 3 ระยะ</p>
+  <p class="page-sub" id="plan-subtitle">ตารางอ่านแบบ 7 วัน แบ่ง 3 ระยะ</p>
+  <div id="plan-dek-summary"></div>
 
   <!-- Phases -->
   <div class="card" style="margin-bottom:16px">
@@ -779,13 +846,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   <div class="grid2" style="margin-bottom:16px">
     <div class="card-sm" style="background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.2)">
       <div class="card-title">จันทร์ – ศุกร์</div>
-      <div style="font-size:32px;font-weight:700;color:var(--amber);font-family:'DM Mono',monospace">4–5 <span style="font-size:16px;color:var(--text2)">ชั่วโมง/วัน</span></div>
-      <div style="font-size:12px;color:var(--text2);margin-top:6px">แบ่งเช้า 2h + เย็น/ดึก 2-3h</div>
+      <div id="weekday-hours-display" style="font-size:32px;font-weight:700;color:var(--amber);font-family:'DM Mono',monospace">4–5 <span style="font-size:16px;color:var(--text2)">ชั่วโมง/วัน</span></div>
+      <div id="weekday-hours-note" style="font-size:12px;color:var(--text2);margin-top:6px">แบ่งเช้า 2h + เย็น/ดึก 2-3h</div>
     </div>
     <div class="card-sm" style="background:rgba(59,130,246,.06);border-color:rgba(59,130,246,.2)">
       <div class="card-title">เสาร์ – อาทิตย์</div>
-      <div style="font-size:32px;font-weight:700;color:var(--blue2);font-family:'DM Mono',monospace">6–8 <span style="font-size:16px;color:var(--text2)">ชั่วโมง/วัน</span></div>
-      <div style="font-size:12px;color:var(--text2);margin-top:6px">เช้า 3h + บ่าย 3-5h</div>
+      <div id="weekend-hours-display" style="font-size:32px;font-weight:700;color:var(--blue2);font-family:'DM Mono',monospace">6–8 <span style="font-size:16px;color:var(--text2)">ชั่วโมง/วัน</span></div>
+      <div id="weekend-hours-note" style="font-size:12px;color:var(--text2);margin-top:6px">เช้า 3h + บ่าย 3-5h</div>
     </div>
   </div>
 
@@ -1105,7 +1172,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 <!-- ═══════════════════════════════ FOOTER ═══════════════════════════════ -->
 <footer id="site-footer">
   <div class="footer-inner">
-    <div class="footer-brand">📚 StudyPath</div>
+    <div class="footer-brand">StudyPath</div>
     <div class="footer-credit">
       <span class="footer-dev">developed by</span>
       <span class="footer-name">_xzc_mxn</span>
@@ -1113,8 +1180,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
       <span class="footer-claude">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="vertical-align:middle;margin-right:3px"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z" fill="currentColor" opacity=".3"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" fill="currentColor"/></svg>Claude
       </span>
+      <a href="team.html" target="_blank" rel="noopener" class="team-link">Team</a>
     </div>
-    <div class="footer-copy">© 2570 · Good luck Dek70 🎯</div>
+    <div class="footer-copy">© 2570 · Good luck</div>
   </div>
 </footer>
 <style>
@@ -1144,6 +1212,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 .footer-credit{
   display:flex;
   align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
   gap:6px;
   font-size:13px;
 }
@@ -1173,10 +1243,29 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   align-items:center;
   gap:2px;
 }
+.team-link{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:28px;
+  padding:5px 12px;
+  border-radius:8px;
+  border:1px solid var(--border2);
+  background:var(--bg3);
+  color:var(--text);
+  font-size:12px;
+  font-weight:700;
+  text-decoration:none;
+  transition:all .15s;
+}
+.team-link:hover{
+  border-color:var(--amber);
+  color:var(--amber);
+}
 .footer-copy{
   font-size:11px;
   color:var(--text3);
-  letter-spacing:.3px;
+  letter-spacing:0;
 }
 </style>
 
@@ -1226,6 +1315,12 @@ const SUBJECT_GROUPS=Object.freeze([
   {key:'TPAT',label:'TPAT (ความถนัดเฉพาะ)',color:'#8b5cf6',subjects:['tpat1','tpat2','tpat3','tpat4','tpat5']},
   {key:'A-Level',label:'A-Level',color:'#3b82f6',subjects:['alv_math1','alv_math2','alv_sci','alv_phy','alv_chem','alv_bio','alv_soc','alv_thai','alv_eng']}
 ]);
+const DEK_PLANS=Object.freeze({
+  dek70:{key:'dek70',label:'Dek70',extraDays:0,color:'#f59e0b',desc:'Baseline เดิม',short:'เดิม'},
+  dek71:{key:'dek71',label:'Dek71',extraDays:365,color:'#14b8a6',desc:'เพิ่มเวลาอีก 365 วันจาก Dek70',short:'+365d'},
+  dek72:{key:'dek72',label:'Dek72',extraDays:730,color:'#60a5fa',desc:'เพิ่มเวลาอีก 730 วันจาก Dek70',short:'+730d'},
+  dek73:{key:'dek73',label:'Dek73',extraDays:1095,color:'#a78bfa',desc:'เพิ่มเวลาอีก 1,095 วันจาก Dek70',short:'+1095d'}
+});
 function getEstimatedHours(sid){const s=TCAS_SUBJECTS[sid];if(!s)return 0;const h={1:3,2:5,3:7,4:10,5:14};return s.chapters.length*(h[s.difficulty]||7);}
 function getSelectedSubjects(){return(data.selectedSubjects||[]).map(id=>TCAS_SUBJECTS[id]).filter(Boolean);}
 function getActiveExams(){const subs=getSelectedSubjects();const map={};subs.forEach(s=>{map[s.id]={name:s.name,date:s.examDate,color:s.color};});return map;}
@@ -1255,7 +1350,7 @@ const WEEK_PLAN=Object.freeze([
 
 let data = window.data || {
   logs:[], chapters:{}, streak:0, bestStreak:0, lastStudyDate:null, pomoDone:0, dailyGoal:4,
-  selectedSubjects:[], onboarded:false
+  selectedSubjects:[], onboarded:false, dekPlan:'dek70', dailyGoalManual:false
 };
 Object.defineProperty(window, 'data', {get:()=>data,set:(v)=>{data=v;},configurable:true});
 
@@ -1295,7 +1390,13 @@ function scheduleRender(...fns) {
 
 function ensureChapters(){if(!data.chapters)data.chapters={};(data.selectedSubjects||[]).forEach(id=>{if(!data.chapters[id])data.chapters[id]=[];});}
 // Migrate old data: if user had subjects selected before onboarded flag existed
-function migrateData(){if(!data.onboarded&&(data.selectedSubjects||[]).length>0){data.onboarded=true;save();}}
+function migrateData(){
+  let changed=false;
+  if(!DEK_PLANS[data.dekPlan]){data.dekPlan='dek70';changed=true;}
+  if(typeof data.dailyGoalManual!=='boolean'){data.dailyGoalManual=false;changed=true;}
+  if(!data.onboarded&&(data.selectedSubjects||[]).length>0){data.onboarded=true;changed=true;}
+  if(changed)save();
+}
 
 
 // ═══════════════════════════ NAV ═══════════════════════════
@@ -1327,7 +1428,7 @@ function showPage(id){
 // ═══════════════════════════ COUNTDOWN ═══════════════════════════
 function daysUntil(dateStr){
   const now=new Date();now.setHours(0,0,0,0);
-  const target=new Date(dateStr);
+  const target=parseLocalDate(dateStr);
   return Math.max(0,Math.ceil((target-now)/(1000*60*60*24)));
 }
 
@@ -1339,6 +1440,171 @@ const EXAM_GROUPS=[
   {key:'alevel', label:'A-Level',    subLabel:'คณิต·วิทย์·ภาษา', date:'2027-03-13', color:'#3b82f6', icon:'📐', ids:['alv_math1','alv_math2','alv_sci','alv_phy','alv_chem','alv_bio','alv_soc','alv_thai','alv_eng']},
 ];
 
+function parseLocalDate(dateStr){
+  const [y,m,d]=(dateStr||'').split('-').map(Number);
+  return new Date(y||1970,(m||1)-1,d||1);
+}
+function startOfToday(){const d=new Date();d.setHours(0,0,0,0);return d;}
+function addDays(date,days){const d=new Date(date);d.setDate(d.getDate()+days);return d;}
+function toISODate(date){
+  const y=date.getFullYear();
+  const m=String(date.getMonth()+1).padStart(2,'0');
+  const d=String(date.getDate()).padStart(2,'0');
+  return `${y}-${m}-${d}`;
+}
+function formatThaiDate(input){
+  const d=typeof input==='string'?parseLocalDate(input):input;
+  return d.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});
+}
+function formatHourValue(value){
+  if(!Number.isFinite(value)||value<=0)return '0';
+  const rounded=Math.round(value*10)/10;
+  return Number.isInteger(rounded)?String(rounded):rounded.toFixed(1);
+}
+function formatPlanHour(value){
+  if(!Number.isFinite(value)||value<=0)return '0.5h';
+  const rounded=Math.max(0.5,Math.round(value*2)/2);
+  return Number.isInteger(rounded)?`${rounded}h`:`${rounded.toFixed(1)}h`;
+}
+function formatHourRange(min,max){
+  return `${formatHourValue(min)}–${formatHourValue(max)}`;
+}
+function getGoalDailyTarget(avgDailyHours){
+  const base=Math.max(avgDailyHours||0,1);
+  let min,max;
+  if(base<=1.15){min=1;max=1;}
+  else if(base<=1.5){min=1;max=1.5;}
+  else if(base<=2){min=1.5;max=2;}
+  else{
+    min=Math.max(1,Math.floor(base*2)/2);
+    max=Math.max(min,Math.ceil(base*2)/2);
+    if(max===min)max=min+0.5;
+  }
+  const label=min===max?`${formatHourValue(min)} ชม./วัน`:`${formatHourValue(min)}-${formatHourValue(max)} ชม./วัน`;
+  const weeklyMin=min*7;
+  const weeklyMax=max*7;
+  const weeklyLabel=min===max?`${formatHourValue(weeklyMin)} ชม./สัปดาห์`:`${formatHourValue(weeklyMin)}-${formatHourValue(weeklyMax)} ชม./สัปดาห์`;
+  return{min,max,label,weeklyLabel};
+}
+function formatGoalHourRange(min,max){
+  return getGoalDailyTarget((min+max)/2).label.replace(' ชม./วัน','');
+}
+function getDekKey(){return DEK_PLANS[data.dekPlan]?data.dekPlan:'dek70';}
+function getDekPlan(key=getDekKey()){return DEK_PLANS[key]||DEK_PLANS.dek70;}
+function getEarliestSelectedExamDate(){
+  const dates=(data.selectedSubjects||[]).map(id=>TCAS_SUBJECTS[id]?.examDate).filter(Boolean).sort();
+  return dates[0]||EXAM_GROUPS[0].date;
+}
+function getDekDaysForDate(dateStr,key=getDekKey()){
+  const baseDays=daysUntil(dateStr);
+  return Math.max(0,baseDays+getDekPlan(key).extraDays);
+}
+function getDekExamDate(dateStr,key=getDekKey()){
+  return toISODate(addDays(startOfToday(),getDekDaysForDate(dateStr,key)));
+}
+function getDekIntensityFactor(key=getDekKey()){
+  const baselineDays=Math.max(daysUntil(getEarliestSelectedExamDate()),1);
+  return Math.max(1,getDekDaysForDate(getEarliestSelectedExamDate(),key)/baselineDays);
+}
+function getDekPlanMetrics(key=getDekKey()){
+  const plan=getDekPlan(key);
+  const activeKeys=(data.selectedSubjects||[]).filter(id=>TCAS_SUBJECTS[id]);
+  const baseExamDate=getEarliestSelectedExamDate();
+  const baselineDays=daysUntil(baseExamDate);
+  const prepDays=getDekDaysForDate(baseExamDate,key);
+  const startDate=toISODate(startOfToday());
+  const examDate=getDekExamDate(baseExamDate,key);
+  const targetTotal=activeKeys.reduce((sum,id)=>sum+getSubjTarget(id),0);
+  const avgDailyHours=targetTotal?targetTotal/Math.max(prepDays,1):0;
+  const intensityFactor=Math.max(1,prepDays/Math.max(baselineDays,1));
+  return{plan,activeKeys,activeCount:activeKeys.length,baseExamDate,baselineDays,prepDays,startDate,examDate,targetTotal,avgDailyHours,intensityFactor};
+}
+function getAdjustedWeekPlan(){
+  const intensityFactor=getDekIntensityFactor();
+  return WEEK_PLAN.map(day=>({
+    ...day,
+    target:Math.max(1,Math.round((day.target/intensityFactor)*2)/2),
+    sessions:day.sessions.map(s=>({...s,h:formatPlanHour(parseFloat(s.h)/intensityFactor)}))
+  }));
+}
+function renderDekPicker(){
+  const current=getDekKey();
+  return`<div class="dek-picker" role="group" aria-label="เลือกรุ่น Dek">
+    ${Object.values(DEK_PLANS).map(p=>`<button type="button" class="dek-btn ${current===p.key?'active':''}" onclick="setDekPlan('${p.key}')" style="--dek-color:${p.color}">
+      <strong>${p.label}</strong><small>${p.short}</small>
+    </button>`).join('')}
+  </div>`;
+}
+function getDekSummaryHTML(){
+  const m=getDekPlanMetrics();
+  const dailyTarget=m.activeCount?getGoalDailyTarget(m.avgDailyHours):null;
+  const avg=dailyTarget?dailyTarget.label:'เลือกวิชา';
+  const totalDays=m.prepDays?`${m.prepDays} วัน`:'วันนี้';
+  const note=m.activeCount
+    ? `เป้าหมายรวม ${m.targetTotal}h เท่าเดิม · ${dailyTarget.weeklyLabel} · ${m.plan.desc}`
+    : 'เลือกวิชาที่จะสอบเพื่อคำนวณเป้าหมายอ่านต่อวัน';
+  return`<div class="card dek-card" style="margin-bottom:16px">
+    <div class="dek-head">
+      <div>
+        <div class="card-title" style="color:${m.plan.color};margin-bottom:6px">แผนเตรียมสอบ</div>
+        <div class="dek-title">${m.plan.label}</div>
+        <div class="dek-subtitle">${note}</div>
+      </div>
+      ${renderDekPicker()}
+    </div>
+    <div class="dek-summary-grid">
+      <div class="dek-stat"><span>รุ่น Dek</span><strong style="color:${m.plan.color}">${m.plan.label}</strong><em>${m.plan.extraDays?`+${m.plan.extraDays} วันจาก Dek70`:'Baseline เดิม'}</em></div>
+      <div class="dek-stat"><span>วันเตรียมตัวทั้งหมด</span><strong>${totalDays}</strong><em>นับจากวันนี้</em></div>
+      <div class="dek-stat"><span>เป้าหมายต่อวัน</span><strong>${avg}</strong><em>${dailyTarget?dailyTarget.weeklyLabel:'ตามเป้าหมายรวม'}</em></div>
+      <div class="dek-stat"><span>วันที่เริ่ม</span><strong>${formatThaiDate(m.startDate)}</strong><em>เริ่มตามแผนนี้</em></div>
+      <div class="dek-stat"><span>วันที่สอบ</span><strong>${formatThaiDate(m.examDate)}</strong><em>${m.plan.label==='Dek70'?'วันสอบเดิม':'วันสอบตามแผน'}</em></div>
+      <div class="dek-stat"><span>เหลือถึงวันสอบ</span><strong>${m.prepDays} วัน</strong><em>จาก baseline ${m.baselineDays} วัน</em></div>
+    </div>
+  </div>`;
+}
+function renderPlanHoursRanges(){
+  const intensityFactor=getDekIntensityFactor();
+  const metrics=getDekPlanMetrics();
+  const dailyTarget=metrics.activeCount?getGoalDailyTarget(metrics.avgDailyHours):null;
+  const weekday=document.getElementById('weekday-hours-display');
+  const weekend=document.getElementById('weekend-hours-display');
+  const weekdayNote=document.getElementById('weekday-hours-note');
+  const weekendNote=document.getElementById('weekend-hours-note');
+  const weekdayLabel=dailyTarget?dailyTarget.label.replace(' ชม./วัน',''):formatGoalHourRange(4/intensityFactor,5/intensityFactor);
+  const weekendMin=dailyTarget?Math.max(dailyTarget.max,1.5):6/intensityFactor;
+  const weekendMax=dailyTarget?Math.max(dailyTarget.max+1,weekendMin):8/intensityFactor;
+  const weekendLabel=formatGoalHourRange(weekendMin,weekendMax);
+  if(weekday)weekday.innerHTML=`${weekdayLabel} <span style="font-size:16px;color:var(--text2)">ชั่วโมง/วัน</span>`;
+  if(weekend)weekend.innerHTML=`${weekendLabel} <span style="font-size:16px;color:var(--text2)">ชั่วโมง/วัน</span>`;
+  if(weekdayNote)weekdayNote.textContent=intensityFactor===1?'แบ่งเช้า 2h + เย็น/ดึก 2-3h':'แบ่งเป็นช่วงสั้น 1-2 รอบต่อวัน';
+  if(weekendNote)weekendNote.textContent=intensityFactor===1?'เช้า 3h + บ่าย 3-5h':'เพิ่มเวลาทำโจทย์และทบทวนเบาๆ';
+}
+function renderDekSections(){
+  const plan=getDekPlan();
+  const selectBox=document.getElementById('select-dek-section');
+  if(selectBox)selectBox.innerHTML=getDekSummaryHTML();
+  ['dashboard-dek-summary','plan-dek-summary'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.innerHTML=getDekSummaryHTML();
+  });
+  const dashSub=document.getElementById('dashboard-subtitle');
+  if(dashSub)dashSub.textContent=`ภาพรวม ${plan.label}`;
+  const planSub=document.getElementById('plan-subtitle');
+  if(planSub)planSub.textContent=`ตารางอ่านแบบ 7 วัน · ${plan.label}${plan.extraDays?` (+${plan.extraDays} วัน)`:''}`;
+  renderPlanHoursRanges();
+}
+function setDekPlan(key){
+  if(!DEK_PLANS[key])return;
+  data.dekPlan=key;
+  save();
+  renderDekSections();
+  renderCountdowns();
+  renderWeekPlan();
+  renderDashboard();
+  if(document.getElementById('page-analysis')?.classList.contains('active'))renderAnalysis();
+  showToast(`เปลี่ยนเป็น ${DEK_PLANS[key].label} แล้ว`);
+}
+
 function renderCountdowns(){
   const box=document.getElementById('countdown-dynamic');if(!box)return;
   const sel=data.selectedSubjects||[];
@@ -1348,15 +1614,15 @@ function renderCountdowns(){
   const activeGroups=EXAM_GROUPS.filter(g=>g.ids.some(id=>sel.includes(id)));
   if(!activeGroups.length){box.innerHTML='<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px;grid-column:1/-1">เลือกวิชาก่อนเพื่อดูนับถอยหลัง</div>';return;}
 
+  const plan=getDekPlan();
   box.innerHTML=activeGroups.map(g=>{
-    const d=daysUntil(g.date);
-    const dt=new Date(g.date);
-    const thaiDate=dt.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});
+    const d=getDekDaysForDate(g.date);
+    const thaiDate=formatThaiDate(getDekExamDate(g.date));
     const selectedInGroup=g.ids.filter(id=>sel.includes(id)).map(id=>TCAS_SUBJECTS[id]?.name.replace(/^(TGAT|TPAT\d*|A-Level)\s*/,'')||id);
     return`<div class="cd-card" style="border-top:2px solid ${g.color}">
       <div class="cd-subj" style="color:${g.color};font-size:13px;font-weight:700;margin-bottom:2px">${g.icon} ${g.label}</div>
       <div class="cd-days" style="color:${g.color};font-size:36px;font-weight:700;font-family:'DM Mono',monospace;line-height:1">${d===0?'วันนี้!':d}<span style="font-size:14px;font-weight:500;color:var(--text2);margin-left:4px">${d===0?'':'วัน'}</span></div>
-      <div class="cd-date" style="margin-top:4px">${thaiDate}</div>
+      <div class="cd-date" style="margin-top:4px">${thaiDate} · ${plan.label}</div>
       <div style="margin-top:6px;font-size:10px;color:var(--text3);line-height:1.5">${selectedInGroup.join(' · ')}</div>
     </div>`;
   }).join('');
@@ -1463,8 +1729,18 @@ function fabQuickAdd(subj,hours){
   toggleFabMenu();showToast(`⚡ ${s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')} +${hours}h`);
 }
 // ═══════════════════════════ DAILY GOAL ═══════════════════════════
+function getSuggestedDailyGoal(){
+  if(getDekKey()==='dek70')return data.dailyGoal||4;
+  const avg=getDekPlanMetrics().avgDailyHours;
+  if(!avg)return data.dailyGoal||1;
+  return Math.min(10,getGoalDailyTarget(avg).min);
+}
+function getCurrentDailyGoal(){
+  return data.dailyGoalManual?(data.dailyGoal||4):getSuggestedDailyGoal();
+}
 function setDailyGoal(val){
   data.dailyGoal=parseFloat(val);
+  data.dailyGoalManual=true;
   document.getElementById('daily-goal-val').textContent=val+'h';
   save();renderDailyRing();
 }
@@ -1473,7 +1749,7 @@ function getTodayHours(){
   return data.logs.filter(l=>l.date===today).reduce((a,b)=>a+b.hours,0);
 }
 function renderDailyRing(){
-  const goal=data.dailyGoal||4;
+  const goal=getCurrentDailyGoal();
   const done=getTodayHours();
   const pct=Math.min(done/goal,1);
   const circ=2*Math.PI*56;
@@ -1488,6 +1764,128 @@ function renderDailyRing(){
   if(slider)slider.value=goal;
   const valEl=document.getElementById('daily-goal-val');
   if(valEl)valEl.textContent=goal+'h';
+}
+
+function getFocusSubjectItem(){
+  const activeSubs=getActiveSubjectsData();
+  const keys=Object.keys(activeSubs);
+  if(!keys.length)return null;
+  const hoursBySubj=getHoursBySubj();
+  const totalHours=Object.values(hoursBySubj).reduce((a,b)=>a+b,0);
+  const equalShare=1/keys.length;
+  return keys.map(k=>{
+    const s=activeSubs[k];
+    const tcas=TCAS_SUBJECTS[k];
+    const doneChapters=(data.chapters[k]||[]).length;
+    const totalChapters=s.chapters.length||1;
+    const actualShare=totalHours?(hoursBySubj[k]||0)/totalHours:0;
+    const shareGap=Math.max(0,equalShare-actualShare);
+    const chapterGap=1-(doneChapters/totalChapters);
+    const examDays=tcas?getDekDaysForDate(tcas.examDate)||1:365;
+    const score=(shareGap*2)+chapterGap+(45/Math.max(examDays,1));
+    return{key:k,s,doneChapters,totalChapters,examDays,score};
+  }).sort((a,b)=>b.score-a.score)[0];
+}
+
+function getNextChapterForSubject(key){
+  const s=TCAS_SUBJECTS[key];
+  if(!s)return null;
+  const done=data.chapters[key]||[];
+  const idx=s.chapters.findIndex((_,i)=>!done.includes(i));
+  if(idx<0)return null;
+  return{index:idx,title:s.chapters[idx]};
+}
+
+// ─── Today Focus selected subject (can override auto suggestion) ───
+let focusOverrideSubj = null;
+
+function renderTodayFocus(){
+  const box=document.getElementById('today-focus-card');
+  if(!box)return;
+  const item=getFocusSubjectItem();
+  if(!item){
+    box.innerHTML=`<div class="card focus-card">
+      <div class="focus-layout">
+        <div class="focus-main">
+          <div class="focus-kicker">แผนวันนี้</div>
+          <div class="focus-title">เลือกวิชาที่จะสอบก่อน</div>
+          <div class="focus-meta">ระบบจะจัดวิชาเร่งด่วน บทถัดไป และเป้าชั่วโมงรายวันให้จากวิชาที่เลือก</div>
+          <div class="focus-actions"><button class="focus-action primary" onclick="showPage('select')">เลือกวิชา</button></div>
+        </div>
+      </div>
+    </div>`;
+    focusOverrideSubj=null;
+    return;
+  }
+  const subs=getSelectedSubjects();
+  // Validate override still exists
+  if(focusOverrideSubj&&!subs.find(s=>s.id===focusOverrideSubj))focusOverrideSubj=null;
+  const activeKey=focusOverrideSubj||item.key;
+  const activeSubj=TCAS_SUBJECTS[activeKey];
+  if(!activeSubj)return;
+
+  const goal=getCurrentDailyGoal();
+  const done=getTodayHours();
+  const remaining=Math.max(0,goal-done);
+  const nextChapter=getNextChapterForSubject(activeKey);
+  const name=activeSubj.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'');
+  const chapterText=nextChapter?nextChapter.title:'ทบทวนข้อสอบเก่า';
+  const remainText=remaining>0?`${formatHourValue(remaining)}h`:'ครบแล้ว';
+  const doneChapters=(data.chapters[activeKey]||[]).length;
+  const totalChapters=(getActiveSubjectsData()[activeKey]||{chapters:[]}).chapters.length||1;
+  const examDays=getDekDaysForDate(activeSubj.examDate)||'—';
+
+  // Subject picker chips
+  const chipsHtml=subs.map(s=>{
+    const isActive=s.id===activeKey;
+    return`<button class="focus-subj-chip ${isActive?'active':''}" style="--chip-color:${s.color}" onclick="focusSelectSubj('${s.id}')" title="${s.name}">${s.icon} ${s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')}</button>`;
+  }).join('');
+
+  box.innerHTML=`<div class="card focus-card">
+    <div class="focus-layout">
+      <div class="focus-main">
+        <div class="focus-kicker" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span>แผนวันนี้</span>
+          <span style="font-size:10px;color:var(--text3);font-weight:400">${focusOverrideSubj?'(เลือกเอง)':'(แนะนำ)'}</span>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 8px" id="focus-subj-chips">${chipsHtml}</div>
+        <div class="focus-title" style="color:${activeSubj.color}">${name}</div>
+        <div class="focus-meta">บทถัดไป: ${chapterText}</div>
+        <div class="focus-actions">
+          <button class="focus-action primary" onclick="startFocusTimer('${activeKey}')">จับเวลา</button>
+          <button class="focus-action" onclick="quickAddFocus('${activeKey}',0.5)">+30m</button>
+          <button class="focus-action" onclick="quickAddFocus('${activeKey}',1)">+1h</button>
+          <button class="focus-action" onclick="quickAddFocus('${activeKey}',1.5)">+1.5h</button>
+        </div>
+      </div>
+      <div class="focus-side">
+        <div class="focus-stat"><span>เหลือวันนี้</span><strong>${remainText}</strong><em>${done.toFixed(1)} / ${goal}h</em></div>
+        <div class="focus-stat"><span>บทเรียน</span><strong>${doneChapters}/${totalChapters}</strong><em>${Math.round(doneChapters/totalChapters*100)}%</em></div>
+        <div class="focus-stat"><span>วันสอบ</span><strong>${examDays}</strong><em>วัน</em></div>
+        <div class="focus-stat"><span>แผน</span><strong>${getDekPlan().label}</strong><em>${getDekPlan().short}</em></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function focusSelectSubj(subjId){
+  focusOverrideSubj=(focusOverrideSubj===subjId)?null:subjId;
+  renderTodayFocus();
+}
+
+function quickAddFocus(subj,hours){
+  const today=new Date().toISOString().split('T')[0];
+  const s=TCAS_SUBJECTS[subj];if(!s)return;
+  data.logs.push({id:Date.now(),date:today,subj,hours,note:'Today Focus',source:'focus'});
+  data.logs.sort((a,b)=>b.date.localeCompare(a.date));
+  updateStreak(today);save();scheduleRender(renderDashboard,renderLog);
+  showToast(`${s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')} +${hours}h`);
+}
+
+function startFocusTimer(subj){
+  const timerSelect=document.getElementById('timer-subject');
+  if(timerSelect)timerSelect.value=subj;
+  showPage('timer');
 }
 // ═══════════════════════════ HIGHLIGHTS ═══════════════════════════
 function renderHighlights(){
@@ -1525,7 +1923,9 @@ function renderHighlights(){
 }
 
 function renderDashboard(){
+  renderDekSections();
   renderCountdowns();
+  renderTodayFocus();
   const total=data.logs.reduce((a,b)=>a+b.hours,0);
   // Streak with fire animation
   const streakEl=document.getElementById('dash-streak');
@@ -1603,11 +2003,11 @@ function renderRecommendation(){
   const scores=activeKeys.map(k=>{
     const s=TCAS_SUBJECTS[k];
     const gap=equalShare-(subj[k]||0)/total;
-    const examDays=s?daysUntil(s.examDate)||1:100;
+    const examDays=s?getDekDaysForDate(s.examDate)||1:100;
     return{key:k,gap,urgency:gap*(300/examDays),examDays,s:activeSubs[k]};
   }).sort((a,b)=>b.urgency-a.urgency);
   const day=new Date().getDay();
-  const dayPlan=WEEK_PLAN[day===0?6:day-1];
+  const dayPlan=getAdjustedWeekPlan()[day===0?6:day-1];
   box.innerHTML=scores.slice(0,3).map((item,i)=>{
     const gapPct=Math.abs(Math.round(item.gap*100));
     const desc=item.gap>0.05?`ขาดอีก ${gapPct}% จากเป้า · สอบอีก ${item.examDays} วัน`:`อยู่ในเป้า ✅ · สอบอีก ${item.examDays} วัน`;
@@ -1659,7 +2059,7 @@ function renderPrediction(){
       const s=activeSubs[k];const tcas=TCAS_SUBJECTS[k];
       const done=subj[k]||0;
       const need=getSubjTarget(k);
-      const examDays=tcas?daysUntil(tcas.examDate)||1:100;
+      const examDays=tcas?getDekDaysForDate(tcas.examDate)||1:100;
       const remaining=Math.max(0,need-done);
       const reqDaily=remaining/examDays;
       const ok=remaining<=0||reqDaily<=Math.max(avgPerDay*0.35,0.5);
@@ -1680,7 +2080,7 @@ function renderPrediction(){
   const earliestExam=activeKeys.reduce((min,k)=>{
     const d=TCAS_SUBJECTS[k]?.examDate;return(!min||d<min)?d:min;
   },null)||'2027-01-30';
-  const daysLeft=daysUntil(earliestExam);
+  const daysLeft=getDekDaysForDate(earliestExam);
   const projectedTotal=total+avgPerDay*daysLeft;
   const onTrack=projectedTotal>=targetTotal;
   const gap=targetTotal-projectedTotal;
@@ -1695,10 +2095,11 @@ function renderPrediction(){
 
 // ═══════════════════════════ WEEKLY PLAN ═══════════════════════════
 function renderWeekPlan(){
+  renderDekSections();
   const grid=document.getElementById('week-grid');
   const today=new Date().getDay();// 0=sun,1=mon
   const startOfWeek=new Date();startOfWeek.setDate(startOfWeek.getDate()-(today===0?6:today-1));
-  grid.innerHTML=WEEK_PLAN.map((d,i)=>{
+  grid.innerHTML=getAdjustedWeekPlan().map((d,i)=>{
     const date=new Date(startOfWeek);date.setDate(date.getDate()+i);
     const isToday=date.toDateString()===new Date().toDateString();
     return`<div class="day-card ${isToday?'today':''}">
@@ -1775,16 +2176,17 @@ function renderAnalysis(){
 
   // Plan vs actual
   const last7=getHoursLast7();
-  const planned=WEEK_PLAN.map(d=>d.target);
-  const day=new Date().getDay();
-  const reorderedPlanned=[];
-  for(let i=0;i<7;i++){const idx=(day===0?6:day-1+i)%7;reorderedPlanned.push(WEEK_PLAN[idx].target);}
+  const adjustedWeekPlan=getAdjustedWeekPlan();
+  const planned=last7.map(d=>{
+    const dayIdx=new Date(d.date).getDay();
+    return adjustedWeekPlan[dayIdx===0?6:dayIdx-1].target;
+  });
   const ctx3=document.getElementById('planVsActualChart').getContext('2d');
   if(planVsChart)planVsChart.destroy();
   planVsChart=new Chart(ctx3,{type:'bar',data:{
     labels:last7.map(d=>{const dt=new Date(d.date);return['อา','จ','อ','พ','พฤ','ศ','ส'][dt.getDay()]}),
     datasets:[
-      {label:'เป้า',data:WEEK_PLAN.map(d=>d.target),backgroundColor:'rgba(94,94,120,0.4)',borderRadius:4,borderSkipped:false},
+      {label:'เป้า',data:planned,borderColor:'rgba(94,94,120,0.4)',backgroundColor:'rgba(94,94,120,0.4)',borderRadius:4,borderSkipped:false},
       {label:'จริง',data:last7.map(d=>d.hours),backgroundColor:'rgba(245,158,11,0.75)',borderRadius:4,borderSkipped:false}
     ]
   },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{color:'#94a3b8',font:{size:11}}}},scales:{x:{grid:{display:false},ticks:{color:'#5c6b88'}},y:{grid:{color:'#2a3348'},ticks:{color:'#5c6b88'},beginAtZero:true}}}});
@@ -1816,7 +2218,7 @@ function renderInsights(subj,dailyVals){
   // 3. Plan vs actual
   const last7=getHoursLast7();
   const weekActual=last7.reduce((a,b)=>a+b.hours,0);
-  const weekTarget=WEEK_PLAN.reduce((a,b)=>a+b.target,0);
+  const weekTarget=getAdjustedWeekPlan().reduce((a,b)=>a+b.target,0);
   if(weekTarget>0){
     const completion=Math.round(weekActual/weekTarget*100);
     insights.push({icon:completion>=80?'✅':'📊',title:`สัปดาห์นี้ ${completion}% ของแผน`,desc:`${weekActual.toFixed(1)}h / ${weekTarget}h`});
@@ -2030,16 +2432,11 @@ function renderSelectPage(){
         ${g.subjects.map(id=>{
           const s=TCAS_SUBJECTS[id];if(!s)return'';
           const active=sel.includes(id);
-          return`<button onclick="toggleSelectSubj('${id}')" style="
-            font-family:'Sarabun',sans-serif;font-size:12px;font-weight:600;
-            padding:8px 14px;border-radius:20px;cursor:pointer;transition:all .2s;
-            border:1.5px solid ${active?s.color:' var(--border2)'};
-            background:${active?s.color+'22':'transparent'};
-            color:${active?s.color:'var(--text2)'}
-          ">${s.icon} ${s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')}</button>`;
+          return`<button class="subject-chip ${active?'active':''}" onclick="toggleSelectSubj('${id}')" style="--chip-color:${s.color}">${s.icon} ${s.name.replace(/^(TGAT|TPAT|A-Level)\s*/,'')}</button>`;
         }).join('')}
       </div>
     </div>`).join('');
+  renderDekSections();
   updateSelectSummary();
 }
 function toggleSelectSubj(id){
@@ -2055,7 +2452,9 @@ function updateSelectSummary(){
   const sel=data.selectedSubjects||[];
   if(!sel.length){el.textContent='ยังไม่ได้เลือกวิชา';return;}
   const total=sel.reduce((a,id)=>a+getEstimatedHours(id),0);
-  el.textContent=`เลือก ${sel.length} วิชา · ประมาณ ${total} ชั่วโมง`;
+  const metrics=getDekPlanMetrics();
+  const target=getGoalDailyTarget(metrics.avgDailyHours);
+  el.textContent=`เลือก ${sel.length} วิชา · ประมาณ ${total} ชั่วโมง · ${metrics.plan.label} เป้า ${target.label}`;
 }
 function confirmSubjects(){
   if(!(data.selectedSubjects||[]).length){showToast('กรุณาเลือกอย่างน้อย 1 วิชา');return;}
@@ -2151,6 +2550,7 @@ function init(){
   migrateData();
   // Set today's date in log form
   document.getElementById('log-date').value=new Date().toISOString().split('T')[0];
+  renderDekSections();
   renderCountdowns();
   renderSubjectSelects();
   renderQuickAddChips();
@@ -2205,10 +2605,14 @@ window.qaAddTime = qaAddTime;
 window.toggleFabMenu = toggleFabMenu;
 window.fabQuickAdd = fabQuickAdd;
 window.setDailyGoal = setDailyGoal;
+window.setDekPlan = setDekPlan;
+window.quickAddFocus = quickAddFocus;
+window.startFocusTimer = startFocusTimer;
 window.confirmSubjects = confirmSubjects;
 window.toggleSelectSubj = toggleSelectSubj;
 window.renderSubjectSelects = renderSubjectSelects;
 window.renderQuickAddChips = renderQuickAddChips;
+window.focusSelectSubj = focusSelectSubj;
 window.openQuickAddSheet = openQuickAddSheet;
 window.openMoreSheet = openMoreSheet;
 window.closeAllSheets = closeAllSheets;
