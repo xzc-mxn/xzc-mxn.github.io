@@ -136,9 +136,13 @@ function subscribeUserData(uid) {
           // ถ้าเคยเลือกวิชาแล้ว ไม่ต้องแสดงหน้าเลือกวิชา
           const hasSubjects = (window.data.selectedSubjects||[]).length > 0;
           if (hasSubjects && window.data.onboarded && window.showPage) { window.showPage('dashboard'); }
+          // ซ่อน overlay หลังจาก navigate แล้ว ป้องกัน flash ของหน้าเลือกวิชา
+          document.getElementById('loading-overlay').style.display = 'none';
         }, 100);
+        return; // early return — overlay จะถูกซ่อนใน setTimeout แทน
       }
     }
+    // กรณีไม่มีข้อมูลใน cloud (user ใหม่) — ซ่อน overlay ทันที
     document.getElementById('loading-overlay').style.display = 'none';
   });
 }
@@ -517,10 +521,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   /* Hide top nav tabs, keep brand + auth */
   body .nav-tabs{display:none}
   body .phase-badge{display:none}
-  body nav{padding:0 14px;justify-content:space-between;}
+  body nav{padding:0 14px;gap:0;}
   body .nav-brand{margin-right:0;}
   /* Keep theme btn visible on mobile, slightly smaller */
-  body .theme-btn{width:30px;height:30px;}
+  body .theme-btn{width:30px;height:30px;margin-right:5px;}
+  body #auth-bar{margin-left:auto!important;}
 
   /* Show bottom nav */
   body #bottom-nav{display:flex;}
@@ -633,6 +638,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 <body>
 
 <nav>
+  <button class="theme-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="สลับโหมดมืด/สว่าง" aria-label="สลับโหมดมืด/สว่าง" style="flex-shrink:0;margin-right:6px">
+    <span id="theme-icon-nav">🌙</span>
+  </button>
   <div class="nav-brand">StudyPath</div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('dashboard')">หน้าหลัก</button>
@@ -645,9 +653,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <button class="nav-tab" onclick="showPage('select')" style="color:var(--amber)">⚙️ วิชา</button>
   </div>
   <div class="phase-badge" id="current-phase-badge">ระยะปูพื้น</div>
-  <button class="theme-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="สลับโหมดมืด/สว่าง" aria-label="สลับโหมดมืด/สว่าง">
-    <span id="theme-icon-nav">🌙</span>
-  </button>
   <div id="auth-bar" style="display:flex;align-items:center;gap:6px;margin-left:8px;flex-shrink:0"></div>
 </nav>
 
@@ -1425,7 +1430,7 @@ const WEEK_PLAN=Object.freeze([
   {day:'อาทิตย์',target:3, sessions:[{cls:'review',label:'พักผ่อน/ทบทวนเบาๆ',h:'2h'},{cls:'tgat',label:'วางแผนสัปดาห์',h:'1h'}]},
 ]);
 
-let data = window.data || {
+let data = window.data || JSON.parse(localStorage.getItem('studypath')||'null') || {
   logs:[], chapters:{}, streak:0, bestStreak:0, lastStudyDate:null, pomoDone:0, dailyGoal:4,
   selectedSubjects:[], onboarded:false, dekPlan:'dek70', dailyGoalManual:false
 };
