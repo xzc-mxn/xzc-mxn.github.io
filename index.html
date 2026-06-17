@@ -632,6 +632,129 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 
   /* Quick Add card — PC only, mobile uses bottom sheet */
   body .quick-add-card{display:none;}
+
+  /* Exam papers mobile */
+  body .exam-grid{grid-template-columns:1fr;}
+  body .exam-group-tabs{gap:6px;}
+  body .exam-group-tab{padding:8px 12px;font-size:12px;}
+  body .exam-year-tabs{gap:6px;}
+  body .exam-year-tab{min-width:56px;font-size:12px;padding:7px 10px;}
+  body .exam-card{padding:16px;}
+  body .exam-card-actions{flex-direction:column;}
+  body .exam-link-btn{width:100%;justify-content:center;}
+}
+/* ═══════════════ EXAM PAPERS ═══════════════ */
+.exam-group-tabs{
+  display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;
+}
+.exam-group-tab{
+  font-family:'Sarabun',sans-serif;font-size:13px;font-weight:700;
+  padding:9px 18px;border-radius:10px;border:1.5px solid var(--border2);
+  background:var(--bg3);color:var(--text2);cursor:pointer;
+  transition:all .18s;white-space:nowrap;
+}
+.exam-group-tab:hover{border-color:var(--eg-color,var(--amber));color:var(--eg-color,var(--amber));}
+.exam-group-tab.active{
+  background:color-mix(in srgb,var(--eg-color,var(--amber)) 16%,transparent);
+  border-color:var(--eg-color,var(--amber));
+  color:var(--eg-color,var(--amber));
+  box-shadow:0 2px 12px color-mix(in srgb,var(--eg-color,var(--amber)) 25%,transparent);
+}
+.exam-year-tabs{
+  display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;
+}
+.exam-year-tab{
+  font-family:'DM Mono',monospace;font-size:13px;font-weight:600;
+  padding:8px 16px;border-radius:8px;border:1px solid var(--border2);
+  background:var(--bg3);color:var(--text2);cursor:pointer;
+  transition:all .15s;min-width:64px;text-align:center;
+}
+.exam-year-tab:hover{border-color:var(--amber);color:var(--text);}
+.exam-year-tab.active{
+  background:var(--amber);border-color:var(--amber);color:#000;
+  box-shadow:0 2px 10px rgba(245,158,11,.3);
+}
+.exam-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:14px;
+}
+.exam-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r16);
+  padding:20px;position:relative;overflow:hidden;
+  transition:border-color .2s,transform .2s,box-shadow .2s;
+}
+.exam-card:hover{
+  border-color:var(--ec-color,var(--border2));
+  transform:translateY(-2px);
+  box-shadow:0 8px 24px rgba(0,0,0,.15);
+}
+.exam-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--ec-color,var(--amber));
+}
+.exam-card-header{
+  display:flex;align-items:center;gap:10px;margin-bottom:12px;
+}
+.exam-card-icon{
+  width:40px;height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;flex-shrink:0;
+  background:color-mix(in srgb,var(--ec-color,var(--amber)) 12%,transparent);
+}
+.exam-card-title{
+  font-size:14px;font-weight:700;color:var(--text);line-height:1.3;
+}
+.exam-card-code{
+  font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;
+}
+.exam-card-info{
+  font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:14px;
+}
+.exam-card-actions{
+  display:flex;gap:8px;flex-wrap:wrap;
+}
+.exam-link-btn{
+  font-family:'Sarabun',sans-serif;font-size:12px;font-weight:700;
+  padding:8px 14px;border-radius:8px;border:1px solid var(--border2);
+  background:var(--bg3);color:var(--text);cursor:pointer;
+  text-decoration:none;display:inline-flex;align-items:center;gap:6px;
+  transition:all .15s;white-space:nowrap;
+}
+.exam-link-btn:hover{
+  border-color:var(--ec-color,var(--amber));
+  color:var(--ec-color,var(--amber));
+  background:color-mix(in srgb,var(--ec-color,var(--amber)) 8%,transparent);
+  transform:translateY(-1px);
+}
+.exam-link-btn.primary{
+  background:var(--ec-color,var(--amber));border-color:var(--ec-color,var(--amber));color:#000;
+}
+.exam-link-btn.primary:hover{
+  filter:brightness(1.1);transform:translateY(-1px);
+}
+.exam-empty{
+  grid-column:1/-1;text-align:center;padding:40px 20px;
+  color:var(--text3);font-size:14px;
+}
+.exam-source-note{
+  margin-top:20px;padding:14px 16px;
+  background:var(--bg3);border:1px solid var(--border);border-radius:var(--r12);
+  font-size:11px;color:var(--text3);line-height:1.7;
+}
+.exam-source-note a{
+  color:var(--amber);text-decoration:none;
+}
+.exam-source-note a:hover{text-decoration:underline;}
+.exam-stats-bar{
+  display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;
+}
+.exam-stat-chip{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 12px;border-radius:8px;
+  background:var(--bg3);border:1px solid var(--border);
+  font-size:12px;color:var(--text2);
+}
+.exam-stat-chip strong{
+  color:var(--text);font-family:'DM Mono',monospace;
 }
 </style>
 </head>
@@ -650,6 +773,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <button class="nav-tab" onclick="showPage('subjects')">เนื้อหา</button>
     <button class="nav-tab" onclick="showPage('analysis')">วิเคราะห์</button>
     <button class="nav-tab" onclick="showPage('goals')">เป้าหมาย</button>
+    <button class="nav-tab" onclick="showPage('exams')">📄 ข้อสอบ</button>
     <button class="nav-tab" onclick="showPage('select')" style="color:var(--amber)">⚙️ วิชา</button>
   </div>
   <div class="phase-badge" id="current-phase-badge">ระยะปูพื้น</div>
@@ -718,6 +842,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <button class="more-btn" onclick="showPage('subjects');closeAllSheets()"><span>📚</span>เนื้อหา</button>
     <button class="more-btn" onclick="showPage('analysis');closeAllSheets()"><span>📊</span>วิเคราะห์</button>
     <button class="more-btn" onclick="showPage('goals');closeAllSheets()"><span>🏆</span>เป้าหมาย</button>
+    <button class="more-btn" onclick="showPage('exams');closeAllSheets()"><span>📄</span>ข้อสอบ</button>
     <button class="more-btn" onclick="showPage('select');closeAllSheets()"><span>⚙️</span>วิชา</button>
     <button class="more-btn" id="more-auth-btn" onclick="closeAllSheets()"><span>👤</span>บัญชี</button>
   </div>
@@ -1141,6 +1266,27 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   </div>
 </div>
 
+<!-- ═══════════════════════════════ EXAM PAPERS ═══════════════════════════════ -->
+<div class="page" id="page-exams">
+  <h2>📄 รวมข้อสอบ TCAS</h2>
+  <p class="page-sub">รวบรวมข้อสอบเก่า TGAT · TPAT · A-Level ย้อนหลังหลายปี พร้อมลิงก์ดาวน์โหลด</p>
+
+  <div id="exam-stats-bar" class="exam-stats-bar"></div>
+
+  <div id="exam-group-tabs" class="exam-group-tabs"></div>
+  <div id="exam-year-tabs" class="exam-year-tabs"></div>
+
+  <div id="exam-papers-grid" class="exam-grid"></div>
+
+  <div class="exam-source-note">
+    📌 <strong>หมายเหตุ:</strong> ข้อสอบทั้งหมดรวบรวมจากแหล่งข้อมูลสาธารณะเพื่อการศึกษา
+    ลิงก์อาจเปลี่ยนแปลงตามเว็บไซต์ต้นทาง ·
+    แหล่งที่มา: <a href="https://www.mytcas.com" target="_blank" rel="noopener">mytcas.com</a> ·
+    <a href="https://www.washi-tutor.com/exam" target="_blank" rel="noopener">washi-tutor.com</a>
+    <br>📝 <strong>เครดิต:</strong> ข้อสอบ A-Level คณิตศาสตร์ จาก <a href="https://www.washi-tutor.com/exam" target="_blank" rel="noopener">Washi Tutor (washi-tutor.com)</a>
+  </div>
+</div>
+
 <!-- ═══════════════════════════════ SIGN OUT MODAL ═══════════════════════════════ -->
 <div id="signout-modal" style="display:none" role="dialog" aria-modal="true" aria-label="Sign out" onclick="if(event.target===this)hideSignOutModal()">
   <div class="so-card">
@@ -1437,21 +1583,31 @@ let data = window.data || JSON.parse(localStorage.getItem('studypath')||'null') 
 Object.defineProperty(window, 'data', {get:()=>data,set:(v)=>{data=v;},configurable:true});
 
 // ═══════════════════════════ STATE MANAGER ═══════════════════════════
-// Debounced save: prevents spamming localStorage/Firebase on rapid changes
+// Debounced save:
+// - เมื่อ login: save ลง Firebase อย่างเดียว (Firebase = source of truth)
+// - เมื่อไม่ login: save ลง localStorage อย่างเดียว
 let _saveTimer = null;
 function save() {
   if (_saveTimer) clearTimeout(_saveTimer);
   _saveTimer = setTimeout(() => {
-    localStorage.setItem('studypath', JSON.stringify(data));
-    if (window.fbSave) window.fbSave(data);
+    const user = window.currentUserFn ? window.currentUserFn() : null;
+    if (user) {
+      if (window.fbSave) window.fbSave(data);
+    } else {
+      localStorage.setItem('studypath', JSON.stringify(data));
+    }
     _saveTimer = null;
   }, 300);
 }
 // Force immediate save (for critical moments like page unload)
 function saveNow() {
   if (_saveTimer) { clearTimeout(_saveTimer); _saveTimer = null; }
-  localStorage.setItem('studypath', JSON.stringify(data));
-  if (window.fbSave) window.fbSave(data);
+  const user = window.currentUserFn ? window.currentUserFn() : null;
+  if (user) {
+    if (window.fbSave) window.fbSave(data);
+  } else {
+    localStorage.setItem('studypath', JSON.stringify(data));
+  }
 }
 window.addEventListener('beforeunload', saveNow);
 
@@ -1504,6 +1660,7 @@ function showPage(id){
   if(id==='analysis')renderAnalysis();
   if(id==='dashboard')renderDashboard();
   if(id==='select')renderSelectPage();
+  if(id==='exams')renderExamPapers();
   window.scrollTo(0,0);
 }
 
@@ -2754,6 +2911,437 @@ window.closeAllSheets = closeAllSheets;
 window.qaSheetSelectSubj = qaSheetSelectSubj;
 window.qaSheetAdd = qaSheetAdd;
 window.renderAnalysis = renderAnalysis;
+window.renderExamPapers = renderExamPapers;
+window.selectExamGroup = selectExamGroup;
+window.selectExamYear = selectExamYear;
+
+// ═══════════════════════════ EXAM PAPERS DATABASE ═══════════════════════════
+// Research notes:
+// - ปี 2566-2567: ทปอ. ไม่เผยแพร่ข้อสอบจริง มีเฉพาะโครงสร้าง/ตัวอย่าง + ข้อสอบจากสถาบัน
+// - ปี 2568: ทปอ. เปลี่ยนนโยบาย ให้นำข้อสอบกลับบ้านได้ → มีข้อสอบ A-Level จริง + เฉลย
+// - ปี 2569: ปีปัจจุบัน มี Blueprint + ตัวอย่าง
+const EXAM_PAPERS = Object.freeze({
+  // ─── TGAT ───
+  tgat1: {
+    2566: { label:'TGAT1 สื่อสารอังกฤษ ปี 66 · แนวข้อสอบ/ตัวอย่าง', tag:'ตัวอย่าง', sources: [
+      { name:'MyTCAS Blueprint', url:'https://www.mytcas.com', type:'official' },
+      { name:'TCASter ฝึกทำ', url:'https://tcaster.net/examhub/', type:'practice' },
+      { name:'SmartMathPro', url:'https://www.smartmathpro.com', type:'web' },
+    ]},
+    2567: { label:'TGAT1 สื่อสารอังกฤษ ปี 67 · แนวข้อสอบ/ตัวอย่าง', tag:'ตัวอย่าง', sources: [
+      { name:'MyTCAS Blueprint', url:'https://www.mytcas.com', type:'official' },
+      { name:'TCASter ฝึกทำ', url:'https://tcaster.net/examhub/', type:'practice' },
+      { name:'Dek-D รวมข้อสอบ', url:'https://www.dek-d.com/tcas/', type:'web' },
+    ]},
+    2568: { label:'TGAT1 สื่อสารอังกฤษ ปี 68 · นร.นำข้อสอบกลับบ้านได้', tag:'ข้อสอบจริง', sources: [
+      { name:'Dek-D รวมข้อสอบ', url:'https://www.dek-d.com/tcas/', type:'web' },
+      { name:'SmartMathPro', url:'https://www.smartmathpro.com', type:'web' },
+      { name:'KruChiangRai', url:'https://www.kruchiangrai.net', type:'web' },
+      { name:'Engstitute (อังกฤษ)', url:'https://engstitute.com', type:'web' },
+    ]},
+    2569: { label:'TGAT1 สื่อสารอังกฤษ ปี 69 · โครงสร้าง+ตัวอย่าง', tag:'Blueprint', sources: [
+      { name:'MyTCAS โครงสร้างข้อสอบ', url:'https://www.mytcas.com', type:'official' },
+      { name:'TCASter ฝึกทำ', url:'https://tcaster.net/examhub/', type:'practice' },
+    ]},
+  },
+  tgat2: {
+    2566: { label:'TGAT2 คิดเชิงเหตุผล ปี 66 · แนวข้อสอบ/ตัวอย่าง', tag:'ตัวอย่าง', sources: [
+      { name:'MyTCAS Blueprint', url:'https://www.mytcas.com', type:'official' },
+      { name:'TCASter ฝึกทำ', url:'https://tcaster.net/examhub/', type:'practice' },
+    ]},
+    2567: { label:'TGAT2 คิดเชิงเหตุผล ปี 67 · แนวข้อสอบ/ตัวอย่าง', tag:'ตัวอย่าง', sources: [
+      { name:'MyTCAS Blueprint', url:'https://www.mytcas.com', type:'official' },
+      { name:'Dek-D รวมข้อสอบ', url:'https://www.dek-d.com/tcas/', type:'web' },
+    ]},
+    2568: { label:'TGAT2 คิดเชิงเหตุผล ปี 68 · นร.นำข้อสอบกลับบ้านได้', tag:'ข้อสอบจริง', sources: [
+      { name:'Dek-D รวมข้อสอบ', url:'https://www.dek-d.com/tcas/', type:'web' },
+      { name:'SmartMathPro', url:'https://www.smartmathpro.com', type:'web' },
+      { name:'KruChiangRai', url:'https://www.kruchiangrai.net', type:'web' },
+    ]},
+    2569: { label:'TGAT2 คิดเชิงเหตุผล ปี 69 · โครงสร้าง+ตัวอย่าง', tag:'Blueprint', sources: [
+      { name:'MyTCAS โครงสร้างข้อสอบ', url:'https://www.mytcas.com', type:'official' },
+    ]},
+  },
+  tgat3: {
+    2566: { label:'TGAT3 สมรรถนะทำงาน ปี 66 · แนวข้อสอบ/ตัวอย่าง', tag:'ตัวอย่าง', sources: [
+      { name:'MyTCAS Blueprint', url:'https://www.mytcas.com', type:'official' },
+      { name:'TCASter ฝึกทำ', url:'https://tcaster.net/examhub/', type:'practice' },
+    ]},
+    2567: { label:'TGAT3 สมรรถนะทำงาน ปี 67 · แนวข้อสอบ/ตัวอย่าง', tag:'ตัวอย่าง', sources: [
+      { name:'MyTCAS Blueprint', url:'https://www.mytcas.com', type:'official' },
+      { name:'Dek-D รวมข้อสอบ', url:'https://www.dek-d.com/tcas/', type:'web' },
+    ]},
+    2568: { label:'TGAT3 สมรรถนะทำงาน ปี 68 · นร.นำข้อสอบกลับบ้านได้', tag:'ข้อสอบจริง', sources: [
+      { name:'Dek-D รวมข้อสอบ', url:'https://www.dek-d.com/tcas/', type:'web' },
+      { name:'SmartMathPro', url:'https://www.smartmathpro.com', type:'web' },
+      { name:'KruChiangRai', url:'https://www.kruchiangrai.net', type:'web' },
+    ]},
+    2569: { label:'TGAT3 สมรรถนะทำงาน ปี 69 · โครงสร้าง+ตัวอย่าง', tag:'Blueprint', sources: [
+      { name:'MyTCAS โครงสร้างข้อสอบ', url:'https://www.mytcas.com', type:'official' },
+    ]},
+  },
+  // ─── TPAT ───
+  tpat1: {
+    2566: { label:'TPAT1 กสพท. ปี 66 · แนวข้อสอบ/ตัวอย่าง', tag:'ตัวอย่าง', sources: [
+      { name:'MyTCAS Blueprint', url:'https://www.mytcas.com', type:'official' },
+      { name:'MedDent GAT', url:'https://meddentgat.com', type:'web' },
+    ]},
+    2567: { label:'TPAT1 กสพท. ปี 67 · แนวข้อสอบ/ตัวอย่าง', tag:'ตัวอย่าง', sources: [
+      { name:'MyTCAS Blueprint', url:'https://www.mytcas.com', type:'official' },
+      { name:'MedDent GAT', url:'https://meddentgat.com', type:'web' },
+      { name:'Dek-D รวมข้อสอบ', url:'https://www.dek-d.com/tcas/', type:'web' },
+    ]},
+    2568: { label:'TPAT1 กสพท. ปี 68 · แนวข้อสอบ', tag:'แนวข้อสอบ', sources: [
+      { name:'Dek-D รวมข้อสอบ', url:'https://www.dek-d.com/tcas/', type:'web' },
+      { name:'MedDent GAT', url:'https://meddentgat.com', type:'web' },
+      { name:'Washi Tutor', url:'https://washitutor.com', type:'web' },
+    ]},
+    2569: { label:'TPAT1 กสพท. ปี 69 · โครงสร้าง+ตัวอย่าง', tag:'Blueprint', sources: [
+      { name:'MyTCAS โครงสร้างข้อสอบ', url:'https://www.mytcas.com', type:'official' },
+    ]},
+  },
+  tpat2: {
+    2566: { label:'TPAT2 ศิลปกรรม ปี 66 · แนวข้อสอบ', tag:'ตัวอย่าง', sources: [
+      { name:'MyTCAS Blueprint', url:'https://www.mytcas.com', type:'official' },
+      { name:'Dek-D', url:'https://www.dek-d.com/tcas/', type:'web' },
+    ]},
+    2567: { label:'TPAT2 ศิลปกรรม ปี 67 · แนวข้อสอบ', tag:'ตัวอย่าง', sources: [
+      { name:'Dek-D', url:'https://www.dek-d.com/tcas/', type:'web' },
+    ]},
+    2568: { label:'TPAT2 ศิลปกรรม ปี 68', tag:'แนวข้อสอบ', sources: [
+      { name:'Dek-D', url:'https://www.dek-d.com/tcas/', type:'web' },
+    ]},
+  },
+  tpat3: {
+    2566: { label:'TPAT3 วิศวกรรม ปี 66 · แนวข้อสอบ', tag:'ตัวอย่าง', sources: [
+      { name:'MyTCAS Blueprint', url:'https://www.mytcas.com', type:'official' },
+      { name:'Dek-D', url:'https://www.dek-d.com/tcas/', type:'web' },
+    ]},
+    2567: { label:'TPAT3 วิศวกรรม ปี 67 · แนวข้อสอบ', tag:'ตัวอย่าง', sources: [
+      { name:'Dek-D', url:'https://www.dek-d.com/tcas/', type:'web' },
+    ]},
+    2568: { label:'TPAT3 วิศวกรรม ปี 68', tag:'แนวข้อสอบ', sources: [
+      { name:'Dek-D', url:'https://www.dek-d.com/tcas/', type:'web' },
+      { name:'SmartMathPro', url:'https://www.smartmathpro.com', type:'web' },
+    ]},
+  },
+  tpat4: {
+    2566: { label:'TPAT4 สถาปัตย์ ปี 66 · แนวข้อสอบ', tag:'ตัวอย่าง', sources: [
+      { name:'MyTCAS Blueprint', url:'https://www.mytcas.com', type:'official' },
+      { name:'Dek-D', url:'https://www.dek-d.com/tcas/', type:'web' },
+    ]},
+    2567: { label:'TPAT4 สถาปัตย์ ปี 67', tag:'ตัวอย่าง', sources: [
+      { name:'Dek-D', url:'https://www.dek-d.com/tcas/', type:'web' },
+    ]},
+    2568: { label:'TPAT4 สถาปัตย์ ปี 68', tag:'แนวข้อสอบ', sources: [
+      { name:'Dek-D', url:'https://www.dek-d.com/tcas/', type:'web' },
+    ]},
+  },
+  tpat5: {
+    2566: { label:'TPAT5 ครุศาสตร์ ปี 66 · แนวข้อสอบ', tag:'ตัวอย่าง', sources: [
+      { name:'MyTCAS Blueprint', url:'https://www.mytcas.com', type:'official' },
+      { name:'Dek-D', url:'https://www.dek-d.com/tcas/', type:'web' },
+    ]},
+    2567: { label:'TPAT5 ครุศาสตร์ ปี 67', tag:'ตัวอย่าง', sources: [
+      { name:'Dek-D', url:'https://www.dek-d.com/tcas/', type:'web' },
+    ]},
+    2568: { label:'TPAT5 ครุศาสตร์ ปี 68', tag:'แนวข้อสอบ', sources: [
+      { name:'Dek-D', url:'https://www.dek-d.com/tcas/', type:'web' },
+    ]},
+  },
+  // ─── A-Level (ปี 2568: ข้อสอบจริง+เฉลยจาก ทปอ.) ───
+  alv_math1: {
+    2566: { label:'A-Level คณิต1 ปี 66 · ข้อสอบ+เฉลย', tag:'ข้อสอบจริง', sources: [
+      { name:'Washi Tutor', url:'https://www.washi-tutor.com/exam', type:'web' },
+      { name:'MyTCAS Blueprint', url:'https://www.mytcas.com', type:'official' },
+    ]},
+    2567: { label:'A-Level คณิต1 ปี 67 · ข้อสอบ+เฉลย', tag:'ข้อสอบจริง', sources: [
+      { name:'Washi Tutor', url:'https://www.washi-tutor.com/exam', type:'web' },
+      { name:'MyTCAS Blueprint', url:'https://www.mytcas.com', type:'official' },
+    ]},
+    2568: { label:'A-Level คณิต1 ปี 68 · ✅ ข้อสอบจริง+เฉลย', tag:'ข้อสอบจริง', sources: [
+      { name:'Washi Tutor', url:'https://www.washi-tutor.com/exam', type:'web' },
+      { name:'MyTCAS เฉลย', url:'https://www.mytcas.com/answers', type:'official' },
+    ]},
+    2569: { label:'A-Level คณิต1 ปี 69 · โครงสร้าง+ตัวอย่าง', tag:'Blueprint', sources: [
+      { name:'Washi Tutor', url:'https://www.washi-tutor.com/exam', type:'web' },
+      { name:'MyTCAS โครงสร้างข้อสอบ', url:'https://www.mytcas.com', type:'official' },
+    ]},
+  },
+  alv_math2: {
+    2566: { label:'A-Level คณิต2 ปี 66 · ข้อสอบ+เฉลย', tag:'ข้อสอบจริง', sources: [
+      { name:'Washi Tutor', url:'https://www.washi-tutor.com/exam', type:'web' },
+      { name:'MyTCAS Blueprint', url:'https://www.mytcas.com', type:'official' },
+    ]},
+    2567: { label:'A-Level คณิต2 ปี 67 · ข้อสอบ+เฉลย', tag:'ข้อสอบจริง', sources: [
+      { name:'Washi Tutor', url:'https://www.washi-tutor.com/exam', type:'web' },
+      { name:'MyTCAS Blueprint', url:'https://www.mytcas.com', type:'official' },
+    ]},
+    2568: { label:'A-Level คณิต2 ปี 68 · ✅ ข้อสอบจริง+เฉลย', tag:'ข้อสอบจริง', sources: [
+      { name:'Washi Tutor', url:'https://www.washi-tutor.com/exam', type:'web' },
+      { name:'MyTCAS เฉลย', url:'https://www.mytcas.com/answers', type:'official' },
+    ]},
+    2569: { label:'A-Level คณิต2 ปี 69 · โครงสร้าง+ตัวอย่าง', tag:'Blueprint', sources: [
+      { name:'Washi Tutor', url:'https://www.washi-tutor.com/exam', type:'web' },
+      { name:'MyTCAS โครงสร้างข้อสอบ', url:'https://www.mytcas.com', type:'official' },
+    ]},
+  },
+  alv_sci: {
+    2566: { label:'A-Level วิทย์ประยุกต์ ปี 66 · แนวข้อสอบ', tag:'ตัวอย่าง', sources: [
+      { name:'MyTCAS Blueprint', url:'https://www.mytcas.com', type:'official' },
+      { name:'TruePlookpanya', url:'https://www.trueplookpanya.com', type:'practice' },
+    ]},
+    2567: { label:'A-Level วิทย์ประยุกต์ ปี 67 · แนวข้อสอบ', tag:'ตัวอย่าง', sources: [
+      { name:'Dek-D', url:'https://www.dek-d.com/tcas/', type:'web' },
+      { name:'TruePlookpanya', url:'https://www.trueplookpanya.com', type:'practice' },
+    ]},
+    2568: { label:'A-Level วิทย์ประยุกต์ ปี 68 · ✅ ข้อสอบจริง+เฉลย', tag:'ข้อสอบจริง', sources: [
+      { name:'MyTCAS เฉลย', url:'https://www.mytcas.com/answers', type:'official' },
+      { name:'KruChiangRai', url:'https://www.kruchiangrai.net', type:'web' },
+      { name:'Dek-D', url:'https://www.dek-d.com/tcas/', type:'web' },
+    ]},
+  },
+  alv_phy: {
+    2566: { label:'A-Level ฟิสิกส์ ปี 66 · แนวข้อสอบ', tag:'ตัวอย่าง', sources: [
+      { name:'MyTCAS Blueprint', url:'https://www.mytcas.com', type:'official' },
+      { name:'TruePlookpanya', url:'https://www.trueplookpanya.com', type:'practice' },
+    ]},
+    2567: { label:'A-Level ฟิสิกส์ ปี 67 · แนวข้อสอบ', tag:'ตัวอย่าง', sources: [
+      { name:'Dek-D', url:'https://www.dek-d.com/tcas/', type:'web' },
+      { name:'Washi Tutor', url:'https://washitutor.com', type:'web' },
+    ]},
+    2568: { label:'A-Level ฟิสิกส์ ปี 68 · ✅ ข้อสอบจริง+เฉลย', tag:'ข้อสอบจริง', sources: [
+      { name:'MyTCAS เฉลย', url:'https://www.mytcas.com/answers', type:'official' },
+      { name:'KruChiangRai', url:'https://www.kruchiangrai.net', type:'web' },
+      { name:'Washi Tutor', url:'https://washitutor.com', type:'web' },
+    ]},
+    2569: { label:'A-Level ฟิสิกส์ ปี 69 · โครงสร้าง+ตัวอย่าง', tag:'Blueprint', sources: [
+      { name:'MyTCAS โครงสร้างข้อสอบ', url:'https://www.mytcas.com', type:'official' },
+    ]},
+  },
+  alv_chem: {
+    2566: { label:'A-Level เคมี ปี 66 · แนวข้อสอบ', tag:'ตัวอย่าง', sources: [
+      { name:'MyTCAS Blueprint', url:'https://www.mytcas.com', type:'official' },
+      { name:'TruePlookpanya', url:'https://www.trueplookpanya.com', type:'practice' },
+    ]},
+    2567: { label:'A-Level เคมี ปี 67 · แนวข้อสอบ', tag:'ตัวอย่าง', sources: [
+      { name:'Dek-D', url:'https://www.dek-d.com/tcas/', type:'web' },
+    ]},
+    2568: { label:'A-Level เคมี ปี 68 · ✅ ข้อสอบจริง+เฉลย', tag:'ข้อสอบจริง', sources: [
+      { name:'MyTCAS เฉลย', url:'https://www.mytcas.com/answers', type:'official' },
+      { name:'KruChiangRai', url:'https://www.kruchiangrai.net', type:'web' },
+      { name:'Dek-D', url:'https://www.dek-d.com/tcas/', type:'web' },
+    ]},
+    2569: { label:'A-Level เคมี ปี 69 · โครงสร้าง+ตัวอย่าง', tag:'Blueprint', sources: [
+      { name:'MyTCAS โครงสร้างข้อสอบ', url:'https://www.mytcas.com', type:'official' },
+    ]},
+  },
+  alv_bio: {
+    2566: { label:'A-Level ชีววิทยา ปี 66 · แนวข้อสอบ', tag:'ตัวอย่าง', sources: [
+      { name:'MyTCAS Blueprint', url:'https://www.mytcas.com', type:'official' },
+      { name:'TruePlookpanya', url:'https://www.trueplookpanya.com', type:'practice' },
+    ]},
+    2567: { label:'A-Level ชีววิทยา ปี 67 · แนวข้อสอบ', tag:'ตัวอย่าง', sources: [
+      { name:'Dek-D', url:'https://www.dek-d.com/tcas/', type:'web' },
+    ]},
+    2568: { label:'A-Level ชีววิทยา ปี 68 · ✅ ข้อสอบจริง+เฉลย', tag:'ข้อสอบจริง', sources: [
+      { name:'MyTCAS เฉลย', url:'https://www.mytcas.com/answers', type:'official' },
+      { name:'KruChiangRai', url:'https://www.kruchiangrai.net', type:'web' },
+    ]},
+  },
+  alv_soc: {
+    2566: { label:'A-Level สังคม ปี 66 · แนวข้อสอบ', tag:'ตัวอย่าง', sources: [
+      { name:'MyTCAS Blueprint', url:'https://www.mytcas.com', type:'official' },
+      { name:'TruePlookpanya', url:'https://www.trueplookpanya.com', type:'practice' },
+    ]},
+    2567: { label:'A-Level สังคม ปี 67 · แนวข้อสอบ', tag:'ตัวอย่าง', sources: [
+      { name:'Dek-D', url:'https://www.dek-d.com/tcas/', type:'web' },
+    ]},
+    2568: { label:'A-Level สังคม ปี 68 · ✅ ข้อสอบจริง+เฉลย', tag:'ข้อสอบจริง', sources: [
+      { name:'MyTCAS เฉลย', url:'https://www.mytcas.com/answers', type:'official' },
+      { name:'KruChiangRai', url:'https://www.kruchiangrai.net', type:'web' },
+    ]},
+    2569: { label:'A-Level สังคม ปี 69 · โครงสร้าง+ตัวอย่าง', tag:'Blueprint', sources: [
+      { name:'MyTCAS โครงสร้างข้อสอบ', url:'https://www.mytcas.com', type:'official' },
+    ]},
+  },
+  alv_thai: {
+    2566: { label:'A-Level ไทย ปี 66 · แนวข้อสอบ', tag:'ตัวอย่าง', sources: [
+      { name:'MyTCAS Blueprint', url:'https://www.mytcas.com', type:'official' },
+      { name:'TruePlookpanya', url:'https://www.trueplookpanya.com', type:'practice' },
+    ]},
+    2567: { label:'A-Level ไทย ปี 67 · แนวข้อสอบ', tag:'ตัวอย่าง', sources: [
+      { name:'Dek-D', url:'https://www.dek-d.com/tcas/', type:'web' },
+    ]},
+    2568: { label:'A-Level ไทย ปี 68 · ✅ ข้อสอบจริง+เฉลย', tag:'ข้อสอบจริง', sources: [
+      { name:'MyTCAS เฉลย', url:'https://www.mytcas.com/answers', type:'official' },
+      { name:'KruChiangRai', url:'https://www.kruchiangrai.net', type:'web' },
+    ]},
+    2569: { label:'A-Level ไทย ปี 69 · โครงสร้าง+ตัวอย่าง', tag:'Blueprint', sources: [
+      { name:'MyTCAS โครงสร้างข้อสอบ', url:'https://www.mytcas.com', type:'official' },
+    ]},
+  },
+  alv_eng: {
+    2566: { label:'A-Level อังกฤษ ปี 66 · แนวข้อสอบ', tag:'ตัวอย่าง', sources: [
+      { name:'MyTCAS Blueprint', url:'https://www.mytcas.com', type:'official' },
+      { name:'TruePlookpanya', url:'https://www.trueplookpanya.com', type:'practice' },
+      { name:'Engstitute', url:'https://engstitute.com', type:'web' },
+    ]},
+    2567: { label:'A-Level อังกฤษ ปี 67 · แนวข้อสอบ', tag:'ตัวอย่าง', sources: [
+      { name:'Dek-D', url:'https://www.dek-d.com/tcas/', type:'web' },
+      { name:'Engstitute', url:'https://engstitute.com', type:'web' },
+    ]},
+    2568: { label:'A-Level อังกฤษ ปี 68 · ✅ ข้อสอบจริง+เฉลย', tag:'ข้อสอบจริง', sources: [
+      { name:'MyTCAS เฉลย', url:'https://www.mytcas.com/answers', type:'official' },
+      { name:'Engstitute', url:'https://engstitute.com', type:'web' },
+      { name:'KruChiangRai', url:'https://www.kruchiangrai.net', type:'web' },
+    ]},
+    2569: { label:'A-Level อังกฤษ ปี 69 · โครงสร้าง+ตัวอย่าง', tag:'Blueprint', sources: [
+      { name:'MyTCAS โครงสร้างข้อสอบ', url:'https://www.mytcas.com', type:'official' },
+      { name:'Engstitute', url:'https://engstitute.com', type:'web' },
+    ]},
+  },
+});
+
+const EXAM_GROUP_DEFS = [
+  { key:'TGAT', label:'🧠 TGAT', color:'#f59e0b', subjects:['tgat1','tgat2','tgat3'] },
+  { key:'TPAT', label:'🔧 TPAT', color:'#8b5cf6', subjects:['tpat1','tpat2','tpat3','tpat4','tpat5'] },
+  { key:'A-Level', label:'📐 A-Level', color:'#3b82f6', subjects:['alv_math1','alv_math2','alv_sci','alv_phy','alv_chem','alv_bio','alv_soc','alv_thai','alv_eng'] },
+];
+const EXAM_YEARS = [2569, 2568, 2567, 2566];
+
+// วิชาที่เปิดลิงก์ข้อสอบให้แล้ว (ตรวจสอบ/ยืนยันลิงก์เรียบร้อย) — ตอนนี้มีแค่ A-Level คณิตศาสตร์ 1 และ 2
+// วิชาอื่นๆ ทั้งหมดจะยังไม่แสดงลิงก์ และจะแสดงข้อความ "จะเพิ่มเข้ามาภายในเร็วๆนี้" แทน
+const LIVE_LINK_SUBJECTS = ['alv_math1', 'alv_math2'];
+function getExamPapers(sid) {
+  return LIVE_LINK_SUBJECTS.includes(sid) ? EXAM_PAPERS[sid] : null;
+}
+
+let examActiveGroup = 'A-Level';
+let examActiveYear = 2568;
+
+function selectExamGroup(key) {
+  examActiveGroup = key;
+  renderExamPapers();
+}
+function selectExamYear(year) {
+  examActiveYear = year;
+  renderExamPapers();
+}
+
+// Tag color/style helper
+function getTagStyle(tag) {
+  if (!tag) return '';
+  const styles = {
+    'ข้อสอบจริง': 'background:rgba(34,197,94,.15);color:var(--green2);border:1px solid rgba(34,197,94,.3)',
+    'Blueprint': 'background:rgba(59,130,246,.12);color:var(--blue2);border:1px solid rgba(59,130,246,.25)',
+    'ตัวอย่าง': 'background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.2)',
+    'แนวข้อสอบ': 'background:rgba(139,92,246,.1);color:var(--purple2);border:1px solid rgba(139,92,246,.2)',
+  };
+  return styles[tag] || styles['ตัวอย่าง'];
+}
+function getSourceIcon(type) {
+  const icons = { official:'🏛️', web:'🌐', practice:'🎯', pdf:'📥' };
+  return icons[type] || '🔗';
+}
+
+function renderExamPapers() {
+  const groupDef = EXAM_GROUP_DEFS.find(g => g.key === examActiveGroup) || EXAM_GROUP_DEFS[0];
+
+  // Stats bar
+  const statsBar = document.getElementById('exam-stats-bar');
+  if (statsBar) {
+    let totalPapers = 0;
+    let totalSubjects = 0;
+    EXAM_GROUP_DEFS.forEach(g => {
+      g.subjects.forEach(sid => {
+        const papers = getExamPapers(sid);
+        if (papers) {
+          totalSubjects++;
+          totalPapers += Object.keys(papers).length;
+        }
+      });
+    });
+    statsBar.innerHTML = `
+      <div class="exam-stat-chip"><span>📚</span> วิชาทั้งหมด <strong>${totalSubjects}</strong></div>
+      <div class="exam-stat-chip"><span>📄</span> ชุดข้อสอบรวม <strong>${totalPapers}</strong></div>
+      <div class="exam-stat-chip"><span>📅</span> ปี <strong>${EXAM_YEARS[EXAM_YEARS.length-1]}–${EXAM_YEARS[0]}</strong></div>
+    `;
+  }
+
+  // Group tabs
+  const groupBox = document.getElementById('exam-group-tabs');
+  if (groupBox) {
+    groupBox.innerHTML = EXAM_GROUP_DEFS.map(g =>
+      `<button class="exam-group-tab ${g.key === examActiveGroup ? 'active' : ''}" style="--eg-color:${g.color}" onclick="selectExamGroup('${g.key}')">${g.label}</button>`
+    ).join('');
+  }
+
+  // Year tabs with availability indicator
+  const yearBox = document.getElementById('exam-year-tabs');
+  if (yearBox) {
+    yearBox.innerHTML = EXAM_YEARS.map(y => {
+      // Count how many subjects have papers for this year in active group
+      const avail = groupDef.subjects.filter(sid => getExamPapers(sid) && getExamPapers(sid)[y]).length;
+      const total = groupDef.subjects.length;
+      const pctLabel = avail > 0 ? ` (${avail})` : '';
+      return `<button class="exam-year-tab ${y === examActiveYear ? 'active' : ''}" onclick="selectExamYear(${y})">${y}${pctLabel}</button>`;
+    }).join('');
+  }
+
+  // Exam cards
+  const grid = document.getElementById('exam-papers-grid');
+  if (!grid) return;
+
+  const subjects = groupDef.subjects;
+  let cards = [];
+
+  subjects.forEach(sid => {
+    const tcas = TCAS_SUBJECTS[sid];
+    if (!tcas) return;
+    const papers = getExamPapers(sid);
+    const yearData = papers ? papers[examActiveYear] : null;
+
+    if (yearData && yearData.sources.length > 0) {
+      const tagHTML = yearData.tag ? `<span style="display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;margin-left:6px;${getTagStyle(yearData.tag)}">${yearData.tag}</span>` : '';
+
+      const linksHTML = yearData.sources.map((src, i) =>
+        `<a href="${src.url}" target="_blank" rel="noopener" class="exam-link-btn ${i === 0 ? 'primary' : ''}" style="--ec-color:${tcas.color}">
+          ${getSourceIcon(src.type)}
+          ${src.name}
+        </a>`
+      ).join('');
+
+      cards.push(`<div class="exam-card" style="--ec-color:${tcas.color}">
+        <div class="exam-card-header">
+          <div class="exam-card-icon">${tcas.icon}</div>
+          <div>
+            <div class="exam-card-title">${tcas.name}${tagHTML}</div>
+            <div class="exam-card-code">รหัส ${tcas.code} · ปี ${examActiveYear}</div>
+          </div>
+        </div>
+        <div class="exam-card-info">${yearData.label}</div>
+        <div class="exam-card-actions">${linksHTML}</div>
+      </div>`);
+    } else {
+      cards.push(`<div class="exam-card" style="--ec-color:${tcas.color}">
+        <div class="exam-card-header">
+          <div class="exam-card-icon" style="opacity:.5">${tcas.icon}</div>
+          <div>
+            <div class="exam-card-title" style="color:var(--text2)">${tcas.name}</div>
+            <div class="exam-card-code">รหัส ${tcas.code} · ปี ${examActiveYear}</div>
+          </div>
+        </div>
+        <div class="exam-card-info" style="color:var(--text3);display:flex;align-items:center;gap:6px;margin-bottom:0">
+          <span style="font-size:15px">🔜</span>
+          <span>จะเพิ่มเข้ามาภายในเร็วๆนี้</span>
+        </div>
+      </div>`);
+    }
+  });
+
+  grid.innerHTML = cards.length ? cards.join('') : '<div class="exam-empty">ยังไม่มีข้อสอบในกลุ่มนี้</div>';
+}
 
 init();
 </script>
