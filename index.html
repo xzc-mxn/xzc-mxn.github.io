@@ -30,6 +30,54 @@ const provider = new GoogleAuthProvider();
 
 let currentUser = null;
 let unsubSnapshot = null;
+let didLoadCloudOnce = false;
+
+function readLocalStudyData() {
+  try {
+    return JSON.parse(localStorage.getItem('studypath') || 'null');
+  } catch(e) {
+    console.warn('Local data parse error:', e);
+    return null;
+  }
+}
+
+function queueCloudBackup(d) {
+  try {
+    const payload = JSON.stringify(d || {});
+    const savedAt = String(Date.now());
+    localStorage.setItem('studypath', payload);
+    localStorage.setItem('studypath-cloud-pending', payload);
+    localStorage.setItem('studypath-cloud-pending-at', savedAt);
+    return { payload, savedAt };
+  } catch(e) {
+    console.error('Local backup error:', e);
+    return null;
+  }
+}
+
+function applyStudyData(d) {
+  window.data = d || {};
+  if (!window.data.chapters) window.data.chapters = {tgat:[],tpat:[],phys:[],math:[]};
+  if (!window.data.dekPlan) window.data.dekPlan = 'dek70';
+  if (typeof window.data.dailyGoalManual !== 'boolean') window.data.dailyGoalManual = false;
+}
+
+function renderStudyDataAfterLoad(allowNavigate = false) {
+  if (window.applyTheme) window.applyTheme(window.data.theme || localStorage.getItem('studypath-theme') || 'dark');
+  setTimeout(() => {
+    if (window.renderDashboard) {
+      window.renderDashboard();
+      window.renderLog();
+      window.renderSubjects();
+      window.renderGoals();
+      window.renderSubjectSelects && window.renderSubjectSelects();
+      window.renderQuickAddChips && window.renderQuickAddChips();
+    }
+    const hasSubjects = (window.data.selectedSubjects||[]).length > 0;
+    if (allowNavigate && hasSubjects && window.data.onboarded && window.showPage) { window.showPage('dashboard'); }
+    document.getElementById('loading-overlay').style.display = 'none';
+  }, 100);
+}
 
 // ─── AUTH UI ───
 function renderAuthBar(user) {
@@ -78,15 +126,26 @@ window.confirmSignOut = function() {
 // ─── CLOUD SAVE/LOAD ───
 async function saveToCloud(d) {
   if (!currentUser) return;
+  const backup = queueCloudBackup(d);
+  if (!backup) return;
   try {
-    await setDoc(doc(db, 'users', currentUser.uid), { studypath: JSON.stringify(d) });
-  } catch(e) { console.error('Save error:', e); }
+    await setDoc(doc(db, 'users', currentUser.uid), {
+      studypath: backup.payload,
+      updatedAt: Number(backup.savedAt),
+    }, { merge: true });
+    localStorage.removeItem('studypath-cloud-pending');
+    localStorage.removeItem('studypath-cloud-pending-at');
+  } catch(e) {
+    console.error('Save error:', e);
+    window.showToast && window.showToast('บันทึกขึ้น Firebase ไม่สำเร็จ เก็บสำรองไว้ในเครื่องแล้ว');
+  }
 }
 
 
 // ─── AUTH STATE ───
 onAuthStateChanged(auth, user => {
   currentUser = user;
+  didLoadCloudOnce = false;
   renderAuthBar(user);
   if (user) {
     document.getElementById('loading-overlay').style.display = 'flex';
@@ -98,9 +157,9 @@ onAuthStateChanged(auth, user => {
   } else {
     if (unsubSnapshot) { unsubSnapshot(); unsubSnapshot = null; }
     document.getElementById('loading-overlay').style.display = 'none';
-    window.data = JSON.parse(localStorage.getItem('studypath')||'null') || {
+    applyStudyData(readLocalStudyData() || {
       logs:[], chapters:{tgat:[],tpat:[],phys:[],math:[]}, streak:0, bestStreak:0, lastStudyDate:null, pomoDone:0, dailyGoal:4, dailyGoalManual:false, dekPlan:'dek70'
-    };
+    });
     // ─── Apply theme from local data ───
     if (window.applyTheme) window.applyTheme(window.data.theme || localStorage.getItem('studypath-theme') || 'dark');
     setTimeout(() => {
@@ -123,27 +182,44 @@ function subscribeUserData(uid) {
   if (unsubSnapshot) unsubSnapshot();
   unsubSnapshot = onSnapshot(doc(db, 'users', uid), snap => {
     if (snap.exists()) {
-      const cloud = JSON.parse(snap.data().studypath || 'null');
+      const docData = snap.data();
+      const cloud = JSON.parse(docData.studypath || 'null');
+      const pending = localStorage.getItem('studypath-cloud-pending');
+      const pendingAt = Number(localStorage.getItem('studypath-cloud-pending-at') || 0);
+      const cloudAt = Number(docData.updatedAt || 0);
+      if (!didLoadCloudOnce && pending && pendingAt > cloudAt) {
+        const pendingData = JSON.parse(pending);
+        applyStudyData(pendingData);
+        saveToCloud(pendingData);
+        didLoadCloudOnce = true;
+        renderStudyDataAfterLoad(true);
+        return;
+      }
       if (cloud) {
-        window.data = cloud;
-        if (!window.data.chapters) window.data.chapters = {tgat:[],tpat:[],phys:[],math:[]};
-        if (!window.data.dekPlan) window.data.dekPlan = 'dek70';
-        if (typeof window.data.dailyGoalManual !== 'boolean') window.data.dailyGoalManual = false;
-        // ─── Apply theme from cloud (overrides local) ───
-        if (window.applyTheme) window.applyTheme(window.data.theme || localStorage.getItem('studypath-theme') || 'dark');
-        setTimeout(() => {
-          if (window.renderDashboard) { window.renderDashboard(); window.renderLog(); window.renderSubjects(); window.renderGoals(); window.renderSubjectSelects && window.renderSubjectSelects(); window.renderQuickAddChips && window.renderQuickAddChips(); }
-          // ถ้าเคยเลือกวิชาแล้ว ไม่ต้องแสดงหน้าเลือกวิชา
-          const hasSubjects = (window.data.selectedSubjects||[]).length > 0;
-          if (hasSubjects && window.data.onboarded && window.showPage) { window.showPage('dashboard'); }
-          // ซ่อน overlay หลังจาก navigate แล้ว ป้องกัน flash ของหน้าเลือกวิชา
-          document.getElementById('loading-overlay').style.display = 'none';
-        }, 100);
+        const allowNavigate = !didLoadCloudOnce;
+        applyStudyData(cloud);
+        didLoadCloudOnce = true;
+        renderStudyDataAfterLoad(allowNavigate);
         return; // early return — overlay จะถูกซ่อนใน setTimeout แทน
       }
     }
+    const localData = readLocalStudyData();
+    if (!didLoadCloudOnce && localData) {
+      applyStudyData(localData);
+      saveToCloud(localData);
+      didLoadCloudOnce = true;
+      renderStudyDataAfterLoad(true);
+      return;
+    }
+    didLoadCloudOnce = true;
     // กรณีไม่มีข้อมูลใน cloud (user ใหม่) — ซ่อน overlay ทันที
     document.getElementById('loading-overlay').style.display = 'none';
+  }, err => {
+    console.error('Cloud load error:', err);
+    const localData = readLocalStudyData();
+    if (localData) applyStudyData(localData);
+    renderStudyDataAfterLoad(true);
+    window.showToast && window.showToast('โหลดข้อมูล Firebase ไม่สำเร็จ ใช้ข้อมูลสำรองในเครื่องแทน');
   });
 }
 </script>
@@ -1587,14 +1663,22 @@ Object.defineProperty(window, 'data', {get:()=>data,set:(v)=>{data=v;},configura
 // - เมื่อ login: save ลง Firebase อย่างเดียว (Firebase = source of truth)
 // - เมื่อไม่ login: save ลง localStorage อย่างเดียว
 let _saveTimer = null;
+function saveLocalBackup(snapshot = data) {
+  try {
+    localStorage.setItem('studypath', JSON.stringify(snapshot));
+  } catch(e) {
+    console.error('Local save error:', e);
+  }
+}
 function save() {
   if (_saveTimer) clearTimeout(_saveTimer);
   _saveTimer = setTimeout(() => {
+    saveLocalBackup(data);
     const user = window.currentUserFn ? window.currentUserFn() : null;
     if (user) {
       if (window.fbSave) window.fbSave(data);
     } else {
-      localStorage.setItem('studypath', JSON.stringify(data));
+      saveLocalBackup(data);
     }
     _saveTimer = null;
   }, 300);
@@ -1602,14 +1686,19 @@ function save() {
 // Force immediate save (for critical moments like page unload)
 function saveNow() {
   if (_saveTimer) { clearTimeout(_saveTimer); _saveTimer = null; }
+  saveLocalBackup(data);
   const user = window.currentUserFn ? window.currentUserFn() : null;
   if (user) {
     if (window.fbSave) window.fbSave(data);
   } else {
-    localStorage.setItem('studypath', JSON.stringify(data));
+    saveLocalBackup(data);
   }
 }
 window.addEventListener('beforeunload', saveNow);
+window.addEventListener('pagehide', saveNow);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') saveNow();
+});
 
 // Simple render scheduler — batches multiple render calls into one rAF
 const _pendingRenders = new Set();
@@ -3210,11 +3299,39 @@ const EXAM_GROUP_DEFS = [
 ];
 const EXAM_YEARS = [2569, 2568, 2567, 2566];
 
-// วิชาที่เปิดลิงก์ข้อสอบให้แล้ว (ตรวจสอบ/ยืนยันลิงก์เรียบร้อย) — ตอนนี้มีแค่ A-Level คณิตศาสตร์ 1 และ 2
-// วิชาอื่นๆ ทั้งหมดจะยังไม่แสดงลิงก์ และจะแสดงข้อความ "จะเพิ่มเข้ามาภายในเร็วๆนี้" แทน
-const LIVE_LINK_SUBJECTS = ['alv_math1', 'alv_math2'];
+const MYTCAS_ANSWERS_URL = 'https://www.mytcas.com/answers/';
+const MYTCAS_A_LEVEL_69_NEWS_URL = 'https://www.mytcas.com/news/94/';
+const MYTCAS_A_LEVEL_69_ANSWERS_PDF = 'https://assets.mytcas.com/69/alevel/69_answers_61-89.pdf';
+const MYTCAS_A_LEVEL_LINKS = Object.freeze({
+  alv_math1: { shortName:'คณิต1', pdf68:'https://assets.mytcas.com/68/answer/tcas68-math1-a-level.pdf', page69:1 },
+  alv_math2: { shortName:'คณิต2', pdf68:'https://assets.mytcas.com/68/answer/tcas68-math2-a-level.pdf', page69:2 },
+  alv_sci: { shortName:'วิทย์ประยุกต์', pdf68:'https://assets.mytcas.com/68/answer/tcas68-sci-a-level.pdf', page69:3 },
+  alv_phy: { shortName:'ฟิสิกส์', pdf68:'https://assets.mytcas.com/68/answer/tcas68-phy-a-level.pdf', page69:4 },
+  alv_chem: { shortName:'เคมี', pdf68:'https://assets.mytcas.com/68/answer/tcas68-chem-a-level.pdf', page69:5 },
+  alv_bio: { shortName:'ชีววิทยา', pdf68:'https://assets.mytcas.com/68/answer/tcas68-bio-a-level.pdf', page69:6 },
+  alv_soc: { shortName:'สังคม', pdf68:'https://assets.mytcas.com/68/answer/tcas68-soc-a-level.pdf', page69:7 },
+  alv_thai: { shortName:'ไทย', pdf68:'https://assets.mytcas.com/68/answer/tcas68-thai-a-level.pdf', page69:8 },
+  alv_eng: { shortName:'อังกฤษ', pdf68:'https://assets.mytcas.com/68/answer/tcas68-eng-a-level.pdf', page69:9 },
+});
+const MYTCAS_A_LEVEL_OFFICIAL = Object.freeze(
+  Object.entries(MYTCAS_A_LEVEL_LINKS).reduce((acc, [sid, meta]) => {
+    acc[sid] = {
+      2568: { label:`A-Level ${meta.shortName} ปี 68 · ข้อสอบ+เฉลยทางการจาก MyTCAS`, tag:'ข้อสอบจริง', sources: [
+        { name:'MyTCAS ข้อสอบ+เฉลย PDF', url:meta.pdf68, type:'pdf' },
+        { name:'หน้า MyTCAS Answers', url:MYTCAS_ANSWERS_URL, type:'official' },
+      ]},
+      2569: { label:`A-Level ${meta.shortName} ปี 69 · เฉลยทางการจาก MyTCAS`, tag:'เฉลยทางการ', sources: [
+        { name:'MyTCAS เฉลยรายวิชา PDF', url:`${MYTCAS_A_LEVEL_69_ANSWERS_PDF}#page=${meta.page69}`, type:'pdf' },
+        { name:'ประกาศ MyTCAS ปี 69', url:MYTCAS_A_LEVEL_69_NEWS_URL, type:'official' },
+      ]},
+    };
+    return acc;
+  }, {})
+);
+const LIVE_LINK_SUBJECTS = Object.keys(MYTCAS_A_LEVEL_OFFICIAL);
 function getExamPapers(sid) {
-  return LIVE_LINK_SUBJECTS.includes(sid) ? EXAM_PAPERS[sid] : null;
+  if (!LIVE_LINK_SUBJECTS.includes(sid)) return null;
+  return { ...(EXAM_PAPERS[sid] || {}), ...MYTCAS_A_LEVEL_OFFICIAL[sid] };
 }
 
 let examActiveGroup = 'A-Level';
@@ -3234,6 +3351,7 @@ function getTagStyle(tag) {
   if (!tag) return '';
   const styles = {
     'ข้อสอบจริง': 'background:rgba(34,197,94,.15);color:var(--green2);border:1px solid rgba(34,197,94,.3)',
+    'เฉลยทางการ': 'background:rgba(59,130,246,.14);color:var(--blue2);border:1px solid rgba(59,130,246,.3)',
     'Blueprint': 'background:rgba(59,130,246,.12);color:var(--blue2);border:1px solid rgba(59,130,246,.25)',
     'ตัวอย่าง': 'background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.2)',
     'แนวข้อสอบ': 'background:rgba(139,92,246,.1);color:var(--purple2);border:1px solid rgba(139,92,246,.2)',
