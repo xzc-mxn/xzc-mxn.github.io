@@ -19,7 +19,7 @@ window.XzcAPI = (() => {
         }
     }
 
-    const DEFAULT_API_KEY = 'AIzaSyDxHAChzenlW54GlGV0RIRiYSuMuoF01hk';
+    const DEFAULT_API_KEY = 'AIzaSyC00MxtfccWldeVl6b--OahuRsDivV0AvI';
     const DEFAULT_PROVIDER = 'gemini';
     const DEFAULT_MODEL = 'gemini-2.5-flash';
 
