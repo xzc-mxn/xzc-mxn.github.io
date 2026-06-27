@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="xzc.ai — Your intelligent AI chat assistant powered by OpenAI and Google Gemini. Experience seamless conversations with cutting-edge AI models.">
+    <meta name="keywords" content="AI Chat, ChatGPT, Gemini, AI Assistant, xzc.ai">
+    <meta name="author" content="xzc.ai">
+    <meta name="theme-color" content="#0d0d0d">
+    <title>xzc.ai — Intelligent Chat Assistant</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/sidebar.css">
+    <link rel="stylesheet" href="css/chat.css">
+    <link rel="stylesheet" href="css/settings.css">
+    <link rel="stylesheet" href="css/animations.css">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="logo.png">
+</head>
+<body>
+
+<div id="app">
+    <!-- ===================== SIDEBAR ===================== -->
+    <aside id="sidebar">
+        <div id="sidebar-header">
+            <button id="new-chat-btn" title="New Chat (Ctrl+Shift+N)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                    <path d="M12 5v14M5 12h14"/>
+                </svg>
+                <span>New Chat</span>
+            </button>
+            <button id="sidebar-collapse-btn" title="Toggle Sidebar (Ctrl+Shift+S)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <path d="M9 3v18"/>
+                </svg>
+            </button>
+        </div>
+
+        <div id="search-container">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="M21 21l-4.35-4.35"/>
+            </svg>
+            <input type="text" id="search-input" placeholder="Search chats..." autocomplete="off">
+        </div>
+
+        <ul id="chat-history-list">
+            <!-- Chat history items will be rendered here by JS -->
+        </ul>
+
+        <div id="sidebar-footer">
+            <button id="export-btn" title="Export Chats">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                </svg>
+                <span>Export Chats</span>
+            </button>
+            <button id="settings-btn" title="Settings">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+                </svg>
+                <span>Settings</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Mobile sidebar overlay -->
+    <div id="sidebar-overlay"></div>
+
+    <!-- ===================== MAIN CONTENT ===================== -->
+    <main id="main">
+        <!-- Header -->
+        <header id="main-header">
+            <button id="sidebar-open-btn" title="Open Sidebar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                    <path d="M3 12h18M3 6h18M3 18h18"/>
+                </svg>
+            </button>
+
+            <button id="model-selector-btn">
+                <span id="current-model-name">GPT-4o Mini</span>
+                <svg class="dropdown-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                    <path d="M6 9l6 6 6-6"/>
+                </svg>
+            </button>
+
+            <div id="header-spacer"></div>
+        </header>
+
+        <!-- Welcome Screen -->
+        <div id="welcome-screen">
+            <div class="welcome-logo"><img src="logo.png" alt="xzc.ai" class="welcome-logo-img"></div>
+            <h1 class="welcome-title">xzc.ai</h1>
+            <p class="welcome-subtitle">Your intelligent AI chat assistant. How can I help you today?</p>
+
+            <div id="suggestion-grid">
+                <button class="suggestion-card" data-suggestion="Explain quantum computing in simple terms">
+                    <span class="suggestion-icon">💡</span>
+                    <span class="suggestion-text">Explain quantum computing in simple terms</span>
+                </button>
+                <button class="suggestion-card" data-suggestion="Write a creative short story about a time traveler">
+                    <span class="suggestion-icon">🎨</span>
+                    <span class="suggestion-text">Write a creative short story about a time traveler</span>
+                </button>
+                <button class="suggestion-card" data-suggestion="Help me debug my JavaScript code">
+                    <span class="suggestion-icon">💻</span>
+                    <span class="suggestion-text">Help me debug my JavaScript code</span>
+                </button>
+                <button class="suggestion-card" data-suggestion="Summarize the key points of machine learning">
+                    <span class="suggestion-icon">📝</span>
+                    <span class="suggestion-text">Summarize the key points of machine learning</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat Container -->
+        <div id="chat-container" class="hidden">
+            <div id="messages-container">
+                <!-- Messages will be rendered here -->
+            </div>
+
+            <!-- Typing Indicator -->
+            <div id="typing-indicator" class="hidden">
+                <div class="typing-avatar"><img src="logo.png" alt="xzc.ai" class="typing-avatar-img"></div>
+                <div class="typing-dots">
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div id="input-area">
+            <div id="input-wrapper">
+                <!-- File Previews -->
+                <div id="file-preview-list" class="hidden"></div>
+
+                <textarea id="message-input"
+                          placeholder="Message xzc.ai..."
+                          rows="1"
+                          autocomplete="off"
+                          autofocus></textarea>
+                <div id="input-actions">
+                    <span id="token-estimate" class="hidden"></span>
+
+                    <!-- Upload Button -->
+                    <button id="upload-btn" type="button" title="Attach file (image, PDF, or text)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                        </svg>
+                    </button>
+
+                    <button id="send-btn" disabled title="Send message (Enter)">
+                        <svg id="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                            <path d="M22 2L11 13"/>
+                            <path d="M22 2L15 22L11 13L2 9L22 2Z"/>
+                        </svg>
+                        <svg id="stop-icon" viewBox="0 0 24 24" fill="currentColor" width="18" height="18" class="hidden">
+                            <rect x="6" y="6" width="12" height="12" rx="2"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <p id="input-footer">xzc.ai can make mistakes. Consider checking important information.</p>
+        </div>
+
+        <!-- Hidden file input -->
+        <input type="file" id="file-upload-input" multiple accept="image/*,.pdf,.txt,.md,.csv,.json,.js,.py,.html,.css" class="hidden">
+    </main>
+</div>
+
+<!-- ===================== MODEL DROPDOWN ===================== -->
+<div id="model-dropdown" class="hidden">
+    <!-- Model options will be populated by JS -->
+</div>
+
+<!-- ===================== SETTINGS MODAL ===================== -->
+<div id="settings-modal">
+    <div id="settings-overlay"></div>
+    <div id="settings-panel">
+        <div id="settings-header">
+            <h2 id="settings-title">Settings</h2>
+            <button id="settings-close-btn" title="Close">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                    <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div id="settings-body">
+            <!-- API Configuration -->
+            <div class="settings-section">
+                <h3 class="section-title">API Configuration</h3>
+
+                <div class="setting-row">
+                    <label class="setting-label" for="api-provider-select">API Provider</label>
+                    <select id="api-provider-select" class="setting-select">
+                        <option value="openai">OpenAI</option>
+                        <option value="gemini">Google Gemini</option>
+                    </select>
+                </div>
+
+                <div class="setting-row">
+                    <label class="setting-label" for="api-key-input">API Key</label>
+                    <p class="setting-description">Your API key is stored locally in your browser only.</p>
+                    <div class="api-key-wrapper">
+                        <input type="password" id="api-key-input" class="setting-input" placeholder="Enter your API key...">
+                        <button id="toggle-key-visibility" type="button" title="Toggle visibility">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="setting-row">
+                    <button id="test-connection-btn" type="button">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                            <path d="M22 4L12 14.01l-3-3"/>
+                        </svg>
+                        <span>Test Connection</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Model Settings -->
+            <div class="settings-section">
+                <h3 class="section-title">Model Settings</h3>
+
+                <div class="setting-row">
+                    <label class="setting-label" for="model-select">Model</label>
+                    <select id="model-select" class="setting-select">
+                        <!-- Options populated by JS based on provider -->
+                    </select>
+                </div>
+
+                <div class="setting-row">
+                    <label class="setting-label" for="system-prompt-input">System Prompt</label>
+                    <textarea id="system-prompt-input" class="setting-input setting-textarea" rows="3" placeholder="You are a helpful assistant."></textarea>
+                </div>
+
+                <div class="setting-row">
+                    <label class="setting-label" for="temperature-range">
+                        Temperature: <span id="temperature-value">0.7</span>
+                    </label>
+                    <p class="setting-description">Higher values make output more random, lower values make it more deterministic.</p>
+                    <input type="range" id="temperature-range" class="setting-range" min="0" max="2" step="0.1" value="0.7">
+                </div>
+
+                <div class="setting-row">
+                    <label class="setting-label" for="max-tokens-input">Max Tokens</label>
+                    <input type="number" id="max-tokens-input" class="setting-input" value="4096" min="1" max="128000" step="1">
+                </div>
+            </div>
+
+            <!-- Appearance -->
+            <div class="settings-section">
+                <h3 class="section-title">Appearance</h3>
+
+                <div class="setting-row">
+                    <label class="setting-label" for="theme-select">Theme</label>
+                    <select id="theme-select" class="setting-select">
+                        <option value="dark">Dark</option>
+                        <option value="light">Light</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Data Management -->
+            <div class="settings-section">
+                <h3 class="section-title">Data Management</h3>
+
+                <div class="setting-row setting-row-actions">
+                    <button id="export-all-btn" class="setting-action-btn" type="button">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                        </svg>
+                        <span>Export All Chats</span>
+                    </button>
+                    <button id="import-btn" class="setting-action-btn" type="button">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                        </svg>
+                        <span>Import Chats</span>
+                    </button>
+                    <button id="clear-all-btn" class="setting-action-btn danger" type="button">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                        </svg>
+                        <span>Clear All Chats</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden file input for import -->
+<input type="file" id="import-file-input" accept=".json" class="hidden">
+
+<!-- ===================== CONFIRM DIALOG ===================== -->
+<div id="confirm-dialog">
+    <div id="confirm-overlay"></div>
+    <div id="confirm-box">
+        <h3 id="confirm-title">Confirm</h3>
+        <p id="confirm-message">Are you sure?</p>
+        <div id="confirm-actions">
+            <button id="confirm-cancel-btn">Cancel</button>
+            <button id="confirm-ok-btn">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== TOAST CONTAINER ===================== -->
+<div id="toast-container"></div>
+
+<!-- JavaScript -->
+<script src="js/utils.js"></script>
+<script src="js/markdown.js"></script>
+<script src="js/history.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/api.js"></script>
+<script src="js/chat.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
