@@ -21,7 +21,7 @@ window.XzcAPI = (() => {
 
     const DEFAULT_API_KEY = 'AIzaSyC00MxtfccWldeVl6b--OahuRsDivV0AvI';
     const DEFAULT_PROVIDER = 'gemini';
-    const DEFAULT_MODEL = 'gemini-2.5-flash';
+    const DEFAULT_MODEL = 'gemini-3.5-flash';
 
     function getRuntimeSettings(overrides = {}) {
         const current = typeof Settings !== 'undefined' ? Settings.getAll() : {};
