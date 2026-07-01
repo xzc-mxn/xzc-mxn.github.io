@@ -52,7 +52,7 @@ window.Settings = (() => {
     const defaults = Object.freeze({
         apiProvider: 'gemini',
         apiKey: 'AIzaSyDxHAChzenlW54GlGV0RIRiYSuMuoF01hk',
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.5-flash',
         systemPrompt: 'You are a helpful assistant.',
         temperature: 0.7,
         maxTokens: 4096,
