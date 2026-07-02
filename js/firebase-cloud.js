@@ -21,39 +21,61 @@ const provider = new GoogleAuthProvider();
 let currentUser = null;
 let unsubSnapshot = null;
 let didLoadCloudOnce = false;
+let pendingCloudPayload = null;
+let pendingCloudAt = 0;
 
-function readLocalStudyData() {
+function createDefaultStudyData() {
+  return {
+    logs:[], chapters:{}, streak:0, bestStreak:0, lastStudyDate:null, pomoDone:0,
+    dailyGoal:4, dailyGoalManual:false, selectedSubjects:[], onboarded:false, dekPlan:'dek70', theme:'dark'
+  };
+}
+
+function readLegacyLocalStudyData() {
   try {
     return JSON.parse(localStorage.getItem('studypath') || 'null');
   } catch(e) {
-    console.warn('Local data parse error:', e);
+    console.warn('Legacy local data parse error:', e);
     return null;
   }
 }
 
-function queueCloudBackup(d) {
+function clearLegacyLocalStudyData() {
   try {
-    const payload = JSON.stringify(d || {});
-    const savedAt = String(Date.now());
-    localStorage.setItem('studypath', payload);
-    localStorage.setItem('studypath-cloud-pending', payload);
-    localStorage.setItem('studypath-cloud-pending-at', savedAt);
-    return { payload, savedAt };
+    localStorage.removeItem('studypath');
+    localStorage.removeItem('studypath-theme');
+    localStorage.removeItem('studypath-cloud-pending');
+    localStorage.removeItem('studypath-cloud-pending-at');
   } catch(e) {
-    console.error('Local backup error:', e);
-    return null;
+    console.warn('Legacy local cleanup error:', e);
   }
+}
+
+function hasMeaningfulStudyData(d) {
+  if (!d || typeof d !== 'object') return false;
+  const chapterCount = Object.values(d.chapters || {}).reduce((sum, chapters) => sum + (Array.isArray(chapters) ? chapters.length : 0), 0);
+  return Boolean(
+    (d.selectedSubjects || []).length ||
+    (d.logs || []).length ||
+    (d.examAttempts || []).length ||
+    (d.mistakes || []).length ||
+    chapterCount ||
+    d.onboarded ||
+    d.theme
+  );
 }
 
 function applyStudyData(d) {
   window.data = d || {};
   if (!window.data.chapters) window.data.chapters = {tgat:[],tpat:[],phys:[],math:[]};
+  if (!Array.isArray(window.data.logs)) window.data.logs = [];
+  if (!Array.isArray(window.data.selectedSubjects)) window.data.selectedSubjects = [];
   if (!window.data.dekPlan) window.data.dekPlan = 'dek70';
   if (typeof window.data.dailyGoalManual !== 'boolean') window.data.dailyGoalManual = false;
 }
 
 function renderStudyDataAfterLoad(allowNavigate = false) {
-  if (window.applyTheme) window.applyTheme(window.data.theme || localStorage.getItem('studypath-theme') || 'light');
+  if (window.applyTheme) window.applyTheme(window.data.theme || 'dark');
   setTimeout(() => {
     if (window.renderDashboard) {
       window.renderDashboard();
@@ -116,20 +138,37 @@ window.confirmSignOut = function() {
 // ─── CLOUD SAVE/LOAD ───
 async function saveToCloud(d) {
   if (!currentUser) return;
-  const backup = queueCloudBackup(d);
-  if (!backup) return;
+  const payload = JSON.stringify(d || {});
+  const savedAt = Date.now();
+  pendingCloudPayload = payload;
+  pendingCloudAt = savedAt;
   try {
     await setDoc(doc(db, 'users', currentUser.uid), {
-      studypath: backup.payload,
-      updatedAt: Number(backup.savedAt),
+      studypath: payload,
+      updatedAt: savedAt,
     }, { merge: true });
-    localStorage.removeItem('studypath-cloud-pending');
-    localStorage.removeItem('studypath-cloud-pending-at');
+    pendingCloudPayload = null;
+    pendingCloudAt = 0;
+    clearLegacyLocalStudyData();
   } catch(e) {
     console.error('Save error:', e);
-    window.showToast && window.showToast('บันทึกขึ้น Firebase ไม่สำเร็จ เก็บสำรองไว้ในเครื่องแล้ว');
+    window.showToast && window.showToast('บันทึกขึ้น Firebase ไม่สำเร็จ จะลองใหม่เมื่อเชื่อมต่อได้');
   }
 }
+
+function retryPendingCloudSave() {
+  if (!currentUser || !pendingCloudPayload) return;
+  try {
+    saveToCloud(JSON.parse(pendingCloudPayload));
+  } catch(e) {
+    console.error('Pending cloud retry parse error:', e);
+  }
+}
+
+window.addEventListener('online', retryPendingCloudSave);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') retryPendingCloudSave();
+});
 
 
 // ─── AUTH STATE ───
@@ -147,16 +186,11 @@ onAuthStateChanged(auth, user => {
   } else {
     if (unsubSnapshot) { unsubSnapshot(); unsubSnapshot = null; }
     document.getElementById('loading-overlay').style.display = 'none';
-    applyStudyData(readLocalStudyData() || {
-      logs:[], chapters:{tgat:[],tpat:[],phys:[],math:[]}, streak:0, bestStreak:0, lastStudyDate:null, pomoDone:0, dailyGoal:4, dailyGoalManual:false, dekPlan:'dek70'
-    });
-    // ─── Apply theme from local data ───
-    if (window.applyTheme) window.applyTheme(window.data.theme || localStorage.getItem('studypath-theme') || 'light');
+    applyStudyData(createDefaultStudyData());
+    if (window.applyTheme) window.applyTheme(window.data.theme || 'dark');
     setTimeout(() => {
       if (window.renderDashboard) { window.renderDashboard(); window.renderLog(); window.renderSubjects(); window.renderGoals(); window.renderSubjectSelects && window.renderSubjectSelects(); window.renderQuickAddChips && window.renderQuickAddChips(); }
-      // ถ้าเคยเลือกวิชาแล้ว ไม่ต้องแสดงหน้าเลือกวิชา
-      const hasSubjects = (window.data.selectedSubjects||[]).length > 0;
-      if (hasSubjects && window.data.onboarded && window.showPage) { window.showPage('dashboard'); }
+      if (window.showPage) window.showPage('select');
     }, 300);
   }
 });
@@ -171,14 +205,13 @@ window._fbSignOut = () => signOut(auth);
 function subscribeUserData(uid) {
   if (unsubSnapshot) unsubSnapshot();
   unsubSnapshot = onSnapshot(doc(db, 'users', uid), snap => {
+    const legacyData = readLegacyLocalStudyData();
     if (snap.exists()) {
       const docData = snap.data();
       const cloud = JSON.parse(docData.studypath || 'null');
-      const pending = localStorage.getItem('studypath-cloud-pending');
-      const pendingAt = Number(localStorage.getItem('studypath-cloud-pending-at') || 0);
       const cloudAt = Number(docData.updatedAt || 0);
-      if (!didLoadCloudOnce && pending && pendingAt > cloudAt) {
-        const pendingData = JSON.parse(pending);
+      if (!didLoadCloudOnce && pendingCloudPayload && pendingCloudAt > cloudAt) {
+        const pendingData = JSON.parse(pendingCloudPayload);
         applyStudyData(pendingData);
         saveToCloud(pendingData);
         didLoadCloudOnce = true;
@@ -188,27 +221,32 @@ function subscribeUserData(uid) {
       if (cloud) {
         const allowNavigate = !didLoadCloudOnce;
         applyStudyData(cloud);
+        clearLegacyLocalStudyData();
         didLoadCloudOnce = true;
         renderStudyDataAfterLoad(allowNavigate);
         return; // early return — overlay จะถูกซ่อนใน setTimeout แทน
       }
     }
-    const localData = readLocalStudyData();
-    if (!didLoadCloudOnce && localData) {
-      applyStudyData(localData);
-      saveToCloud(localData);
+    if (!didLoadCloudOnce && hasMeaningfulStudyData(legacyData)) {
+      applyStudyData(legacyData);
+      saveToCloud(legacyData);
+      didLoadCloudOnce = true;
+      renderStudyDataAfterLoad(true);
+      return;
+    }
+    if (!didLoadCloudOnce && hasMeaningfulStudyData(window.data)) {
+      saveToCloud(window.data);
       didLoadCloudOnce = true;
       renderStudyDataAfterLoad(true);
       return;
     }
     didLoadCloudOnce = true;
-    // กรณีไม่มีข้อมูลใน cloud (user ใหม่) — ซ่อน overlay ทันที
+    applyStudyData(createDefaultStudyData());
+    renderStudyDataAfterLoad(false);
     document.getElementById('loading-overlay').style.display = 'none';
   }, err => {
     console.error('Cloud load error:', err);
-    const localData = readLocalStudyData();
-    if (localData) applyStudyData(localData);
     renderStudyDataAfterLoad(true);
-    window.showToast && window.showToast('โหลดข้อมูล Firebase ไม่สำเร็จ ใช้ข้อมูลสำรองในเครื่องแทน');
+    window.showToast && window.showToast('โหลดข้อมูล Firebase ไม่สำเร็จ กรุณาเชื่อมต่อใหม่อีกครั้ง');
   });
 }
