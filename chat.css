@@ -868,6 +868,82 @@
   box-shadow: 0 0 0 3px var(--accent-subtle);
 }
 
+/* ============================================
+   Voice Input Button
+   ============================================ */
+#voice-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition-fast),
+              color var(--transition-fast),
+              border-color var(--transition-fast),
+              box-shadow var(--transition-fast);
+  flex-shrink: 0;
+  position: relative;
+}
+
+#voice-btn:hover {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  border-color: var(--accent);
+}
+
+#voice-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Recording state */
+#voice-btn.recording {
+  background-color: #ef4444;
+  border-color: #ef4444;
+  color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.25);
+  animation: voicePulse 1.5s ease-in-out infinite;
+}
+
+#voice-btn.recording:hover {
+  background-color: #dc2626;
+  border-color: #dc2626;
+}
+
+/* Recording ring (pulse indicator) */
+#voice-recording-ring {
+  position: absolute;
+  inset: -6px;
+  border: 2px solid rgba(239, 68, 68, 0.5);
+  border-radius: 50%;
+  animation: voiceRipple 1.5s ease-out infinite;
+  pointer-events: none;
+}
+
+/* ============================================
+   Generated Image Display
+   ============================================ */
+.message-content img[src^="data:image"] {
+  max-width: 100%;
+  max-height: 512px;
+  border-radius: var(--radius-xl);
+  margin: var(--space-3) 0;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+  cursor: pointer;
+}
+
+.message-content img[src^="data:image"]:hover {
+  transform: scale(1.02);
+  box-shadow: var(--shadow-lg);
+}
+
 /* --- File content inside message --- */
 .message-file-attachment {
   display: flex;
