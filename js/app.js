@@ -74,47 +74,40 @@ const WEEK_PLAN=Object.freeze([
   {day:'อาทิตย์',target:3, sessions:[{cls:'review',label:'พักผ่อน/ทบทวนเบาๆ',h:'2h'},{cls:'tgat',label:'วางแผนสัปดาห์',h:'1h'}]},
 ]);
 
-let data = window.data || JSON.parse(localStorage.getItem('studypath')||'null') || {
+function createDefaultStudyData(){
+  return {
   logs:[], chapters:{}, streak:0, bestStreak:0, lastStudyDate:null, pomoDone:0, dailyGoal:4,
-  selectedSubjects:[], onboarded:false, dekPlan:'dek70', dailyGoalManual:false
-};
+  selectedSubjects:[], onboarded:false, dekPlan:'dek70', dailyGoalManual:false, theme:'dark'
+  };
+}
+let data = window.data || createDefaultStudyData();
 Object.defineProperty(window, 'data', {get:()=>data,set:(v)=>{data=v;},configurable:true});
 
 // ═══════════════════════════ STATE MANAGER ═══════════════════════════
-// Debounced save:
-// - เมื่อ login: save ลง Firebase อย่างเดียว (Firebase = source of truth)
-// - เมื่อไม่ login: save ลง localStorage อย่างเดียว
+// Debounced save. Firebase is the source of truth for study data.
+// When the user is not signed in, changes only live in the current tab.
 let _saveTimer = null;
-function saveLocalBackup(snapshot = data) {
-  try {
-    localStorage.setItem('studypath', JSON.stringify(snapshot));
-  } catch(e) {
-    console.error('Local save error:', e);
-  }
+let _saveLoginToastTimer = null;
+function hasCloudUser(){return window.currentUserFn ? window.currentUserFn() : null;}
+function notifyLoginRequired(){
+  if (_saveLoginToastTimer) return;
+  _saveLoginToastTimer = setTimeout(()=>{_saveLoginToastTimer=null;}, 3500);
+  showToast('Login ก่อนเพื่อบันทึกข้อมูลขึ้น Firebase');
 }
 function save() {
   if (_saveTimer) clearTimeout(_saveTimer);
   _saveTimer = setTimeout(() => {
-    saveLocalBackup(data);
-    const user = window.currentUserFn ? window.currentUserFn() : null;
-    if (user) {
-      if (window.fbSave) window.fbSave(data);
-    } else {
-      saveLocalBackup(data);
-    }
+    const user = hasCloudUser();
+    if (user && window.fbSave) window.fbSave(data);
+    else notifyLoginRequired();
     _saveTimer = null;
   }, 300);
 }
 // Force immediate save (for critical moments like page unload)
 function saveNow() {
   if (_saveTimer) { clearTimeout(_saveTimer); _saveTimer = null; }
-  saveLocalBackup(data);
-  const user = window.currentUserFn ? window.currentUserFn() : null;
-  if (user) {
-    if (window.fbSave) window.fbSave(data);
-  } else {
-    saveLocalBackup(data);
-  }
+  const user = hasCloudUser();
+  if (user && window.fbSave) window.fbSave(data);
 }
 window.addEventListener('beforeunload', saveNow);
 window.addEventListener('pagehide', saveNow);
@@ -713,7 +706,11 @@ function renderDashboard(){
   const labels=last7.map(d=>{const dt=new Date(d.date);return['อา','จ','อ','พ','พฤ','ศ','ส'][dt.getDay()]});
   const vals=last7.map(d=>d.hours);
   const maxVal=Math.max(...vals,1);
-  const barColors=vals.map(v=>v>=4?'rgba(34,197,94,0.7)':v>=2?'rgba(245,158,11,0.7)':'rgba(239,68,68,0.5)');
+  const css=getComputedStyle(document.documentElement);
+  const chartGreen=css.getPropertyValue('--green2').trim()||'#74ba83';
+  const chartAmber=css.getPropertyValue('--amber').trim()||'#ac6b1f';
+  const chartRed=css.getPropertyValue('--red2').trim()||'#e47b72';
+  const barColors=vals.map(v=>v>=4?chartGreen:v>=2?chartAmber:chartRed);
   const cc=getChartColors();
   const ctx=document.getElementById('weekChart').getContext('2d');
   if(weekChart)weekChart.destroy();
@@ -938,8 +935,8 @@ function renderAnalysis(){
   planVsChart=new Chart(ctx3,{type:'bar',data:{
     labels:last7.map(d=>{const dt=new Date(d.date);return['อา','จ','อ','พ','พฤ','ศ','ส'][dt.getDay()]}),
     datasets:[
-      {label:'เป้า',data:planned,borderColor:'rgba(94,94,120,0.4)',backgroundColor:'rgba(94,94,120,0.4)',borderRadius:4,borderSkipped:false},
-      {label:'จริง',data:last7.map(d=>d.hours),backgroundColor:'rgba(245,158,11,0.75)',borderRadius:4,borderSkipped:false}
+      {label:'เป้า',data:planned,borderColor:getComputedStyle(document.documentElement).getPropertyValue('--border2').trim()||'rgba(94,94,120,0.4)',backgroundColor:getComputedStyle(document.documentElement).getPropertyValue('--bg4').trim()||'rgba(94,94,120,0.4)',borderRadius:4,borderSkipped:false},
+      {label:'จริง',data:last7.map(d=>d.hours),backgroundColor:getComputedStyle(document.documentElement).getPropertyValue('--amber').trim()||'#ac6b1f',borderRadius:4,borderSkipped:false}
     ]
   },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{color:cc.label,font:{size:11}}}},scales:{x:{grid:{display:false},ticks:{color:cc.tick}},y:{grid:{color:cc.grid},ticks:{color:cc.tick},beginAtZero:true}}}});
 
@@ -1330,19 +1327,15 @@ function applyTheme(theme){
 function toggleTheme(){
   const isLight=document.documentElement.classList.contains('light');
   const next=isLight?'dark':'light';
-  // Save to standalone localStorage key (fallback before data loads)
-  localStorage.setItem('studypath-theme',next);
-  // Save to data object → syncs to Firebase via save()
   if(typeof data!=='undefined'&&data!==null){
     data.theme=next;
     if(typeof save==='function')save();
   }
   applyTheme(next);
 }
-// Init theme — read from data.theme in localStorage first, then standalone key, then default light
+// Init theme from in-memory/cloud data only. It will persist after login via Firebase.
 (function(){
-  const savedData=JSON.parse(localStorage.getItem('studypath')||'null');
-  const theme=savedData?.theme||localStorage.getItem('studypath-theme')||'light';
+  const theme=data?.theme||'dark';
   applyTheme(theme);
 })();
 window.applyTheme=applyTheme;
@@ -1425,6 +1418,13 @@ window.renderAnalysis = renderAnalysis;
 window.renderExamPapers = renderExamPapers;
 window.selectExamGroup = selectExamGroup;
 window.selectExamYear = selectExamYear;
+window.TCAS_SUBJECTS = TCAS_SUBJECTS;
+window.SUBJECT_GROUPS = SUBJECT_GROUPS;
+window.DEK_PLANS = DEK_PLANS;
+window.getSelectedSubjects = getSelectedSubjects;
+window.getActiveSubjectsData = getActiveSubjectsData;
+window.studySave = save;
+window.studySaveNow = saveNow;
 
 // ═══════════════════════════ EXAM PAPERS DATABASE ═══════════════════════════
 // Research notes:
