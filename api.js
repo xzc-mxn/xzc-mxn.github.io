@@ -209,8 +209,14 @@ window.XzcAPI = (() => {
         }));
     }
 
+    function isImageGenModel(modelId) {
+        return modelId && modelId.includes('image-generation');
+    }
+
     async function streamGemini({ messages, settings, signal, onToken }) {
         assertApiKey(settings);
+
+        const isImageModel = isImageGenModel(settings.model);
 
         const endpoint =
             `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(settings.model)}:streamGenerateContent` +
@@ -223,6 +229,11 @@ window.XzcAPI = (() => {
                 maxOutputTokens: settings.maxTokens
             }
         };
+
+        // Image generation models need responseModalities
+        if (isImageModel) {
+            body.generationConfig.responseModalities = ['TEXT', 'IMAGE'];
+        }
 
         body.systemInstruction = {
             parts: [{ text: buildFinalSystemPrompt(settings.systemPrompt) }]
@@ -255,10 +266,17 @@ window.XzcAPI = (() => {
             }
 
             const parts = payload?.candidates?.[0]?.content?.parts || [];
-            const token = parts.map((part) => part.text || '').join('');
-            if (token) {
-                fullText += token;
-                onToken(token, fullText);
+            for (const part of parts) {
+                // Handle inline image data from Gemini
+                if (part.inlineData && part.inlineData.mimeType && part.inlineData.data) {
+                    const imgSrc = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+                    const imgTag = `\n\n![Generated Image](${imgSrc})\n\n`;
+                    fullText += imgTag;
+                    onToken(imgTag, fullText);
+                } else if (part.text) {
+                    fullText += part.text;
+                    onToken(part.text, fullText);
+                }
             }
 
             return true;
@@ -283,6 +301,7 @@ window.XzcAPI = (() => {
         streamChat,
         getRuntimeSettings,
         normalizeMessages,
+        isImageGenModel,
         PROVIDER_LABELS
     };
 })();
