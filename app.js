@@ -223,7 +223,8 @@ window.XzcApp = (() => {
             return Settings.getModelsForProvider(provider).map((model) => ({
                 ...model,
                 provider,
-                providerName: XzcAPI.PROVIDER_LABELS[provider] || provider
+                providerName: XzcAPI.PROVIDER_LABELS[provider] || provider,
+                category: model.category || 'text'
             }));
         });
     }
@@ -237,26 +238,48 @@ window.XzcApp = (() => {
         const currentModel = Settings.getModel();
         els.modelDropdown.innerHTML = '';
 
-        getAllModelOptions().forEach((model) => {
-            const option = document.createElement('button');
-            option.type = 'button';
-            option.className = 'model-option';
-            option.classList.toggle('active', model.provider === currentProvider && model.id === currentModel);
-            option.dataset.provider = model.provider;
-            option.dataset.model = model.id;
-            option.innerHTML = `
-                <span class="model-name">${Utils.escapeHtml(model.name)}</span>
-                <span class="model-provider">${Utils.escapeHtml(model.providerName)}</span>
-            `;
-            option.addEventListener('click', () => {
-                Settings.set('apiProvider', model.provider);
-                Settings.set('model', model.id);
-                Settings.populateForm();
-                updateCurrentModelName();
-                renderModelDropdown();
-                closeModelDropdown();
+        const allOptions = getAllModelOptions();
+
+        // Group by provider
+        const providers = [...new Set(allOptions.map((m) => m.provider))];
+
+        providers.forEach((provider) => {
+            const providerLabel = XzcAPI.PROVIDER_LABELS[provider] || provider;
+            const group = allOptions.filter((m) => m.provider === provider);
+
+            // Provider header
+            const header = document.createElement('div');
+            header.className = 'model-dropdown-group-header';
+            header.textContent = providerLabel;
+            els.modelDropdown.appendChild(header);
+
+            group.forEach((model) => {
+                const option = document.createElement('button');
+                option.type = 'button';
+                option.className = 'model-option';
+                option.classList.toggle('active', model.provider === currentProvider && model.id === currentModel);
+                option.dataset.provider = model.provider;
+                option.dataset.model = model.id;
+
+                const isImageGen = model.category === 'image';
+                const badge = isImageGen
+                    ? `<span class="model-badge image-badge">🖼️ Image</span>`
+                    : '';
+
+                option.innerHTML = `
+                    <span class="model-name">${Utils.escapeHtml(model.name)}${badge}</span>
+                    <span class="model-provider">${Utils.escapeHtml(model.providerName)}</span>
+                `;
+                option.addEventListener('click', () => {
+                    Settings.set('apiProvider', model.provider);
+                    Settings.set('model', model.id);
+                    Settings.populateForm();
+                    updateCurrentModelName();
+                    renderModelDropdown();
+                    closeModelDropdown();
+                });
+                els.modelDropdown.appendChild(option);
             });
-            els.modelDropdown.appendChild(option);
         });
     }
 
