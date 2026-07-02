@@ -48,6 +48,9 @@ window.ChatController = (() => {
         els.fileInput = document.getElementById('file-upload-input');
         els.filePreviewList = document.getElementById('file-preview-list');
         els.inputWrapper = document.getElementById('input-wrapper');
+        // Voice input elements
+        els.voiceBtn = document.getElementById('voice-btn');
+        els.voiceRecordingRing = document.getElementById('voice-recording-ring');
     }
 
     function init() {
@@ -161,6 +164,17 @@ window.ChatController = (() => {
                     e.preventDefault();
                     const files = imageItems.map((item) => item.getAsFile()).filter(Boolean);
                     processFiles(files);
+                }
+            });
+        }
+
+        // --- Voice input ---
+        if (els.voiceBtn) {
+            els.voiceBtn.addEventListener('click', () => {
+                if (_voiceIsListening) {
+                    stopVoiceInput();
+                } else {
+                    startVoiceInput();
                 }
             });
         }
@@ -335,6 +349,120 @@ window.ChatController = (() => {
     function clearPendingFiles() {
         pendingFiles = [];
         renderFilePreviews();
+    }
+
+    /* ============================================================
+       Voice Input (Web Speech API)
+       ============================================================ */
+
+    let _voiceRecognition = null;
+    let _voiceIsListening = false;
+
+    function getSpeechRecognition() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            return null;
+        }
+        return new SpeechRecognition();
+    }
+
+    function startVoiceInput() {
+        const recognition = getSpeechRecognition();
+        if (!recognition) {
+            Utils.showToast('เบราว์เซอร์ของคุณไม่รองรับ Voice Input กรุณาใช้ Chrome หรือ Edge', 'warning');
+            return;
+        }
+
+        _voiceRecognition = recognition;
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'th-TH'; // Default Thai, auto-switches
+        recognition.maxAlternatives = 1;
+
+        let finalTranscript = '';
+
+        recognition.onstart = () => {
+            _voiceIsListening = true;
+            setVoiceListeningState(true);
+            Utils.showToast('🎤 กำลังฟัง... พูดได้เลย', 'info');
+        };
+
+        recognition.onresult = (event) => {
+            let interim = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    finalTranscript += transcript + ' ';
+                } else {
+                    interim += transcript;
+                }
+            }
+
+            if (els.input) {
+                const existingText = els.input.value;
+                const baseText = existingText.replace(/\[🎤 .*\]$/, '').trimEnd();
+                if (interim) {
+                    els.input.value = (baseText ? baseText + ' ' : '') + finalTranscript + '[🎤 ' + interim + ']';
+                } else {
+                    els.input.value = (baseText ? baseText + ' ' : '') + finalTranscript;
+                }
+                Utils.autoResize(els.input);
+                updateInputState();
+            }
+        };
+
+        recognition.onerror = (event) => {
+            if (event.error === 'no-speech') {
+                Utils.showToast('ไม่ได้ยินเสียง ลองพูดอีกครั้ง', 'info');
+            } else if (event.error === 'not-allowed') {
+                Utils.showToast('กรุณาอนุญาตให้ใช้ไมโครโฟน', 'error');
+            } else if (event.error !== 'aborted') {
+                Utils.showToast(`Voice error: ${event.error}`, 'error');
+            }
+            stopVoiceInput();
+        };
+
+        recognition.onend = () => {
+            _voiceIsListening = false;
+            setVoiceListeningState(false);
+            _voiceRecognition = null;
+
+            // Clean up interim brackets
+            if (els.input) {
+                els.input.value = els.input.value.replace(/\[🎤 .*\]$/, '').trimEnd();
+                Utils.autoResize(els.input);
+                updateInputState();
+            }
+        };
+
+        try {
+            recognition.start();
+        } catch (err) {
+            Utils.showToast('ไม่สามารถเริ่ม Voice Input ได้', 'error');
+        }
+    }
+
+    function stopVoiceInput() {
+        if (_voiceRecognition) {
+            try {
+                _voiceRecognition.stop();
+            } catch {
+                // Already stopped
+            }
+        }
+        _voiceIsListening = false;
+        setVoiceListeningState(false);
+        _voiceRecognition = null;
+    }
+
+    function setVoiceListeningState(listening) {
+        if (els.voiceBtn) {
+            els.voiceBtn.classList.toggle('recording', listening);
+            els.voiceBtn.title = listening ? 'หยุดฟัง' : 'Voice input (พูดเพื่อพิมพ์)';
+        }
+        if (els.voiceRecordingRing) {
+            els.voiceRecordingRing.classList.toggle('hidden', !listening);
+        }
     }
 
     /* ============================================================ */
