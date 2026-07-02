@@ -99,8 +99,7 @@ window.Settings = (() => {
             { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', category: 'text' },
             { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', category: 'text' },
             { id: 'gemini-2.0-flash-lite', name: 'Gemini 2.0 Flash Lite', category: 'text' },
-            { id: 'gemini-2.5-flash-preview-image-generation', name: 'Gemini 2.5 Flash (Image Gen)', category: 'image' },
-            { id: 'gemini-2.0-flash-preview-image-generation', name: 'Gemini 2.0 Flash (Image Gen)', category: 'image' }
+            { id: 'gemini-3.1-flash-lite-image', name: 'Gemini 3.1 Flash Lite (Image Gen)', category: 'image' }
         ]
     };
 
