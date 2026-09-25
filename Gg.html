@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101216">
+<title>Box Draw — ตัวจำลองการเปิดแพ็ก</title>
+<style>
+:root{
+  --bg:#101216;
+  --panel:#171a20;
+  --panel-2:#1d212a;
+  --line:#272c36;
+  --line-2:#333a47;
+  --text:#eceef3;
+  --muted:#99a0af;
+  --accent:#4f7cff;
+  --accent-soft:rgba(79,124,255,.14);
+  --epic:#e6b23c;
+  --highlight:#5aa2ff;
+  --standard:#8b93a6;
+  --danger:#ff6b6b;
+  --ok:#4bd07f;
+  --r:12px;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.22);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font:15px/1.6 "Inter","Noto Sans Thai",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:88px;
+}
+img{display:block;max-width:100%}
+button,input,textarea,select{font:inherit;color:inherit}
+h1,h2,h3{margin:0;font-weight:650;letter-spacing:-.01em}
+.wrap{width:min(1120px,calc(100% - 32px));margin:0 auto}
+.muted{color:var(--muted)}
+.tiny{font-size:12.5px;line-height:1.55}
+
+/* ---------- nav ---------- */
+.nav{
+  position:sticky;top:0;z-index:40;
+  background:rgba(16,18,22,.88);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.nav-in{display:flex;align-items:center;justify-content:space-between;gap:16px;height:60px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px}
+.brand i{
+  width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
+  background:var(--accent);color:#fff;font-style:normal;font-weight:800;font-size:15px;
+}
+
+.nav-hint{font-size:12px;color:var(--muted)}
+
+/* ---------- buttons ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:40px;padding:0 16px;border-radius:10px;cursor:pointer;
+  background:var(--panel-2);border:1px solid var(--line-2);
+  font-size:14px;font-weight:600;text-decoration:none;
+  transition:background .14s,border-color .14s,transform .08s;
+}
+.btn:hover{background:#242935;border-color:#3d4557}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-primary:hover{background:#5d87ff;border-color:#5d87ff}
+.btn-gold{background:var(--epic);border-color:var(--epic);color:#231a06}
+.btn-gold:hover{background:#eec052;border-color:#eec052}
+.btn-ghost{background:transparent;border-color:var(--line-2)}
+.btn-danger{background:transparent;border-color:#5a2e33;color:var(--danger)}
+.btn-danger:hover{background:#2a1a1d;border-color:#7a3c43}
+.btn-sm{min-height:34px;padding:0 12px;font-size:13px;border-radius:9px}
+.btn-xl{min-height:58px;font-size:16px;border-radius:12px}
+.btn-block{width:100%}
+
+/* ---------- pack tabs ---------- */
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:20px 0 4px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  flex:0 0 auto;min-height:38px;padding:0 15px;border-radius:999px;cursor:pointer;
+  background:var(--panel);border:1px solid var(--line);
+  font-size:13.5px;font-weight:600;color:var(--muted);white-space:nowrap;
+  transition:.14s;
+}
+.tab:hover{color:var(--text);border-color:var(--line-2)}
+.tab.on{background:var(--accent-soft);border-color:var(--accent);color:#c3d3ff}
+.tab .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--danger);margin-left:7px;vertical-align:middle}
+
+/* ---------- panel ---------- */
+.panel{
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--r);padding:20px;margin-top:16px;box-shadow:var(--shadow);
+}
+.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px}
+.panel-head h2{font-size:16px}
+.panel-head p{margin:3px 0 0;font-size:12.5px;color:var(--muted)}
+
+/* ---------- pack header ---------- */
+.pack-head{display:grid;grid-template-columns:200px minmax(0,1fr);gap:20px;align-items:center}
+.pack-cover{
+  aspect-ratio:16/10;border-radius:10px;overflow:hidden;background:var(--panel-2);
+  border:1px solid var(--line);display:grid;place-items:center;color:var(--muted);font-size:12px;
+}
+.pack-cover img{width:100%;height:100%;object-fit:cover}
+.pack-title{font-size:clamp(20px,3.2vw,27px);line-height:1.25}
+.pack-desc{margin:6px 0 0;font-size:13.5px;color:var(--muted);max-width:640px}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}
+.chip{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:6px 11px;border-radius:8px;font-size:12.5px;font-weight:600;
+  background:var(--panel-2);border:1px solid var(--line);
+}
+.chip b{font-weight:700}
+.chip.epic{color:var(--epic)}
+.chip.highlight{color:var(--highlight)}
+.chip.time{color:var(--text)}
+.chip.expired{color:var(--danger);border-color:#5a2e33;background:#241a1c}
+
+/* ---------- stats ---------- */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+.stat{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:13px 14px}
+.stat .k{font-size:11.5px;color:var(--muted)}
+.stat .v{font-size:22px;font-weight:700;margin-top:3px;letter-spacing:-.02em}
+
+/* ---------- odds ---------- */
+.odds{display:grid;gap:12px}
+.odd{display:grid;grid-template-columns:96px minmax(60px,1fr) 104px;align-items:center;gap:14px}
+.odd-name{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600}
+.sw{width:9px;height:9px;border-radius:3px;background:var(--standard)}
+.sw.epic{background:var(--epic)}
+.sw.highlight{background:var(--highlight)}
+.track{height:7px;border-radius:99px;background:#0c0e12;overflow:hidden}
+.track span{display:block;height:100%;border-radius:99px;transition:width .3s ease}
+.track .epic{background:var(--epic)}
+.track .highlight{background:var(--highlight)}
+.track .standard{background:var(--standard)}
+.odd-val{text-align:right;font-size:14.5px;font-weight:700;font-variant-numeric:tabular-nums}
+.odd-val small{display:block;font-size:11px;font-weight:500;color:var(--muted)}
+
+/* ---------- budget ---------- */
+.budget{margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
+.budget-row{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px;align-items:center}
+.range{-webkit-appearance:none;width:100%;height:5px;border-radius:99px;background:#0c0e12;outline:none;margin:16px 0 12px}
+.range::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--accent);border:3px solid var(--panel);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.5)}
+.range::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--accent);border:3px solid var(--panel);cursor:pointer}
+.result-line{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.result-line .r{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:13px}
+.result-line .r + .r{margin-top:9px;padding-top:9px;border-top:1px solid var(--line)}
+.result-line b{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
+
+/* ---------- inputs ---------- */
+label.lb{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:7px}
+.inp{
+  width:100%;min-height:42px;padding:9px 12px;border-radius:10px;
+  background:#0d0f14;border:1px solid var(--line-2);outline:none;transition:.14s;
+}
+.inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+textarea.inp{min-height:76px;resize:vertical;line-height:1.55}
+.field + .field{margin-top:14px}
+.row{display:grid;gap:14px}
+.row-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.row-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+
+/* ---------- draw ---------- */
+.draw-actions{display:grid;grid-template-columns:1fr 1fr auto;gap:10px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:12px;margin-top:18px}
+.pc{
+  position:relative;aspect-ratio:3/4;border-radius:10px;overflow:hidden;
+  background:var(--panel-2);border:1px solid var(--line);
+  animation:pop .28s cubic-bezier(.2,.8,.3,1) both;
+}
+.pc.epic{border-color:#7a6224}
+.pc.highlight{border-color:#2e5party}
+.pc.highlight{border-color:#2e5a94}
+@keyframes pop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+.pc img{width:100%;height:100%;object-fit:cover}
+.pc-ph{
+  width:100%;height:100%;display:grid;place-items:center;
+  color:#5d6577;font-size:12px;font-weight:700;letter-spacing:.08em;
+  background:var(--panel-2);
+}
+.pc.epic .pc-ph{background:linear-gradient(160deg,#2c2415,var(--panel-2) 60%);color:#8a763c}
+.pc.highlight .pc-ph{background:linear-gradient(160deg,#16243c,var(--panel-2) 60%);color:#54739e}
+.pc-shade{position:absolute;inset:auto 0 0;height:56%;background:linear-gradient(transparent,rgba(9,11,15,.92))}
+.pc-tag{
+  position:absolute;top:8px;left:8px;padding:3px 7px;border-radius:6px;
+  font-size:10px;font-weight:700;letter-spacing:.05em;
+  background:rgba(12,14,18,.82);border:1px solid var(--line-2);color:var(--standard);
+}
+.pc-tag.epic{color:var(--epic);border-color:#7a6224}
+.pc-tag.highlight{color:var(--highlight);border-color:#2e5a94}
+.pc-x{position:absolute;top:8px;right:8px;padding:3px 7px;border-radius:6px;background:rgba(12,14,18,.82);border:1px solid var(--line-2);font-size:11px;font-weight:700}
+.pc-name{position:absolute;left:10px;right:10px;bottom:9px;font-size:12.5px;font-weight:650;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.placeholder{
+  margin-top:18px;padding:32px 20px;border-radius:10px;text-align:center;
+  border:1px dashed var(--line-2);color:var(--muted);font-size:13px;
+}
+
+/* ---------- history ---------- */
+.hist{margin-top:18px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.hist-row{display:flex;justify-content:space-between;gap:14px;padding:11px 14px;font-size:12.5px;background:var(--panel-2)}
+.hist-row + .hist-row{border-top:1px solid var(--line)}
+
+/* ---------- details ---------- */
+details.fold{margin-top:16px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2)}
+details.fold > summary{
+  list-style:none;cursor:pointer;padding:13px 16px;font-size:13.5px;font-weight:600;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+details.fold > summary::-webkit-details-marker{display:none}
+details.fold > summary::after{content:"แสดง";font-size:12px;color:var(--muted);font-weight:500}
+details.fold[open] > summary::after{content:"ซ่อน"}
+.fold-body{padding:0 16px 16px}
+
+/* ---------- mobile draw bar ---------- */
+.mbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:45;display:none;gap:9px;
+  padding:10px 14px calc(10px + env(safe-area-inset-bottom));
+  background:rgba(16,18,22,.94);backdrop-filter:blur(10px);border-top:1px solid var(--line);
+}
+.mbar .btn{flex:1}
+
+/* ---------- toast ---------- */
+.toast{
+  position:fixed;left:50%;bottom:96px;z-index:80;transform:translate(-50%,16px);
+  opacity:0;pointer-events:none;transition:.2s ease;
+  max-width:min(460px,calc(100% - 32px));padding:12px 18px;border-radius:10px;
+  background:#f2f4f8;color:#14161b;font-size:13.5px;font-weight:650;box-shadow:var(--shadow);
+}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.toast.err{background:#ffe3e3;color:#7d1d1d}
+
+.foot{margin:44px 0 20px;text-align:center;font-size:11.5px;color:#666d7d;line-height:1.8}
+.hidden{display:none!important}
+
+@media(max-width:900px){
+  .budget-row{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  .wrap{width:calc(100% - 24px)}
+  .panel{padding:16px}
+  .pack-head{grid-template-columns:1fr}
+  .pack-cover{aspect-ratio:16/9}
+  .odd{grid-template-columns:80px minmax(40px,1fr) 88px;gap:10px}
+  .row-2,.row-3{grid-template-columns:1fr}
+  .draw-actions{display:none}
+  .mbar{display:flex}
+  .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .up{grid-template-columns:1fr}
+  .savebar{margin:16px -16px -16px;padding:12px 16px}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <div class="brand"><i>B</i> Box Draw</div>
+    <span class="nav-hint">ตั้งค่าที่ท้ายไฟล์</span>
+  </div>
+</nav>
+
+<main class="wrap">
+  <div id="tabs" class="tabs"></div>
+  <div id="app"></div>
+
+  <p class="foot">
+    เครื่องมือจำลองความน่าจะเป็นเพื่อการศึกษา ไม่มีการใช้เงินจริง<br>
+    ไม่ได้เกี่ยวข้องกับ KONAMI และผลการสุ่มไม่การันตีผลในเกมจริง
+  </p>
+</main>
+
+<div id="mbar" class="mbar"></div>
+<div id="toast" class="toast" role="status"></div>
+
+<script>
+(() => {
+"use strict";
+
+/* ═══════════ helpers ═══════════ */
+const $ = id => document.getElementById(id);
+const uid = () => (crypto?.randomUUID?.() || "id" + Date.now() + Math.random().toString(36).slice(2));
+const cp = v => JSON.parse(JSON.stringify(v));
+const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const num = v => Number(v) || 0;
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const fmt = n => n.toLocaleString("th-TH");
+const shuffle = a => { const r = [...a]; for (let i = r.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [r[i], r[j]] = [r[j], r[i]]; } return r; };
+
+/* ═══════════ storage / config ═══════════ */
+const DB = "boxdraw", STORE = "kv", KEY = "runtime";
+let _db;
+const db = () => _db ||= new Promise((res, rej) => {
+  const r = indexedDB.open(DB, 2);
+  r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains(STORE)) r.result.createObjectStore(STORE); };
+  r.onsuccess = () => res(r.result);
+  r.onerror = () => rej(r.error);
+});
+async function load() {
+  try {
+    const d = await db();
+    return await new Promise((res, rej) => {
+      const q = d.transaction(STORE, "readonly").objectStore(STORE).get(KEY);
+      q.onsuccess = () => res(q.result || null);
+      q.onerror = () => rej(q.error);
+    });
+  } catch { return null; }
+}
+let saveTimer;
+function save() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    try {
+      const d = await db();
+      d.transaction(STORE, "readwrite").objectStore(STORE).put(state, KEY);
+    } catch { toast("บันทึกสถานะไม่สำเร็จ", true); }
+  }, 120);
+}
+
+function configToPacks() {
+  return (BOX_DRAW_CONFIG.packs || []).map((p, pi) => ({
+    id: p.id || `pack-${pi+1}`,
+    title: p.title || `แพ็ก ${pi+1}`,
+    desc: p.desc || "",
+    cover: p.cover || "",
+    expiry: p.expiry || "",
+    coin1: Math.max(0, num(p.coin1)),
+    coin10: Math.max(0, num(p.coin10)),
+    stdCount: Math.max(0, Math.floor(num(p.standard?.count))),
+    stdImage: p.standard?.image || "",
+    epics: (p.epic || []).map((c,i) => ({id:`${p.id||pi}-e-${i}`,name:c.name||`Epic ${i+1}`,image:c.image||""})),
+    highs: (p.highlight || []).map((c,i) => ({id:`${p.id||pi}-h-${i}`,name:c.name||`Highlight ${i+1}`,image:c.image||""}))
+  }));
+}
+
+let state = { packs: [], active: null, draws: {}, budgets: {}, configKey: "" };
+const configKey = () => JSON.stringify(BOX_DRAW_CONFIG);
+const pack = () => state.packs.find(p => p.id === state.active) || null;
+const total = p => p.epics.length + p.highs.length + p.stdCount;
+const sig = p => [p.epics.map(c=>c.id).join(),p.highs.map(c=>c.id).join(),p.stdCount].join("|");
+function normalize(){
+  if(!Array.isArray(state.packs)) state.packs=[];
+  state.draws ||= {}; state.budgets ||= {};
+  state.packs.forEach(p=>{
+    p.coin1=Math.max(0,num(p.coin1)); p.coin10=Math.max(0,num(p.coin10));
+    p.stdCount=Math.max(0,Math.floor(num(p.stdCount))); p.stdImage ||= "";
+    p.epics=(p.epics||[]).map(c=>({id:c.id||uid(),name:c.name||"Epic",image:c.image||""}));
+    p.highs=(p.highs||[]).map(c=>({id:c.id||uid(),name:c.name||"Highlight",image:c.image||""}));
+  });
+  if(!state.packs.some(p=>p.id===state.active)) state.active=state.packs[0]?.id||null;
+}
+
+/* ═══════════ draw state ═══════════ */
+function deck(p) {
+  const d = [];
+  p.epics.forEach(c => d.push({ t: "epic", id: c.id }));
+  p.highs.forEach(c => d.push({ t: "highlight", id: c.id }));
+  for (let i = 0; i < p.stdCount; i++) d.push({ t: "standard", id: "s" + i });
+  return shuffle(d);
+}
+const fresh = p => ({ left: deck(p), spent: 0, opened: 0, last: [], log: [], sig: sig(p) });
+function drawState(p) {
+  const d = state.draws[p.id];
+  if (!d || d.sig !== sig(p)) return state.draws[p.id] = fresh(p);
+  return d;
+}
+function counts(d) {
+  const c = { epic: 0, highlight: 0, standard: 0 };
+  d.left.forEach(t => c[t.t]++);
+  return c;
+}
+function resolve(p, tok) {
+  if (tok.t === "epic") { const c = p.epics.find(x => x.id === tok.id); return { t: "epic", name: c?.name || "Epic", image: c?.image || "" }; }
+  if (tok.t === "highlight") { const c = p.highs.find(x => x.id === tok.id); return { t: "highlight", name: c?.name || "Highlight", image: c?.image || "" }; }
+  return { t: "standard", name: "Standard", image: p.stdImage || "" };
+}
+
+/* ═══════════ math ═══════════ */
+function atLeastOne(k, n, N) {
+  k = Math.max(0, k); n = clamp(n, 0, N);
+  if (!k || !n || !N) return 0;
+  if (n > N - k) return 1;
+  let miss = 1;
+  for (let i = 0; i < n; i++) miss *= (N - k - i) / (N - i);
+  return 1 - miss;
+}
+function drawsFor(p, coins) {
+  coins = Math.max(0, coins);
+  const a = Math.max(0, p.coin1), b = Math.max(0, p.coin10);
+  if (!a) return 0;
+  if (b && b < a * 10) { const k = Math.floor(coins / b); return k * 10 + Math.floor((coins - k * b) / a); }
+  return Math.floor(coins / a);
+}
+
+/* ═══════════ time ═══════════ */
+const expired = p => p.expiry && new Date(p.expiry).getTime() <= Date.now();
+function leftText(p) {
+  if (!p.expiry) return "ไม่มีวันหมดอายุ";
+  const ms = new Date(p.expiry).getTime() - Date.now();
+  if (!(ms > 0)) return "หมดเวลาแล้ว";
+  const d = ms / 864e5 | 0, h = ms % 864e5 / 36e5 | 0, m = ms % 36e5 / 6e4 | 0, s = ms % 6e4 / 1e3 | 0;
+  if (d) return `เหลือ ${d} วัน ${h} ชม.`;
+  return `เหลือ ${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+}
+const dateText = p => p.expiry
+  ? new Intl.DateTimeFormat("th-TH", { dateStyle: "medium", timeStyle: "short" }).format(new Date(p.expiry))
+  : "";
+const localInput = d => {
+  const z = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`;
+};
+
+/* ═══════════ toast ═══════════ */
+let tTimer;
+function toast(msg, err) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.className = "toast on" + (err ? " err" : "");
+  clearTimeout(tTimer);
+  tTimer = setTimeout(() => t.classList.remove("on"), 2400);
+}
+
+/* ═══════════ card markup ═══════════ */
+function cardHTML(c, i = 0, badge = "") {
+  const label = c.t === "epic" ? "EPIC" : c.t === "highlight" ? "HIGHLIGHT" : "STANDARD";
+  return `<div class="pc ${c.t}" style="animation-delay:${Math.min(i * 40, 420)}ms">
+    ${c.image ? `<img src="${esc(c.image)}" alt="${esc(c.name)}" loading="lazy">` : `<div class="pc-ph">${label}</div>`}
+    <div class="pc-shade"></div>
+    <span class="pc-tag ${c.t}">${label}</span>${badge}
+    <div class="pc-name">${esc(c.name)}</div>
+  </div>`;
+}
+
+/* ═══════════ render: public ═══════════ */
+function renderTabs() {
+  $("tabs").innerHTML = state.packs.map(p =>
+    `<button class="tab ${p.id === state.active ? "on" : ""}" data-pack="${esc(p.id)}">
+      ${esc(p.title)}${expired(p) ? '<i class="dot"></i>' : ""}
+    </button>`).join("");
+}
+
+function renderApp() {
+  renderTabs();
+  const p = pack(), app = $("app"), mbar = $("mbar");
+
+  if (!p) {
+    app.innerHTML = `<div class="panel"><div class="placeholder">ยังไม่มีแพ็ก — กด “ตั้งค่าแพ็ก” ด้านบนเพื่อสร้างแพ็กแรก</div></div>`;
+    mbar.innerHTML = ""; mbar.style.display = "none";
+    return;
+  }
+
+  const d = drawState(p), c = counts(d), N = d.left.length, all = total(p);
+  const ex = expired(p), done = N === 0;
+  const budget = state.budgets[p.id] ?? 1800;
+  const nDraw = Math.min(drawsFor(p, budget), N);
+  const last = d.last.map(t => resolve(p, t));
+  const canDraw = !ex && !done;
+
+  app.innerHTML = `
+  <!-- pack header -->
+  <div class="panel">
+    <div class="pack-head">
+      <div class="pack-cover">${p.cover ? `<img src="${esc(p.cover)}" alt="">` : "ยังไม่มีรูปหน้าปก"}</div>
+      <div>
+        <h1 class="pack-title">${esc(p.title)}</h1>
+        ${p.desc ? `<p class="pack-desc">${esc(p.desc)}</p>` : ""}
+        <div class="chips">
+          <span class="chip epic">Epic <b>${p.epics.length}</b></span>
+          <span class="chip highlight">Highlight <b>${p.highs.length}</b></span>
+          <span class="chip">Standard <b>${fmt(p.stdCount)}</b></span>
+          <span class="chip">รวม <b>${fmt(all)}</b> ใบ</span>
+          <span class="chip ${ex ? "expired" : "time"}" id="cd">${leftText(p)}</span>
+        </div>
+        ${p.expiry ? `<p class="tiny muted" style="margin:9px 0 0">หมดเวลา ${esc(dateText(p))}</p>` : ""}
+      </div>
+    </div>
+  </div>
+
+  <!-- draw -->
+  <div class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>เปิดแพ็ก</h2>
+        <p>${ex ? "แพ็กนี้หมดเวลาแล้ว" : done ? "เปิดครบทุกใบแล้ว กดรีเซ็ตเพื่อเริ่มใหม่" : "เปิดได้เรื่อย ๆ จนกว่าการ์ดในตู้จะหมด การ์ดที่ออกแล้วจะไม่กลับเข้าตู้"}</p>
+      </div>
+    </div>
+
+    <div class="stats" style="margin-bottom:16px">
+      <div class="stat"><div class="k">เหลือในตู้</div><div class="v">${fmt(N)}</div></div>
+      <div class="stat"><div class="k">เปิดไปแล้ว</div><div class="v">${fmt(d.opened)}</div></div>
+      <div class="stat"><div class="k">Epic ที่ได้</div><div class="v" style="color:var(--epic)">${p.epics.length - c.epic}</div></div>
+      <div class="stat"><div class="k">Highlight ที่ได้</div><div class="v" style="color:var(--highlight)">${p.highs.length - c.highlight}</div></div>
+      <div class="stat"><div class="k">เหรียญที่ใช้</div><div class="v">${fmt(d.spent)}</div></div>
+    </div>
+
+    <div class="draw-actions">
+      <button class="btn btn-xl btn-primary" data-act="draw1" ${canDraw ? "" : "disabled"}>เปิด 1 ใบ · ${fmt(p.coin1)}</button>
+      <button class="btn btn-xl btn-gold" data-act="draw10" ${canDraw ? "" : "disabled"}>เปิด 10 ใบ · ${fmt(p.coin10)}</button>
+      <button class="btn btn-xl btn-ghost" data-act="reset">รีเซ็ตตู้</button>
+    </div>
+
+    ${last.length
+      ? `<div class="cards">${last.map((x, i) => cardHTML(x, i)).join("")}</div>`
+      : `<div class="placeholder">ยังไม่ได้เปิดแพ็กนี้ — กดปุ่มด้านบนเพื่อเริ่ม</div>`}
+
+    ${d.log.length ? `<div class="hist">${d.log.slice(0, 6).map(r =>
+      `<div class="hist-row">
+        <span>เปิด ${r.n} ใบ · <b style="color:var(--epic)">Epic ${r.e}</b> · <b style="color:var(--highlight)">Highlight ${r.h}</b></span>
+        <span class="muted">-${fmt(r.cost)}</span>
+      </div>`).join("")}</div>` : ""}
+  </div>
+
+  <!-- odds -->
+  <div class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>โอกาสออก</h2>
+        <p>คำนวณจากการ์ดที่เหลือจริงในตู้ตอนนี้ (${fmt(N)} ใบ)</p>
+      </div>
+    </div>
+
+    <div class="odds">
+      ${oddRow("epic", "Epic", c.epic, N)}
+      ${oddRow("highlight", "Highlight", c.highlight, N)}
+      ${oddRow("standard", "Standard", c.standard, N)}
+    </div>
+
+    <div class="budget">
+      <label class="lb" for="bNum">ลองคำนวณจากงบเหรียญ (ไม่หักการ์ดในตู้)</label>
+      <div class="budget-row">
+        <div>
+          <input id="bRange" class="range" type="range" min="0" max="60000" step="100" value="${clamp(budget,0,60000)}">
+          <input id="bNum" class="inp" type="number" min="0" step="100" value="${budget}">
+        </div>
+        <div class="result-line">
+          <div class="r"><span class="muted">เปิดได้</span><b id="rN">${fmt(nDraw)} ใบ</b></div>
+          <div class="r"><span class="muted">ได้ Epic อย่างน้อย 1</span><b id="rE" style="color:var(--epic)">${(atLeastOne(c.epic,nDraw,N)*100).toFixed(2)}%</b></div>
+          <div class="r"><span class="muted">ได้ Highlight อย่างน้อย 1</span><b id="rH" style="color:var(--highlight)">${(atLeastOne(c.highlight,nDraw,N)*100).toFixed(2)}%</b></div>
+        </div>
+      </div>
+    </div>
+
+    <details class="fold">
+      <summary>รายชื่อทั้งหมดในแพ็กนี้</summary>
+      <div class="fold-body">
+        ${p.epics.length ? `<p class="tiny muted" style="margin:0 0 8px">Epic ${p.epics.length} ใบ</p>
+          <div class="cards" style="margin-top:0">${p.epics.map((x,i)=>cardHTML({t:"epic",...x},i)).join("")}</div>` : ""}
+        ${p.highs.length ? `<p class="tiny muted" style="margin:16px 0 8px">Highlight ${p.highs.length} ใบ</p>
+          <div class="cards" style="margin-top:0">${p.highs.map((x,i)=>cardHTML({t:"highlight",...x},i)).join("")}</div>` : ""}
+        ${p.stdCount ? `<p class="tiny muted" style="margin:16px 0 8px">Standard ${fmt(p.stdCount)} ใบ (ใช้รูปเดียวกันทั้งหมด)</p>
+          <div class="cards" style="margin-top:0;grid-template-columns:repeat(auto-fill,minmax(132px,1fr))">
+            ${cardHTML({t:"standard",name:"Standard",image:p.stdImage},0,`<span class="pc-x">×${fmt(p.stdCount)}</span>`)}
+          </div>` : ""}
+      </div>
+    </details>
+  </div>`;
+
+  mbar.innerHTML = `
+    <button class="btn btn-primary" data-act="draw1" ${canDraw ? "" : "disabled"}>เปิด 1 ใบ</button>
+    <button class="btn btn-gold" data-act="draw10" ${canDraw ? "" : "disabled"}>เปิด 10 ใบ</button>
+    <button class="btn btn-ghost" data-act="reset">รีเซ็ต</button>`;
+  mbar.style.display = "";
+}
+
+function oddRow(t, label, k, N) {
+  const pct = N ? k / N * 100 : 0;
+  return `<div class="odd">
+    <div class="odd-name"><i class="sw ${t}"></i>${label}</div>
+    <div class="track"><span class="${t}" style="width:${pct}%"></span></div>
+    <div class="odd-val">${pct.toFixed(2)}%<small>เหลือ ${fmt(k)} ใบ</small></div>
+  </div>`;
+}
+
+function updateBudget() {
+  const p = pack(); if (!p) return;
+  const d = drawState(p), c = counts(d), N = d.left.length;
+  const v = Math.max(0, num($("bNum").value));
+  state.budgets[p.id] = v;
+  $("bRange").value = clamp(v, 0, 60000);
+  const n = Math.min(drawsFor(p, v), N);
+  $("rN").textContent = fmt(n) + " ใบ";
+  $("rE").textContent = (atLeastOne(c.epic, n, N) * 100).toFixed(2) + "%";
+  $("rH").textContent = (atLeastOne(c.highlight, n, N) * 100).toFixed(2) + "%";
+  save();
+}
+
+/* ═══════════ draw action ═══════════ */
+function doDraw(n) {
+  const p = pack(); if (!p) return;
+  if (expired(p)) return toast("แพ็กนี้หมดเวลาแล้ว", true);
+  const d = drawState(p);
+  if (!d.left.length) return toast("การ์ดในตู้หมดแล้ว", true);
+
+  const take = Math.min(n, d.left.length);
+  const cost = (n === 10 && take === 10) ? p.coin10 : take * p.coin1;
+  const got = d.left.splice(0, take);
+  const e = got.filter(x => x.t === "epic").length;
+  const h = got.filter(x => x.t === "highlight").length;
+
+  d.spent += cost; d.opened += take; d.last = got;
+  d.log.unshift({ n: take, cost, e, h });
+  d.log = d.log.slice(0, 30);
+
+  save(); renderApp();
+  document.querySelector(".cards")?.scrollIntoView({ block: "center", behavior: "smooth" });
+  toast(e ? `ได้ Epic ${e} ใบ!` : h ? `ได้ Highlight ${h} ใบ` : `เปิดแล้ว ${take} ใบ`);
+}
+
+/* ═══════════ events ═══════════ */
+document.addEventListener("click", e => {
+  const tab=e.target.closest("[data-pack]");
+  if(tab){ state.active=tab.dataset.pack; save(); renderApp(); return; }
+  const b=e.target.closest("[data-act]"); if(!b) return;
+  const a=b.dataset.act;
+  if(a==="draw1") doDraw(1);
+  if(a==="draw10") doDraw(10);
+  if(a==="reset"){
+    const p=pack(); if(!p) return;
+    if(confirm(`คืนการ์ดทั้งหมดกลับเข้าตู้ "${p.title}" ใช่ไหม`)){
+      state.draws[p.id]=fresh(p); save(); renderApp(); toast("รีเซ็ตตู้แล้ว");
+    }
+  }
+});
+
+/* countdown tick */
+let wasExpired = null;
+setInterval(() => {
+  const p = pack(); if (!p) return;
+  const ex = expired(p);
+  if (ex !== wasExpired) { wasExpired = ex; renderApp(); return; }
+  const el = $("cd"); if (el) el.textContent = leftText(p);
+}, 1000);
+
+/* ═══════════ init ═══════════ */
+async function initApp(){
+  const saved=await load();
+  const key=configKey();
+  const packs=configToPacks();
+  if(saved && saved.configKey===key){
+    state=saved;
+    state.packs=packs;
+  }else{
+    state={packs,active:packs[0]?.id||null,draws:{},budgets:{},configKey:key};
+  }
+  normalize();
+  state.configKey=key;
+  save();
+  renderApp();
+}
+window.addEventListener("boxdraw-config-ready", initApp);
+
+})();
+</script>
+<script>
+/*
+╔══════════════════════════════════════════════════════════════╗
+║ CONFIG — แก้เฉพาะส่วนนี้เพื่อจัดการแพ็ก                     ║
+║ ไม่ต้องมี Admin / Backend UI บนหน้าเว็บอีกต่อไป             ║
+╚══════════════════════════════════════════════════════════════╝
+- packs       = รายการแพ็กทั้งหมด
+- cover       = URL รูปหน้าปก หรือ ""
+- image       = URL รูปนักเตะ หรือ ""
+- expiry      = "" ถ้าไม่มีวันหมด / ใช้ ISO เช่น 2026-10-01T23:59:00
+*/
+const BOX_DRAW_CONFIG = {
+  appName: "Box Draw",
+  defaultBudget: 1800,
+  packs: [
+    {
+      id: "italian-legends",
+      title: "Epic Italian Legends",
+      desc: "ตัวอย่างแพ็ก — แก้ข้อมูลได้ที่ CONFIG ท้ายไฟล์",
+      cover: "",
+      expiry: "",
+      coin1: 100,
+      coin10: 900,
+      standard: { count: 137, image: "" },
+      epic: [
+        { name: "Leonardo Bonucci", image: "" },
+        { name: "Giorgio Chiellini", image: "" },
+        { name: "Daniele De Rossi", image: "" }
+      ],
+      highlight: [
+        { name: "Eric Dier", image: "" },
+        { name: "Fabian Schar", image: "" },
+        { name: "Leonardo Spinazzola", image: "" },
+        { name: "Joe Gomez", image: "" },
+        { name: "Ola Aina", image: "" },
+        { name: "Antonio Raillo", image: "" },
+        { name: "Pierre Lees Melou", image: "" },
+        { name: "Matty Cash", image: "" },
+        { name: "Marcos Acuna", image: "" },
+        { name: "Kieran Trippier", image: "" }
+      ]
+    }
+  ]
+};
+
+
+// CONFIG ถูกอ่านแล้ว จึงค่อยเริ่มระบบหลัก
+window.dispatchEvent(new Event("boxdraw-config-ready"));
+</script>
+</body>
+</html>
